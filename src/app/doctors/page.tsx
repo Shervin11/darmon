@@ -1,0 +1,303 @@
+"use client";
+
+import React, { useEffect } from "react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import useStore from "@/store/store";
+import { Heart, ChevronDown } from "lucide-react";
+import Link from "next/link";
+import FixedRating from "@/components/StarRating/page";
+
+interface Price {
+  current: number;
+  old: number;
+  currency: string;
+}
+
+interface Category {
+  id: number;
+  name: string;
+  image: string;
+}
+
+interface User {
+  fullName: string;
+  photo: string;
+}
+
+interface Comment {
+  id: number;
+  user: User;
+  rating: number;
+  comment: string;
+  date: string;
+}
+
+interface AvailableSlot {
+  id: number;
+  day: string;
+  date: string;
+  time: string;
+  active?: boolean;
+  disabled?: boolean;
+}
+
+interface Doctor {
+  id: number;
+  name: string;
+  specialty: string;
+  experience: number;
+  recommendation?: number;
+  rating: number;
+  price?: Price;
+  city: string;
+  clinic: string;
+  image: string;
+  bio: string;
+  availableSlots: AvailableSlot[];
+  comments?: Comment[];
+}
+
+const Doctors = () => {
+  const category: Category[] = useStore((state) => state.category);
+  const doctor: Doctor[] = useStore((state) => state.doctor);
+
+  const getCategory = useStore.getState().getCategory;
+  const getDoctor = useStore.getState().getDoctor;
+
+  function formatDate(dateStr: string) {
+    if (!dateStr) return "";
+
+    const months = [
+      "январь",
+      "феврал",
+      "март",
+      "апрел",
+      "май",
+      "июн",
+      "июл",
+      "август",
+      "сентябр",
+      "октябр",
+      "ноябр",
+      "декабр",
+    ];
+
+    const [year, month, day] = dateStr.split("-");
+    const monthIndex = parseInt(month, 10) - 1;
+    const dayNum = Number(day);
+    return `${dayNum} ${months[monthIndex]}`;
+  }
+
+  const filterButtons = [
+    { label: "Фильтры", icon: true },
+    { label: "Метро", dropdown: true },
+    { label: "Рядом" },
+    { label: "Сегодня" },
+    { label: "Дата приема", dropdown: true },
+    { label: "Выезд на дом" },
+    { label: "Популярные", dropdown: true },
+  ];
+
+  useEffect(() => {
+    getCategory();
+    getDoctor();
+  }, []);
+
+  return (
+    <div>
+      <section className="py-16 max-w-[1440px] m-auto bg-gray-50">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-12">
+            <h2 className="text-3xl lg:text-4xl font-bold text-gray-800 mb-8">
+              Онлайн ба қабули духтур номнавис шавед.
+            </h2>
+
+            <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-200 max-w-4xl mx-auto">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <Input
+                  placeholder="Врач, клиника, болезнь, услуга"
+                  className="h-12 text-base border-gray-200 focus:border-teal-500"
+                />
+                <Input
+                  placeholder="Метро, район, округ, город МО"
+                  className="h-12 text-base border-gray-200 focus:border-teal-500"
+                />
+                <Button className="w-full h-12 cursor-pointer hover:bg-teal-800 bg-[#2c94a1] text-white font-semibold text-base rounded-lg">
+                  Найти
+                </Button>
+              </div>
+            </div>
+          </div>
+
+          <div className="text-center">
+            <h3 className="text-2xl font-bold text-gray-800 mb-8">
+              Мутахассисҳои машҳур
+            </h3>
+
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-6">
+              {category.map((e) => (
+                <div
+                  key={e.id}
+                  className="flex flex-col items-center p-6 bg-white rounded-2xl shadow-sm border border-gray-100 hover:shadow-md transition-shadow cursor-pointer group"
+                >
+                  <div className="w-16 h-16 rounded-2xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+                    <img src={e.image} alt={e.name} />
+                  </div>
+                  <span className="text-sm font-medium text-gray-700 text-center leading-tight whitespace-pre-line">
+                    {e.name}
+                  </span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section className="py-8 bg-gray-50 max-w-[1440px] m-auto min-h-screen">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+          <h1 className="text-2xl lg:text-3xl font-bold text-gray-900 mb-4">
+            Ба қабули беҳтарин духтурон навиштан{" "}
+          </h1>
+
+          <div className="bg-blue-50 p-4 rounded-lg mb-4">
+            <p className="text-gray-700 leading-relaxed">
+              <span className="font-semibold text-blue-600">Духтури хуб</span> —
+              мутахассиси васеъпрофил мебошад, ки бар асоси нишонаҳои шуморо
+              ташхис мекунад, ташхиси дурустро мегузорад ва табобати самаранок
+              таъин менамояд.
+            </p>
+          </div>
+
+          <div className="flex flex-wrap gap-3 mb-6">
+            {filterButtons.map((filter, index) => (
+              <Button
+                key={index}
+                variant="outline"
+                className="bg-white border-gray-300 text-gray-700 hover:bg-gray-50 rounded-full px-4 py-2"
+              >
+                {filter.icon && <span className="mr-2">⚙</span>}
+                {filter.label}
+                {filter.dropdown && <ChevronDown className="w-4 h-4 ml-2" />}
+              </Button>
+            ))}
+          </div>
+
+          <div className="flex flex-col gap-7">
+            {doctor.map((e) => (
+              <div key={e.id} className="bg-white rounded-2xl p-6">
+                <div className="flex justify-between gap-6">
+                  <div>
+                    <div className="flex gap-4 mb-6">
+                      <div className="relative flex w-[200px] flex-col items-center">
+                        <Link href={`/doctors/${e.id}`}>
+                          <div className="w-24 h-24 rounded-full overflow-hidden mb-2 bg-gray-100">
+                            <img
+                              src={e.image}
+                              alt={e.name}
+                              width={96}
+                              height={96}
+                              className="w-full h-full object-cover"
+                            />
+                          </div>
+                        </Link>
+                        <button className="absolute -top-2 cursor-pointer right-2 w-8 h-8 bg-white rounded-full shadow-md flex items-center justify-center hover:bg-gray-50">
+                          <Heart className="w-4 h-4 text-gray-400" />
+                        </button>
+                        <div className="flex flex-col items-center gap-2 mb-4">
+                          <FixedRating rating={e.rating} />
+                          <span
+                            style={{
+                              display: e.recommendation == 0 ? "none" : "block",
+                            }}
+                            className="text-sm text-center text-gray-600"
+                          >
+                            {e.recommendation}% беморон <br /> духтурро тавсия
+                            медиҳанд
+                          </span>
+                          <p className="text-blue-600 hover:text-blue-700 text-sm font-medium">
+                            {e.comments?.length} шарҳ
+                          </p>
+                        </div>
+                      </div>
+
+                      <div className="flex flex-col">
+                        <span className="text-sm text-gray-500 mb-2">
+                          {e.specialty}
+                        </span>
+                        <Link href={`/doctors/${e.id}`}>
+                          <h3 className="text-xl font-bold text-gray-900 mb-2">
+                            {e.name}
+                          </h3>
+                        </Link>
+                        <p className="text-gray-600 mb-3">{e.bio}</p>
+                        <div className="mb-4 w-[195px]">
+                          <h4 className="font-medium text-gray-900 mb-3">
+                            Навъи қабули духтур
+                          </h4>
+                          <div className="border-2 h-[150px] border-gray-200 rounded-lg p-3">
+                            <div className="w-8 h-8 flex items-center justify-center mb-2 rounded-full bg-gray-300">
+                              🏥
+                            </div>
+                            <div className="text-sm">
+                              <div className="font-medium">Дар {e.clinic}</div>
+                              <div className="text-gray-600">
+                                от {e.price?.current} {e.price?.currency}
+                              </div>
+                              <div className="text-xs line-through text-gray-400">
+                                {e.price?.old} {e.price?.currency}
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div>
+                    <div className="p-4">
+                      <div className="flex items-center gap-2 mb-4">
+                        {e.availableSlots.map((el) => (
+                          <button
+                            key={el.id}
+                            disabled={el.disabled}
+                            className={`p-2 rounded-lg text-start h-[55px] border transition-colors ${
+                              el.active
+                                ? "bg-blue-500 text-white"
+                                : el.disabled
+                                ? "bg-gray-200 text-gray-400 cursor-not-allowed"
+                                : "bg-white text-gray-700 hover:bg-gray-100"
+                            }`}
+                          >
+                            <div className="font-medium">
+                              {el.day} 
+                            </div>
+                          </button>
+                        ))}
+                      </div>
+
+                      <div className="flex gap-3 mb-4">
+                        {e.availableSlots.map((el) => (
+                          <Button
+                            key={el.id}
+                            variant="outline"
+                            size="sm"
+                            className="bg-blue-500 text-white text-xs border-blue-500 hover:text-[white] hover:bg-blue-600"
+                          >
+                            {el.time}
+                          </Button>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+    </div>
+  );
+};
+
+export default Doctors;
