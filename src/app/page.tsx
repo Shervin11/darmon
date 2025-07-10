@@ -6,7 +6,7 @@ import Link from "next/link";
 const Home = () => {
   return (
     <div className="min-h-screen overflow-hidden">
-      <section className="bg-gradient-to-br from-teal-500 via-teal-600 to-emerald-600 max-w-[1440npx shadcn@latest add badgepx] mx-auto px-4 sm:px-6 lg:px-8 py-12">
+      <section className="bg-gradient-to-br max-w-[1440px] m-auto from-teal-500 via-teal-600 to-emerald-600 max-w-[1440npx shadcn@latest add badgepx] mx-auto px-4 sm:px-6 lg:px-8 py-12">
         <div className="grid lg:grid-cols-2 gap-12 items-center">
           <div className="text-white">
             <h1 className="text-4xl lg:text-5xl font-bold leading-tight mb-6">

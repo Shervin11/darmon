@@ -1,10 +1,10 @@
 "use client";
 
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import useStore from "@/store/store";
-import { Heart, ChevronDown } from "lucide-react";
+import { Heart } from "lucide-react";
 import Link from "next/link";
 import FixedRating from "@/components/StarRating/page";
 
@@ -61,43 +61,11 @@ interface Doctor {
 const Doctors = () => {
   const category: Category[] = useStore((state) => state.category);
   const doctor: Doctor[] = useStore((state) => state.doctor);
+  const [doc, setDoc] = useState("");
+  const [city, setCity] = useState("all");
 
   const getCategory = useStore.getState().getCategory;
   const getDoctor = useStore.getState().getDoctor;
-
-  function formatDate(dateStr: string) {
-    if (!dateStr) return "";
-
-    const months = [
-      "январь",
-      "феврал",
-      "март",
-      "апрел",
-      "май",
-      "июн",
-      "июл",
-      "август",
-      "сентябр",
-      "октябр",
-      "ноябр",
-      "декабр",
-    ];
-
-    const [year, month, day] = dateStr.split("-");
-    const monthIndex = parseInt(month, 10) - 1;
-    const dayNum = Number(day);
-    return `${dayNum} ${months[monthIndex]}`;
-  }
-
-  const filterButtons = [
-    { label: "Фильтры", icon: true },
-    { label: "Метро", dropdown: true },
-    { label: "Рядом" },
-    { label: "Сегодня" },
-    { label: "Дата приема", dropdown: true },
-    { label: "Выезд на дом" },
-    { label: "Популярные", dropdown: true },
-  ];
 
   useEffect(() => {
     getCategory();
@@ -116,15 +84,47 @@ const Doctors = () => {
             <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-200 max-w-4xl mx-auto">
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <Input
-                  placeholder="Врач, клиника, болезнь, услуга"
+                  value={doc}
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                    setDoc(e.target.value)
+                  }
+                  placeholder="Табиб, Клиника"
                   className="h-12 text-base border-gray-200 focus:border-teal-500"
                 />
-                <Input
-                  placeholder="Метро, район, округ, город МО"
-                  className="h-12 text-base border-gray-200 focus:border-teal-500"
-                />
+                <select
+                  id="city-select"
+                  value={city}
+                  className="
+            w-full
+            px-4 py-3
+            text-base
+            border border-gray-300
+            rounded-lg
+            bg-white
+            text-[gray]
+            shadow-sm
+            transition-all duration-200
+            cursor-pointer
+            focus:outline-none
+            focus:ring-2
+            focus:ring-gray-300
+            focus:border-gray-400
+            hover:border-gray-400
+            appearance-none
+            pr-10
+          "
+                  onChange={(e: React.ChangeEvent<HTMLSelectElement>) =>
+                    setCity(e.target.value)
+                  }
+                >
+                  <option value="dushanbe">Душанбе</option>
+                  <option value="bokhtar">Бохтар</option>
+                  <option value="khujand">Хуҷанд</option>
+                  <option value="kulob">Кӯлоб</option>
+                  <option value="istaravshan">Истарафшан</option>
+                </select>
                 <Button className="w-full h-12 cursor-pointer hover:bg-teal-800 bg-[#2c94a1] text-white font-semibold text-base rounded-lg">
-                  Найти
+                  Ёфтан
                 </Button>
               </div>
             </div>
@@ -167,20 +167,6 @@ const Doctors = () => {
               ташхис мекунад, ташхиси дурустро мегузорад ва табобати самаранок
               таъин менамояд.
             </p>
-          </div>
-
-          <div className="flex flex-wrap gap-3 mb-6">
-            {filterButtons.map((filter, index) => (
-              <Button
-                key={index}
-                variant="outline"
-                className="bg-white border-gray-300 text-gray-700 hover:bg-gray-50 rounded-full px-4 py-2"
-              >
-                {filter.icon && <span className="mr-2">⚙</span>}
-                {filter.label}
-                {filter.dropdown && <ChevronDown className="w-4 h-4 ml-2" />}
-              </Button>
-            ))}
           </div>
 
           <div className="flex flex-col gap-7">
@@ -269,9 +255,7 @@ const Doctors = () => {
                                 : "bg-white text-gray-700 hover:bg-gray-100"
                             }`}
                           >
-                            <div className="font-medium">
-                              {el.day} 
-                            </div>
+                            <div className="font-medium">{el.day}</div>
                           </button>
                         ))}
                       </div>

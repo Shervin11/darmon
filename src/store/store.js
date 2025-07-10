@@ -8,15 +8,24 @@ const useStore = create((set) => ({
   category: [],
   doctor: [],
   doctorById: {},
-  async registerClient(newUser) {
+  userById: {},
+  async registerUser(newUser) {
     let { data } = await axios.post(API + "/register", newUser);
-    toast.success("Шумо бомуваффақият ба қайд гирифта шудед");
+    toast.success("Хуш омадед!");
     localStorage.setItem("accessToken", data.token);
   },
-  async registerDoctor(newUser) {
-    let { data } = await axios.post(API + "/register", newUser);
-    toast.success("Шумо бомуваффақият ба қайд гирифта шудед");
+  async loginUser(user) {
+    let { data } = await axios.post(API + "/auth", user);
+    toast.success("Хуш омадед!");
     localStorage.setItem("accessToken", data.token);
+  },
+  async loginMe() {
+    let { data } = await axios.get(API + "/auth_me", {
+      headers: {
+        Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
+      },
+    });
+    set({ userById: data });
   },
   async getCategory() {
     let { data } = await axios.get(API + "/category");
@@ -24,7 +33,7 @@ const useStore = create((set) => ({
   },
   async getDoctor() {
     let { data } = await axios.get(API + "/users");
-    const filterData = data.filter((e) => e.role == 'doctor')
+    const filterData = data.filter((e) => e.role == "doctor");
     set({ doctor: filterData });
   },
   async getDoctorById(id) {

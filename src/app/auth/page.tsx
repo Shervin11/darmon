@@ -1,10 +1,12 @@
 "use client";
-import { useState } from "react";
+
+import { useEffect, useState } from "react";
 import React from "react";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Stethoscope, UserPlus, LogIn, Heart, Shield } from "lucide-react";
 import useStore from "@/store/store";
+import { useRouter } from "next/navigation";
 
 export default function Auth() {
   const [showLogin, setShowLogin] = useState(false);
@@ -15,16 +17,18 @@ export default function Auth() {
   const [emailReg, setEmailReg] = useState("");
   const [docReg, setDocReg] = useState(false);
   const [docLog, setDocLog] = useState(false);
+  const router = useRouter();
 
-  const { registerClient, registerDoctor } = useStore((state) => state);
+  const { registerUser, loginUser, loginMe } = useStore((state) => state);
 
-  function reg(e: React.FormEvent<HTMLFormElement>) {
+  function register(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
+    let user: object = {};
     if (docReg) {
-      registerDoctor({
-        name: nameReg,
+      user = {
+        name: nameReg.trim(),
         phone: "",
-        email: emailReg,
+        email: emailReg.trim(),
         city: "",
         specialty: "",
         experience: 0,
@@ -40,24 +44,49 @@ export default function Auth() {
         bio: "",
         availableSlots: [],
         comments: [],
-        password: passReg,
-        role: 'doctor'
-      });
+        password: passReg.trim(),
+        role: "doctor",
+      };
     } else {
-      registerClient({
-        fullName: nameReg,
+      user = {
+        fullName: nameReg.trim(),
         phone: "",
-        email: emailReg,
+        email: emailReg.trim(),
         city: "",
-        password: passReg,
-        role: 'client'
-      });
+        password: passReg.trim(),
+        role: "client",
+      };
     }
-    setShowLogin(true);
+    registerUser(user);
+    router.push("/");
     setNameReg("");
     setPassReg("");
     setEmailReg("");
   }
+
+  function login(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault();
+    let user: object = {};
+    if (docLog) {
+      user = {
+        email: emailLogin.trim(),
+        password: passLogin.trim(),
+      };
+    } else {
+      user = {
+        email: emailLogin.trim(),
+        password: passLogin.trim(),
+      };
+    }
+    loginUser(user);
+    router.push("/");
+    setPassLogin("");
+    setEmailLogin("");
+  }
+
+  useEffect(() => {
+    loginMe();
+  }, []);
 
   return (
     <div className="relative md:w-full h-[600px] w-[90%] max-w-[420px] my-[50px] mx-auto">
@@ -105,7 +134,10 @@ export default function Auth() {
               Аккаунт доред?
             </button>
 
-            <form onSubmit={reg} className="flex flex-col space-y-4 flex-1">
+            <form
+              onSubmit={register}
+              className="flex flex-col space-y-4 flex-1"
+            >
               <div className="space-y-4">
                 <div className="relative">
                   <input
@@ -119,7 +151,7 @@ export default function Auth() {
 
                 <div className="relative">
                   <input
-                    type="text"
+                    type="email"
                     value={emailReg}
                     onChange={(e) => setEmailReg(e.target.value)}
                     placeholder="Email"
@@ -221,11 +253,11 @@ export default function Auth() {
               Аккаунт надоред?
             </button>
 
-            <form className="flex flex-col space-y-4 flex-1">
+            <form onSubmit={login} className="flex flex-col space-y-4 flex-1">
               <div className="space-y-4">
                 <div className="relative">
                   <input
-                    type="text"
+                    type="email"
                     value={emailLogin}
                     onChange={(e) => setEmailLogin(e.target.value)}
                     placeholder="Email"
