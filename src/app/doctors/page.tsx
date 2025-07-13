@@ -62,15 +62,48 @@ const Doctors = () => {
   const category: Category[] = useStore((state) => state.category);
   const doctor: Doctor[] = useStore((state) => state.doctor);
   const [doc, setDoc] = useState("");
+  const [doctorCategory, setDoctorCategory] = useState("");
   const [city, setCity] = useState("all");
-
+  const [filterData, setFilterData] = useState(doctor);
   const getCategory = useStore.getState().getCategory;
   const getDoctor = useStore.getState().getDoctor;
+
+  function searchDoctor() {
+    if (doc && city != "all") {
+      setFilterData(
+        doctor.filter(
+          (e) =>
+            (e.name.toLowerCase().includes(doc.toLowerCase()) &&
+              e.city == city) ||
+            (e.clinic.toLowerCase().includes(doc.toLowerCase()) &&
+              e.city == city)
+        )
+      );
+    } else if (doc) {
+      setFilterData(
+        doctor.filter(
+          (e) =>
+            e.name.toLowerCase().includes(doc.toLowerCase()) ||
+            e.clinic.toLowerCase().includes(doc.toLowerCase())
+        )
+      );
+    } else if (city != "all") {
+      setFilterData(doctor.filter((e) => e.city == city));
+    } else setFilterData(doctor);
+  }
+
+  function searchDoctorByCategory(categoryName: string) {
+    setFilterData(doctor.filter((e) => e.specialty == categoryName));
+  }
 
   useEffect(() => {
     getCategory();
     getDoctor();
   }, []);
+
+  useEffect(() => {
+    setFilterData(doctor);
+  }, [doctor]);
 
   return (
     <div>
@@ -98,15 +131,14 @@ const Doctors = () => {
             w-full
             px-4 py-3
             text-base
-            border border-gray-300
+            border border-gray-200
             rounded-lg
             bg-white
             text-[gray]
-            shadow-sm
             transition-all duration-200
             cursor-pointer
             focus:outline-none
-            focus:ring-2
+            focus:ring-3
             focus:ring-gray-300
             focus:border-gray-400
             hover:border-gray-400
@@ -117,13 +149,17 @@ const Doctors = () => {
                     setCity(e.target.value)
                   }
                 >
-                  <option value="dushanbe">Душанбе</option>
-                  <option value="bokhtar">Бохтар</option>
-                  <option value="khujand">Хуҷанд</option>
-                  <option value="kulob">Кӯлоб</option>
-                  <option value="istaravshan">Истарафшан</option>
+                  <option value="all">Шаҳрҳо</option>
+                  <option value="Душанбе">Душанбе</option>
+                  <option value="Бохтар">Бохтар</option>
+                  <option value="Хуҷанд">Хуҷанд</option>
+                  <option value="Кулоб">Кӯлоб</option>
+                  <option value="Истарафшан">Истарафшан</option>
                 </select>
-                <Button className="w-full h-12 cursor-pointer hover:bg-teal-800 bg-[#2c94a1] text-white font-semibold text-base rounded-lg">
+                <Button
+                  onClick={searchDoctor}
+                  className="w-full h-12 cursor-pointer hover:bg-teal-800 bg-[#2c94a1] text-white font-semibold text-base rounded-lg"
+                >
                   Ёфтан
                 </Button>
               </div>
@@ -138,6 +174,7 @@ const Doctors = () => {
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-6">
               {category.map((e) => (
                 <div
+                  onClick={() => searchDoctorByCategory(e.name)}
                   key={e.id}
                   className="flex flex-col items-center p-6 bg-white rounded-2xl shadow-sm border border-gray-100 hover:shadow-md transition-shadow cursor-pointer group"
                 >
@@ -170,7 +207,7 @@ const Doctors = () => {
           </div>
 
           <div className="flex flex-col gap-7">
-            {doctor.map((e) => (
+            {filterData.map((e) => (
               <div key={e.id} className="bg-white rounded-2xl p-6">
                 <div className="flex justify-between gap-6">
                   <div>
