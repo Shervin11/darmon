@@ -4,6 +4,7 @@ import "./globals.css";
 import { Toaster } from "react-hot-toast";
 import Header from "@/components/header/page";
 import Footer from "@/components/footer/page";
+import AuthGuard from "@/components/auth/page";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -33,8 +34,8 @@ export default function RootLayout({
         <header className="sticky top-0 z-50 w-full border-b bg-white/95 backdrop-blur supports-[backdrop-filter]:bg-white/60 max-w-[1440px] m-auto">
           <Header />
         </header>
-        {children}
-        <Toaster position="bottom-center" reverseOrder={false} />
+        <AuthGuard>{children}</AuthGuard>
+        <Toaster position="top-center" reverseOrder={false} />
         <Footer />
       </body>
     </html>

@@ -49,6 +49,7 @@ interface Doctor {
   bio: string;
   availableSlots: AvailableSlot[];
   comments?: Comment[];
+  phone: string;
 }
 
 const DoctorById = ({ params }: { params: Promise<{ id: string }> }) => {
@@ -60,8 +61,9 @@ const DoctorById = ({ params }: { params: Promise<{ id: string }> }) => {
 
   const handleShowNumber = () => {
     setShowFullNumber(true);
-    setPhoneNumber("8 (495) 123-45-67");
+    setPhoneNumber(doctorById?.phone);
   };
+
   useEffect(() => {
     getDoctorById(id);
   }, []);
@@ -171,7 +173,7 @@ const DoctorById = ({ params }: { params: Promise<{ id: string }> }) => {
                 </div>
 
                 <Button
-                  className="w-full bg-[#2c94a1] hover:bg-teal-600 text-white py-3 rounded-xl font-medium"
+                  className="w-full cursor-pointer bg-[#2c94a1] hover:bg-teal-600 text-white py-3 rounded-xl font-medium"
                   size="lg"
                 >
                   Қайд шудан ба қабул
@@ -191,7 +193,7 @@ const DoctorById = ({ params }: { params: Promise<{ id: string }> }) => {
                   <div className="flex items-center gap-2">
                     <Input
                       type="tel"
-                      placeholder="8 (49..."
+                      placeholder="+992 ..."
                       value={phoneNumber}
                       onChange={(e) => setPhoneNumber(e.target.value)}
                       className="flex-1 text-sm"
@@ -202,7 +204,7 @@ const DoctorById = ({ params }: { params: Promise<{ id: string }> }) => {
                         variant="link"
                         size="sm"
                         onClick={handleShowNumber}
-                        className="text-blue-500 hover:text-blue-600 p-0 h-auto font-normal text-sm"
+                        className="text-teal-500 cursor-pointer hover:text-teal-800 p-0 h-auto font-normal text-sm"
                       >
                         Показать номер
                       </Button>

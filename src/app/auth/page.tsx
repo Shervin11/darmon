@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import React from "react";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
@@ -19,9 +19,9 @@ export default function Auth() {
   const [docLog, setDocLog] = useState(false);
   const router = useRouter();
 
-  const { registerUser, loginUser, loginMe } = useStore((state) => state);
+  const { registerUser, loginUser } = useStore((state) => state);
 
-  function register(e: React.FormEvent<HTMLFormElement>) {
+  async function register(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     let user: object = {};
     if (docReg) {
@@ -58,13 +58,13 @@ export default function Auth() {
       };
     }
     registerUser(user);
-    router.push("/");
+    await router.push("/");
     setNameReg("");
     setPassReg("");
     setEmailReg("");
   }
 
-  function login(e: React.FormEvent<HTMLFormElement>) {
+  async function login(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     let user: object = {};
     if (docLog) {
@@ -79,14 +79,10 @@ export default function Auth() {
       };
     }
     loginUser(user);
-    router.push("/");
+    await router.push("/");
     setPassLogin("");
     setEmailLogin("");
   }
-
-  useEffect(() => {
-    loginMe();
-  }, []);
 
   return (
     <div className="relative md:w-full h-[600px] w-[90%] max-w-[420px] my-[50px] mx-auto">

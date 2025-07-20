@@ -62,7 +62,6 @@ const Doctors = () => {
   const category: Category[] = useStore((state) => state.category);
   const doctor: Doctor[] = useStore((state) => state.doctor);
   const [doc, setDoc] = useState("");
-  const [doctorCategory, setDoctorCategory] = useState("");
   const [city, setCity] = useState("all");
   const [filterData, setFilterData] = useState(doctor);
   const getCategory = useStore.getState().getCategory;

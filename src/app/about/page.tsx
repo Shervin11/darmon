@@ -29,7 +29,10 @@ const About = () => {
             </p>
 
             <Link href={"/doctors"}>
-              <Button size="lg" className="bg-teal-800 hover:bg-[#2c94a1] px-8">
+              <Button
+                size="lg"
+                className="hover:bg-teal-800 cursor-pointer bg-[#2c94a1] px-8"
+              >
                 Қайд шудан
                 <ArrowRight className="h-4 w-4" />
               </Button>

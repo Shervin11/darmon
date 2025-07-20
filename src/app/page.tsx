@@ -44,7 +44,7 @@ const Home = () => {
 
       <section className="relative max-w-[1440px] m-auto top-[-120px]">
         <div className="flex lg:flex-row flex-col items-center gap-8 mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="bg-gradient-to-br from-teal-100 to-teal-200 lg:h-[410px] rounded-3xl p-8 overflow-hidden">
+          <div className="bg-gradient-to-br shadow-md from-teal-100 to-teal-200 lg:h-[410px] rounded-3xl p-8 overflow-hidden">
             <div className="h-full flex flex-col justify-center">
               <div className="text-6xl font-bold text-gray-800 mb-4">15+</div>
               <h3 className="text-xl font-semibold text-gray-800 mb-4">
@@ -57,7 +57,7 @@ const Home = () => {
             </div>
           </div>
 
-          <div className="bg-gray-100 w-full flex lg:flex-row flex-col items-center justify-between lg:h-[410px] rounded-3xl p-8 overflow-hidden">
+          <div className="bg-gray-100 w-full shadow-md flex lg:flex-row flex-col items-center justify-between lg:h-[410px] rounded-3xl p-8 overflow-hidden">
             <div className="h-full flex flex-col justify-center pr-12">
               <h2 className="text-4xl lg:text-4xl lg:mb-[60px] font-bold text-gray-800 mb-4 leading-tight">
                 Ба ҷомеаи рушдёбандаи тандурустӣ ва некӯаҳволӣ ҳамроҳ шавед.
