@@ -9,12 +9,13 @@ const useStore = create((set) => ({
   doctor: [],
   doctorById: {},
   userById: {},
+  wishlist: {},
   async registerUser(newUser) {
     try {
       let { data } = await axios.post(API + "/register", newUser);
       localStorage.setItem("accessToken", data.token);
-      window.location.reload();
-      await toast.success("Хуш омадед!");
+      window.dispatchEvent(new Event("storage"));
+      toast.success("Хуш омадед!");
     } catch (error) {
       console.error(error);
     }
@@ -23,8 +24,71 @@ const useStore = create((set) => ({
     try {
       let { data } = await axios.post(API + "/auth", user);
       localStorage.setItem("accessToken", data.token);
-      window.location.reload();
-      await toast.success("Хуш омадед!");
+      toast.success("Хуш омадед!");
+      return { success: true, status: 200 };
+    } catch (error) {
+      console.error(error);
+      return {
+        success: false,
+        status: error?.response?.status || 500,
+      };
+    }
+  },
+  async wishlistUser(id) {
+    try {
+      let { data } = await axios.get(API + "/wishlist");
+      const list = data.filter((e) => e.userId == id);
+      set({ wishlist: list[0] });
+    } catch (error) {
+      console.error(error);
+    }
+  },
+  async toggleWishlist(userId, doctor) {
+    try {
+      const { data: wishlists } = await axios.get(`${API}/wishlist`);
+      const userList = wishlists.find((e) => e.userId == userId);
+
+      const newDoctor = {
+        doctorId: doctor.id,
+        name: doctor.name,
+        specialty: doctor.specialty,
+        photo: doctor.image,
+      };
+
+      if (!userList) {
+        const { data: created } = await axios.post(`${API}/wishlist`, {
+          userId,
+          favorites: [newDoctor],
+        });
+        set({ wishlist: created });
+        toast.success("Ба интихобшудаҳо илова шуд!");
+        return;
+      }
+
+      const isInFavorites = userList.favorites.some(
+        (fav) => fav.doctorId == newDoctor.doctorId
+      );
+
+      const updatedFavorites = isInFavorites
+        ? userList.favorites.filter(
+            (fav) => fav.doctorId != newDoctor.doctorId
+          )
+        : [...userList.favorites, newDoctor];
+
+      await axios.patch(`${API}/wishlist/${userList.id}`, {
+        favorites: updatedFavorites,
+      });
+
+      set((state) => ({
+        wishlist: {
+          ...state.wishlist,
+          favorites: updatedFavorites,
+        },
+      }));
+
+      toast.success(
+        isInFavorites ? "Аз интихобшудаҳо гирифта шуд!" : "Ба интихобшудаҳо илова шуд!"
+      );
     } catch (error) {
       console.error(error);
     }

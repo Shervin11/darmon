@@ -7,6 +7,7 @@ import useStore from "@/store/store";
 import { Heart } from "lucide-react";
 import Link from "next/link";
 import FixedRating from "@/components/StarRating/page";
+import toast from "react-hot-toast";
 
 interface Price {
   current: number;
@@ -61,6 +62,7 @@ interface Doctor {
 const Doctors = () => {
   const category: Category[] = useStore((state) => state.category);
   const doctor: Doctor[] = useStore((state) => state.doctor);
+  const { toggleWishlist, userById, loginMe } = useStore((state) => state);
   const [doc, setDoc] = useState("");
   const [city, setCity] = useState("all");
   const [filterData, setFilterData] = useState(doctor);
@@ -98,6 +100,7 @@ const Doctors = () => {
   useEffect(() => {
     getCategory();
     getDoctor();
+    loginMe();
   }, []);
 
   useEffect(() => {
@@ -178,7 +181,7 @@ const Doctors = () => {
                   className="flex flex-col items-center p-6 bg-white rounded-2xl shadow-sm border border-gray-100 hover:shadow-md transition-shadow cursor-pointer group"
                 >
                   <div className="w-16 h-16 rounded-2xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
-                    <img src={e.image} alt={e.name} />
+                    <img src={e.image} alt={"image"} />
                   </div>
                   <span className="text-sm font-medium text-gray-700 text-center leading-tight whitespace-pre-line">
                     {e.name}
@@ -207,7 +210,10 @@ const Doctors = () => {
 
           <div className="flex flex-col gap-7">
             {filterData.map((e) => (
-              <div key={e.id} className="bg-white rounded-2xl p-6">
+              <div
+                key={e.id}
+                className="bg-white group hover:shadow-lg transition-all duration-300 border-0 shadow-md rounded-2xl p-6"
+              >
                 <div className="flex justify-between gap-6">
                   <div>
                     <div className="flex gap-4 mb-6">
@@ -223,8 +229,17 @@ const Doctors = () => {
                             />
                           </div>
                         </Link>
-                        <button className="absolute -top-2 cursor-pointer right-2 w-8 h-8 bg-white rounded-full shadow-md flex items-center justify-center hover:bg-gray-50">
-                          <Heart className="w-4 h-4 text-gray-400" />
+                        <button
+                          onClick={() => {
+                            if (userById?.id) {
+                              toggleWishlist(userById.id, e);
+                            } else {
+                              toast.error("Лутфан ворид шавед!");
+                            }
+                          }}
+                          className="absolute text-white bg-gray-200 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-all duration-300 -top-2 cursor-pointer right-0 w-8 h-8 rounded-full shadow-md flex items-center justify-center"
+                        >
+                          <Heart className="w-4 h-4 fill-current" />
                         </button>
                         <div className="flex flex-col items-center gap-2 mb-4">
                           <FixedRating rating={e.rating} />
@@ -244,7 +259,7 @@ const Doctors = () => {
                       </div>
 
                       <div className="flex flex-col">
-                        <span className="text-sm text-gray-500 mb-2">
+                        <span className="text-sm text-gray-500 font-semibold mb-2">
                           {e.specialty}
                         </span>
                         <Link href={`/doctors/${e.id}`}>

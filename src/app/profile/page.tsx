@@ -15,7 +15,6 @@ import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Calendar, Clock, Mail, MapPin, Phone, Eye } from "lucide-react";
 import { DefaultPhoto } from "@/config/config";
-import { usePathname, useRouter } from "next/navigation";
 
 const Profile = () => {
   const { loginMe, userById, edit } = useStore((state) => state);
@@ -26,8 +25,6 @@ const Profile = () => {
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [isPhotoRemoved, setIsPhotoRemoved] = useState(false);
-  const router = useRouter();
-  const pathname = usePathname();
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -50,12 +47,10 @@ const Profile = () => {
     let user = {
       ...userById,
       fullName: name,
-      email: email,
+      email: email.toLowerCase(),
       phone: phone,
       city: city,
-      photo: isPhotoRemoved
-        ? null
-        : previewUrl || userById.photo || DefaultPhoto,
+      photo: previewUrl || userById.photo || DefaultPhoto,
     };
     edit(user);
   }
@@ -96,7 +91,7 @@ const Profile = () => {
                     <div className="flex items-center space-x-2">
                       <Phone className="h-4 w-4 text-gray-500" />
                       <span className="text-sm text-gray-600">
-                        {userById.phone}
+                        {userById.phone || "Номери телефон"}
                       </span>
                     </div>
                     <div className="flex items-center space-x-2">
@@ -283,6 +278,7 @@ const Profile = () => {
                         <Label htmlFor="phone">Телефон</Label>
                         <Input
                           id="phone"
+                          placeholder="Телефон"
                           value={phone}
                           onChange={(e) => setPhone(e.target.value)}
                         />

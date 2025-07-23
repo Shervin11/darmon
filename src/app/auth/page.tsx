@@ -7,6 +7,7 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Stethoscope, UserPlus, LogIn, Heart, Shield } from "lucide-react";
 import useStore from "@/store/store";
 import { useRouter } from "next/navigation";
+import toast from "react-hot-toast";
 
 export default function Auth() {
   const [showLogin, setShowLogin] = useState(false);
@@ -28,7 +29,7 @@ export default function Auth() {
       user = {
         name: nameReg.trim(),
         phone: "",
-        email: emailReg.trim(),
+        email: emailReg.trim().toLowerCase(),
         city: "",
         specialty: "",
         experience: 0,
@@ -51,17 +52,21 @@ export default function Auth() {
       user = {
         fullName: nameReg.trim(),
         phone: "",
-        email: emailReg.trim(),
+        email: emailReg.trim().toLowerCase(),
         city: "",
         password: passReg.trim(),
         role: "client",
       };
     }
-    registerUser(user);
-    await router.push("/");
-    setNameReg("");
-    setPassReg("");
-    setEmailReg("");
+    if (nameReg && passReg && emailReg) {
+      registerUser(user);
+      router.push("/");
+      setNameReg("");
+      setPassReg("");
+      setEmailReg("");
+    } else {
+      toast.error("Маълумоти худро дуруст пур кунед");
+    }
   }
 
   async function login(e: React.FormEvent<HTMLFormElement>) {
@@ -69,19 +74,27 @@ export default function Auth() {
     let user: object = {};
     if (docLog) {
       user = {
-        email: emailLogin.trim(),
+        email: emailLogin.trim().toLowerCase(),
         password: passLogin.trim(),
       };
     } else {
       user = {
-        email: emailLogin.trim(),
+        email: emailLogin.trim().toLowerCase(),
         password: passLogin.trim(),
       };
     }
-    loginUser(user);
-    await router.push("/");
-    setPassLogin("");
-    setEmailLogin("");
+    if (passLogin && emailLogin) {
+      const result = await loginUser(user);
+      if (result.success) {
+        router.push("/");
+        setPassLogin("");
+        setEmailLogin("");
+      } else {
+        toast.error("Email ё рамз нодуруст аст");
+      }
+    } else {
+      toast.error("Маълумоти худро дуруст пур кунед");
+    }
   }
 
   return (
@@ -140,7 +153,7 @@ export default function Auth() {
                     type="text"
                     value={nameReg}
                     onChange={(e) => setNameReg(e.target.value)}
-                    placeholder="Ном"
+                    placeholder="Ному насаб"
                     className="w-full bg-white/15 backdrop-blur-sm border border-white/20 text-white px-4 py-3 rounded-xl focus:outline-none focus:ring-2 focus:ring-white/30 focus:border-transparent placeholder-white/70 transition-all"
                   />
                 </div>
