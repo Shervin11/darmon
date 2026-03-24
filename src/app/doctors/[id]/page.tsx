@@ -37,7 +37,7 @@ interface AvailableSlot {
 
 interface Doctor {
   id: number;
-  name: string;
+  fullName: string;
   specialty: string;
   experience: number;
   recommendation?: number;
@@ -73,7 +73,7 @@ const DoctorById = ({ params }: { params: Promise<{ id: string }> }) => {
       {doctorById && (
         <div className="bg-white flex items-center justify-between">
           <div className="p-6">
-            <h2 className="text-3xl font-bold mb-2">{doctorById.name}</h2>
+            <h2 className="text-3xl font-bold mb-2">{doctorById.fullName}</h2>
             <div className="flex items-center gap-5 mb-4">
               <div className="flex items-center gap-2">
                 <FixedRating rating={doctorById.rating} />

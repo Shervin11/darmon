@@ -19,6 +19,7 @@ interface Category {
   id: number;
   name: string;
   image: string;
+  subcategories: string[];
 }
 
 interface User {
@@ -45,7 +46,7 @@ interface AvailableSlot {
 
 interface Doctor {
   id: number;
-  name: string;
+  fullName: string;
   specialty: string;
   experience: number;
   recommendation?: number;
@@ -62,6 +63,9 @@ interface Doctor {
 const Doctors = () => {
   const category: Category[] = useStore((state) => state.category);
   const doctor: Doctor[] = useStore((state) => state.doctor);
+  const [selectedCategory, setSelectedCategory] = useState<Category | null>(
+    null,
+  );
   const { toggleWishlist, userById, loginMe } = useStore((state) => state);
   const [doc, setDoc] = useState("");
   const [city, setCity] = useState("all");
@@ -74,19 +78,19 @@ const Doctors = () => {
       setFilterData(
         doctor.filter(
           (e) =>
-            (e.name.toLowerCase().includes(doc.toLowerCase()) &&
+            (e.fullName.toLowerCase().includes(doc.toLowerCase()) &&
               e.city == city) ||
             (e.clinic.toLowerCase().includes(doc.toLowerCase()) &&
-              e.city == city)
-        )
+              e.city == city),
+        ),
       );
     } else if (doc) {
       setFilterData(
         doctor.filter(
           (e) =>
-            e.name.toLowerCase().includes(doc.toLowerCase()) ||
-            e.clinic.toLowerCase().includes(doc.toLowerCase())
-        )
+            e.fullName.toLowerCase().includes(doc.toLowerCase()) ||
+            e.clinic.toLowerCase().includes(doc.toLowerCase()),
+        ),
       );
     } else if (city != "all") {
       setFilterData(doctor.filter((e) => e.city == city));
@@ -176,7 +180,7 @@ const Doctors = () => {
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-6">
               {category.map((e) => (
                 <div
-                  onClick={() => searchDoctorByCategory(e.name)}
+                  onClick={() => setSelectedCategory(e)}
                   key={e.id}
                   className="flex flex-col items-center p-6 bg-white rounded-2xl shadow-sm border border-gray-100 hover:shadow-md transition-shadow cursor-pointer group"
                 >
@@ -188,6 +192,21 @@ const Doctors = () => {
                   </span>
                 </div>
               ))}
+            </div>
+            <div>
+              {selectedCategory && (
+                <div className="mt-8 flex flex-wrap justify-center gap-4">
+                  {selectedCategory.subcategories.map((sub, index) => (
+                    <div
+                      key={index}
+                      onClick={() => searchDoctorByCategory(sub)}
+                      className="px-4 py-2 bg-white border rounded-lg cursor-pointer hover:bg-gray-100"
+                    >
+                      {sub}
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
           </div>
         </div>
@@ -209,125 +228,155 @@ const Doctors = () => {
           </div>
 
           <div className="flex flex-col gap-7">
-            {filterData.map((e) => (
-              <div
-                key={e.id}
-                className="bg-white group hover:shadow-lg transition-all duration-300 border-0 shadow-md rounded-2xl p-6"
-              >
-                <div className="flex justify-between gap-6">
-                  <div>
-                    <div className="flex gap-4 mb-6">
-                      <div className="relative flex w-[200px] flex-col items-center">
-                        <Link href={`/doctors/${e.id}`}>
-                          <div className="w-24 h-24 rounded-full overflow-hidden mb-2 bg-gray-100">
-                            <img
-                              src={e.image}
-                              alt={e.name}
-                              width={96}
-                              height={96}
-                              className="w-full h-full object-cover"
-                            />
+            {filterData.map(
+              (e) =>
+                e.availableSlots &&
+                e.bio &&
+                e.city &&
+                e.fullName &&
+                e.specialty &&
+                e.clinic &&
+                e.price && (
+                  <div
+                    key={e.id}
+                    className="bg-white group hover:shadow-lg transition-all duration-300 border-0 shadow-md rounded-2xl p-6"
+                  >
+                    <div className="flex justify-between gap-6">
+                      <div>
+                        <div className="flex gap-4 mb-6">
+                          <div className="relative flex w-[200px] flex-col items-center">
+                            <Link href={`/doctors/${e.id}`}>
+                              <div className="w-24 h-24 rounded-full overflow-hidden mb-2 bg-gray-100">
+                                <img
+                                  src={e.image}
+                                  alt={e.fullName}
+                                  width={96}
+                                  height={96}
+                                  className="w-full h-full object-cover"
+                                />
+                              </div>
+                            </Link>
+                            <button
+                              onClick={() => {
+                                if (userById?.id) {
+                                  toggleWishlist(userById.id, e);
+                                } else {
+                                  toast.error("Лутфан ворид шавед!");
+                                }
+                              }}
+                              className="absolute text-white bg-gray-200 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-all duration-300 -top-2 cursor-pointer right-0 w-8 h-8 rounded-full shadow-md flex items-center justify-center"
+                            >
+                              <Heart className="w-4 h-4 fill-current" />
+                            </button>
+                            <div className="flex flex-col items-center gap-2 mb-4">
+                              <FixedRating rating={e.rating} />
+                              <span
+                                style={{
+                                  display:
+                                    e.recommendation == 0 ? "none" : "block",
+                                }}
+                                className="text-sm text-center text-gray-600"
+                              >
+                                {e.recommendation}% беморон <br /> духтурро
+                                тавсия медиҳанд
+                              </span>
+                              <p className="text-blue-600 hover:text-blue-700 text-sm font-medium">
+                                {e.comments?.length} шарҳ
+                              </p>
+                            </div>
                           </div>
-                        </Link>
-                        <button
-                          onClick={() => {
-                            if (userById?.id) {
-                              toggleWishlist(userById.id, e);
-                            } else {
-                              toast.error("Лутфан ворид шавед!");
-                            }
-                          }}
-                          className="absolute text-white bg-gray-200 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-all duration-300 -top-2 cursor-pointer right-0 w-8 h-8 rounded-full shadow-md flex items-center justify-center"
-                        >
-                          <Heart className="w-4 h-4 fill-current" />
-                        </button>
-                        <div className="flex flex-col items-center gap-2 mb-4">
-                          <FixedRating rating={e.rating} />
-                          <span
-                            style={{
-                              display: e.recommendation == 0 ? "none" : "block",
-                            }}
-                            className="text-sm text-center text-gray-600"
-                          >
-                            {e.recommendation}% беморон <br /> духтурро тавсия
-                            медиҳанд
-                          </span>
-                          <p className="text-blue-600 hover:text-blue-700 text-sm font-medium">
-                            {e.comments?.length} шарҳ
-                          </p>
+
+                          <div className="flex flex-col">
+                            <span className="text-sm text-gray-500 font-semibold mb-2">
+                              {e.specialty}
+                            </span>
+                            <Link href={`/doctors/${e.id}`}>
+                              <h3 className="text-xl font-bold text-gray-900 mb-2">
+                                {e.fullName}
+                              </h3>
+                            </Link>
+                            <p className="text-gray-600 mb-3">{e.bio}</p>
+                            <div className="mb-4 w-[195px]">
+                              <h4 className="font-medium text-gray-900 mb-3">
+                                Навъи қабули духтур
+                              </h4>
+                              <div className="border-2 h-[150px] border-gray-200 rounded-lg p-3">
+                                <div className="w-8 h-8 flex items-center justify-center mb-2 rounded-full bg-gray-300">
+                                  🏥
+                                </div>
+                                <div className="text-sm">
+                                  <div className="font-medium">
+                                    Дар {e.clinic}
+                                  </div>
+                                  <div className="text-gray-600">
+                                    от {e.price?.current} {e.price?.currency}
+                                  </div>
+                                  <div className="text-xs line-through text-gray-400">
+                                    {e.price?.old} {e.price?.currency}
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
                         </div>
                       </div>
 
-                      <div className="flex flex-col">
-                        <span className="text-sm text-gray-500 font-semibold mb-2">
-                          {e.specialty}
-                        </span>
-                        <Link href={`/doctors/${e.id}`}>
-                          <h3 className="text-xl font-bold text-gray-900 mb-2">
-                            {e.name}
-                          </h3>
-                        </Link>
-                        <p className="text-gray-600 mb-3">{e.bio}</p>
-                        <div className="mb-4 w-[195px]">
-                          <h4 className="font-medium text-gray-900 mb-3">
-                            Навъи қабули духтур
-                          </h4>
-                          <div className="border-2 h-[150px] border-gray-200 rounded-lg p-3">
-                            <div className="w-8 h-8 flex items-center justify-center mb-2 rounded-full bg-gray-300">
-                              🏥
-                            </div>
-                            <div className="text-sm">
-                              <div className="font-medium">Дар {e.clinic}</div>
-                              <div className="text-gray-600">
-                                от {e.price?.current} {e.price?.currency}
-                              </div>
-                              <div className="text-xs line-through text-gray-400">
-                                {e.price?.old} {e.price?.currency}
-                              </div>
-                            </div>
+                      <div>
+                        <div className="p-4">
+                          <div className="flex items-center gap-2 mb-4">
+                            {e.availableSlots.map((el) => (
+                              <button
+                                key={el.id}
+                                disabled={el.disabled}
+                                className={`p-2 rounded-lg text-start h-[55px] border transition-colors ${
+                                  el.active
+                                    ? "bg-blue-500 text-white"
+                                    : el.disabled
+                                      ? "bg-gray-200 text-gray-400 cursor-not-allowed"
+                                      : "bg-white text-gray-700 hover:bg-gray-100"
+                                }`}
+                              >
+                                <div className="font-medium">{el.day}</div>
+                              </button>
+                            ))}
+                          </div>
+
+                          <div className="flex gap-3 mb-4">
+                            {e.availableSlots.map((el) => (
+                              <Button
+                                key={el.id}
+                                variant="outline"
+                                size="sm"
+                                className="bg-blue-500 text-white text-xs border-blue-500 hover:text-[white] hover:bg-blue-600"
+                              >
+                                {el.time}
+                              </Button>
+                            ))}
                           </div>
                         </div>
                       </div>
                     </div>
                   </div>
+                ),
+            )}
 
-                  <div>
-                    <div className="p-4">
-                      <div className="flex items-center gap-2 mb-4">
-                        {e.availableSlots.map((el) => (
-                          <button
-                            key={el.id}
-                            disabled={el.disabled}
-                            className={`p-2 rounded-lg text-start h-[55px] border transition-colors ${
-                              el.active
-                                ? "bg-blue-500 text-white"
-                                : el.disabled
-                                ? "bg-gray-200 text-gray-400 cursor-not-allowed"
-                                : "bg-white text-gray-700 hover:bg-gray-100"
-                            }`}
-                          >
-                            <div className="font-medium">{el.day}</div>
-                          </button>
-                        ))}
-                      </div>
-
-                      <div className="flex gap-3 mb-4">
-                        {e.availableSlots.map((el) => (
-                          <Button
-                            key={el.id}
-                            variant="outline"
-                            size="sm"
-                            className="bg-blue-500 text-white text-xs border-blue-500 hover:text-[white] hover:bg-blue-600"
-                          >
-                            {el.time}
-                          </Button>
-                        ))}
-                      </div>
-                    </div>
-                  </div>
+            {filterData.length === 0 && (
+              <div className="flex flex-col items-center justify-center py-16 text-center">
+                <div className="w-21 h-20 text-2xl flex items-center justify-center rounded-full bg-blue-50 mb-6">
+                  🩺
                 </div>
+
+                <h2 className="text-2xl font-semibold text-gray-900 mb-2">
+                  Табибе ёфт нашуд
+                </h2>
+
+                <p className="text-gray-500 max-w-md mb-6">
+                  Мутаассифона, бо параметрҳои интихобшуда ягон духтур ёфт
+                  нашуд. Лутфан филтрҳоро тағйир диҳед ё ҷустуҷӯро аз нав
+                  санҷед.
+                </p>
               </div>
-            ))}
+            )}
           </div>
         </div>
       </section>
