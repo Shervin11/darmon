@@ -1,7 +1,6 @@
 "use client";
 import useStore from "@/store/store";
 import React, { useEffect, useRef, useState } from "react";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -12,12 +11,27 @@ import {
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Calendar, Clock, Mail, MapPin, Phone, Eye } from "lucide-react";
+import {
+  Plus,
+  Trash2,
+  Camera,
+  User,
+  Phone,
+  Mail,
+  MapPin,
+  Stethoscope,
+  Briefcase,
+  Building2,
+  Wallet,
+  Clock,
+  ChevronRight
+} from "lucide-react";
 import { DefaultPhoto } from "@/config/config";
+import { WorkingSchedule } from "@/store/store";
 
 const Profile = () => {
-  const { loginMe, userById, edit } = useStore((state) => state);
+  const { loginMe, userById, edit, uploadImage } = useStore((state) => state);
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [city, setCity] = useState("");
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
@@ -26,321 +40,314 @@ const Profile = () => {
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [isPhotoRemoved, setIsPhotoRemoved] = useState(false);
 
+  // Doctor-specific states
+  const [specialty, setSpecialty] = useState("");
+  const [experience, setExperience] = useState<number | "">("");
+  const [clinic, setClinic] = useState("");
+  const [bio, setBio] = useState("");
+  const [priceCurrent, setPriceCurrent] = useState("");
+  const [priceCurrency, setPriceCurrency] = useState("сом.");
+  const [schedule, setSchedule] = useState<WorkingSchedule[]>([]);
+
+  const handleAddSchedule = () => {
+    setSchedule([...schedule, { day: "Душанбе", startTime: "08:00", endTime: "17:00" }]);
+  };
+
+  const handleRemoveSchedule = (index: number) => {
+    setSchedule(schedule.filter((_, i) => i !== index));
+  };
+
+  const handleScheduleChange = (index: number, field: keyof WorkingSchedule, value: string) => {
+    const newSchedule = [...schedule];
+    newSchedule[index][field] = value;
+    setSchedule(newSchedule);
+  };
+
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (file) {
-      const imageUrl = URL.createObjectURL(file);
-      setPreviewUrl(imageUrl);
+      setSelectedFile(file);
+      setPreviewUrl(URL.createObjectURL(file));
+      setIsPhotoRemoved(false);
     }
   };
 
   const handleRemovePhoto = () => {
     setPreviewUrl(null);
     setIsPhotoRemoved(true);
-    if (fileInputRef.current) {
-      fileInputRef.current.value = "";
-    }
+    setSelectedFile(null);
+    if (fileInputRef.current) fileInputRef.current.value = "";
   };
 
-  function editUser(e: React.FormEvent<HTMLFormElement>) {
+  async function editUser(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
-    let user = {
+    let finalPhoto = userById.image || "";
+    if (isPhotoRemoved) finalPhoto = "";
+    else if (selectedFile) {
+      const uploadedUrl = await uploadImage(selectedFile);
+      if (uploadedUrl) finalPhoto = uploadedUrl;
+      else return;
+    }
+
+    const updatedUser = {
       ...userById,
       fullName: name,
       email: email.toLowerCase(),
       phone: phone,
       city: city,
-      photo: previewUrl || userById.photo || DefaultPhoto,
+      photo: finalPhoto,
+      ...(userById.role === "doctor" && {
+        specialty,
+        experience: Number(experience),
+        clinic,
+        bio,
+        price: { current: priceCurrent, old: userById.price?.old || "", currency: priceCurrency },
+        workingSchedule: schedule,
+      }),
     };
-    edit(user);
+
+    const res = await edit(updatedUser);
+    if (res.success) {
+      setSelectedFile(null);
+      setPreviewUrl(null);
+    }
   }
 
   useEffect(() => {
-    setCity(userById.city);
-    setName(userById.fullName);
-    setEmail(userById.email);
-    setPhone(userById.phone);
+    setCity(userById.city || "");
+    setName(userById.fullName || "");
+    setEmail(userById.email || "");
+    setPhone(userById.phone || "");
+    if (userById.role === "doctor") {
+      setSpecialty(userById.specialty || "");
+      setExperience(userById.experience || "");
+      setClinic(userById.clinic || "");
+      setBio(userById.bio || "");
+      setPriceCurrent(userById.price?.current || "");
+      setPriceCurrency(userById.price?.currency || "сом.");
+      setSchedule(userById.workingSchedule || []);
+    }
   }, [userById]);
 
-  useEffect(() => {
-    loginMe();
-  }, []);
+  useEffect(() => { loginMe(); }, []);
 
   return (
-    <div className="max-w-[1200px] m-auto">
-      <div>
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          <Card className="mb-8">
-            <CardContent className="p-6">
-              <div className="flex items-start space-x-6">
-                <div className="flex-1">
-                  <div className="flex items-center gap-3">
+    <div className="bg-md-surface-container-low min-h-screen pb-20 pt-20">
+      {/* Hero Banner */}
+      <section className="max-w-7xl mx-auto px-6 mb-12 mt-4">
+        <div className="signature-gradient rounded-xl p-10 md:p-16 relative overflow-hidden">
+          <div className="relative z-10">
+            <p className="text-md-secondary-container text-xs uppercase tracking-[4px] font-bold mb-3 font-headline">Кабинети шахсӣ</p>
+            <h1 className="text-4xl md:text-5xl font-extrabold text-white tracking-tight font-headline">Танзимоти профил</h1>
+          </div>
+          <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full -mr-32 -mt-32 blur-3xl"></div>
+        </div>
+      </section>
+
+      <div className="max-w-[1000px] mx-auto px-4">
+        <form onSubmit={editUser} className="space-y-6">
+          <Card className="border-none clinical-shadow overflow-hidden bg-md-surface-container-lowest rounded-xl">
+            <CardHeader className="bg-white border-b border-md-surface-variant/20 py-8">
+              <div className="flex flex-col md:flex-row items-center gap-8">
+                {/* Avatar */}
+                <div className="relative group">
+                  <div className="w-32 h-32 rounded-3xl overflow-hidden ring-4 ring-white shadow-2xl transition-transform group-hover:scale-[1.02]">
                     <img
-                      src={userById.photo || DefaultPhoto}
+                      src={isPhotoRemoved ? DefaultPhoto : (previewUrl || userById.image || DefaultPhoto)}
                       alt="avatar"
-                      className="w-[130px] h-[130px] rounded-full object-cover border"
+                      className="w-full h-full object-cover"
                     />
-                    <div>
-                      <h2 className="text-2xl font-bold text-gray-900">
-                        {userById.fullName}
-                      </h2>
-                      <p className="text-gray-600">Пациент ID: {userById.id}</p>
+                  </div>
+                  <label htmlFor="avatar-upload" className="absolute -bottom-2 -right-2 bg-md-primary hover:bg-md-primary-container text-white p-2 rounded-xl shadow-lg cursor-pointer transition-all active:scale-90">
+                    <Camera className="w-5 h-5" />
+                    <input id="avatar-upload" type="file" accept="image/*" className="hidden" onChange={handleFileChange} ref={fileInputRef} />
+                  </label>
+                </div>
+
+                <div className="text-center md:text-left space-y-2">
+                  <CardTitle className="text-2xl font-bold text-md-on-surface font-headline">{name || "Корбар"}</CardTitle>
+                  <CardDescription className="flex items-center justify-center md:justify-start gap-2">
+                    <span className="bg-md-primary/10 text-md-primary px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider font-headline">
+                      {userById.role === "doctor" ? "Табиб" : "Бемор"}
+                    </span>
+                    <span className="text-md-outline">•</span>
+                    <span className="text-md-on-surface-variant text-sm">{email}</span>
+                  </CardDescription>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    onClick={handleRemovePhoto}
+                    className="text-md-error hover:text-md-error hover:bg-md-error-container h-8 px-2 text-xs cursor-pointer"
+                  >
+                    <Trash2 className="w-3.5 h-3.5 mr-1" /> Нест кардани акс
+                  </Button>
+                </div>
+              </div>
+            </CardHeader>
+
+            <CardContent className="p-8 space-y-10">
+              {/* General Info */}
+              <div className="space-y-6">
+                <div className="flex items-center gap-2 text-md-on-surface font-bold border-l-4 border-md-primary pl-4 font-headline">
+                  <User className="w-5 h-5 text-md-primary" />
+                  <h3>Маълумоти умумӣ</h3>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="space-y-2">
+                    <Label className="text-xs font-bold text-md-on-surface-variant uppercase tracking-wider">Ному насаб</Label>
+                    <div className="relative">
+                      <User className="absolute left-3 top-3 w-4 h-4 text-md-outline" />
+                      <Input value={name} onChange={(e) => setName(e.target.value)} className="pl-10 h-11 bg-md-surface-container-low border-md-outline-variant/30 focus:bg-white" />
                     </div>
                   </div>
-                  <div className="mt-4 grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <div className="flex items-center space-x-2">
-                      <Phone className="h-4 w-4 text-gray-500" />
-                      <span className="text-sm text-gray-600">
-                        {userById.phone || "Номери телефон"}
-                      </span>
+
+                  <div className="space-y-2">
+                    <Label className="text-xs font-bold text-md-on-surface-variant uppercase tracking-wider">Телефон</Label>
+                    <div className="relative">
+                      <Phone className="absolute left-3 top-3 w-4 h-4 text-md-outline" />
+                      <Input value={phone} onChange={(e) => setPhone(e.target.value)} className="pl-10 h-11 bg-md-surface-container-low border-md-outline-variant/30 focus:bg-white" />
                     </div>
-                    <div className="flex items-center space-x-2">
-                      <Mail className="h-4 w-4 text-gray-500" />
-                      <span className="text-sm text-gray-600">
-                        {userById.email}
-                      </span>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label className="text-xs font-bold text-md-on-surface-variant uppercase tracking-wider">Email</Label>
+                    <div className="relative">
+                      <Mail className="absolute left-3 top-3 w-4 h-4 text-md-outline" />
+                      <Input type="email" value={email} onChange={(e) => setEmail(e.target.value)} className="pl-10 h-11 bg-md-surface-container-low border-md-outline-variant/30 focus:bg-white" />
+                    </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label className="text-xs font-bold text-md-on-surface-variant uppercase tracking-wider">Шаҳр</Label>
+                    <div className="relative">
+                      <MapPin className="absolute left-3 top-3 w-4 h-4 text-md-outline" />
+                      <select
+                        value={city}
+                        onChange={(e) => setCity(e.target.value)}
+                        className="w-full pl-10 h-11 bg-md-surface-container-low border border-md-outline-variant/30 rounded-lg text-sm appearance-none focus:outline-none focus:ring-2 ring-md-primary/20"
+                      >
+                        <option value="all">Интихоб кунед</option>
+                        <option value="Душанбе">Душанбе</option>
+                        <option value="Бохтар">Бохтар</option>
+                        <option value="Хуҷанд">Хуҷанд</option>
+                        <option value="Кӯлоб">Кӯлоб</option>
+                        <option value="Истаравшан">Истаравшан</option>
+                      </select>
                     </div>
                   </div>
                 </div>
               </div>
-            </CardContent>
-          </Card>
 
-          <Tabs defaultValue="appointments" className="space-y-6">
-            <TabsList className="grid w-full grid-cols-2">
-              <TabsTrigger value="appointments">Приемы</TabsTrigger>
-              <TabsTrigger value="profile">Профиль</TabsTrigger>
-            </TabsList>
+              {/* Doctor Info */}
+              {userById.role === "doctor" && (
+                <div className="space-y-8 pt-6 border-t border-md-surface-variant/20">
+                  <div className="flex items-center gap-2 text-md-on-surface font-bold border-l-4 border-md-secondary-container pl-4 font-headline">
+                    <Stethoscope className="w-5 h-5 text-md-secondary-container" />
+                    <h3>Маълумоти касбӣ</h3>
+                  </div>
 
-            <TabsContent value="appointments" className="space-y-6">
-              <div className="flex justify-between items-center">
-                <h3 className="text-lg font-semibold">Мои приемы</h3>
-                <Button>
-                  <Calendar className="h-4 w-4 mr-2" />
-                  Записаться на прием
-                </Button>
-              </div>
-
-              <div className="grid gap-4">
-                <Card>
-                  <CardContent className="p-6">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center space-x-4">
-                        <div className="bg-blue-100 p-3 rounded-full">
-                          <Calendar className="h-6 w-6 text-blue-600" />
-                        </div>
-                        <div>
-                          <h4 className="font-semibold">
-                            Консультация кардиолога
-                          </h4>
-                          <p className="text-sm text-gray-600">
-                            Др. Смирнов Александр Владимирович
-                          </p>
-                          <div className="flex items-center space-x-4 mt-2">
-                            <div className="flex items-center space-x-1">
-                              <Calendar className="h-4 w-4 text-gray-400" />
-                              <span className="text-sm text-gray-600">
-                                25 декабря 2024
-                              </span>
-                            </div>
-                            <div className="flex items-center space-x-1">
-                              <Clock className="h-4 w-4 text-gray-400" />
-                              <span className="text-sm text-gray-600">
-                                14:30
-                              </span>
-                            </div>
-                            <div className="flex items-center space-x-1">
-                              <MapPin className="h-4 w-4 text-gray-400" />
-                              <span className="text-sm text-gray-600">
-                                Кабинет 205
-                              </span>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                      <div className="flex items-center space-x-2">
-                        <Badge className="bg-green-100 text-green-800">
-                          Подтвержден
-                        </Badge>
-                        <Button variant="outline" size="sm">
-                          Отменить
-                        </Button>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-
-                <Card>
-                  <CardContent className="p-6">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center space-x-4">
-                        <div className="bg-gray-100 p-3 rounded-full">
-                          <Calendar className="h-6 w-6 text-gray-600" />
-                        </div>
-                        <div>
-                          <h4 className="font-semibold">Плановый осмотр</h4>
-                          <p className="text-sm text-gray-600">
-                            Др. Петрова Наталья Ивановна
-                          </p>
-                          <div className="flex items-center space-x-4 mt-2">
-                            <div className="flex items-center space-x-1">
-                              <Calendar className="h-4 w-4 text-gray-400" />
-                              <span className="text-sm text-gray-600">
-                                15 декабря 2024
-                              </span>
-                            </div>
-                            <div className="flex items-center space-x-1">
-                              <Clock className="h-4 w-4 text-gray-400" />
-                              <span className="text-sm text-gray-600">
-                                10:00
-                              </span>
-                            </div>
-                            <div className="flex items-center space-x-1">
-                              <MapPin className="h-4 w-4 text-gray-400" />
-                              <span className="text-sm text-gray-600">
-                                Кабинет 101
-                              </span>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                      <div className="flex items-center space-x-2">
-                        <Badge variant="outline">Завершен</Badge>
-                        <Button variant="outline" size="sm">
-                          <Eye className="h-4 w-4 mr-1" />
-                          Отчет
-                        </Button>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              </div>
-            </TabsContent>
-
-            <TabsContent value="profile" className="space-y-6">
-              <Card>
-                <CardHeader>
-                  <CardTitle>Личная информация</CardTitle>
-                  <CardDescription>
-                    Управление вашими личными данными
-                  </CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-6">
-                  <form onSubmit={editUser}>
-                    <div className="flex items-center mb-[20px] gap-4">
-                      <img
-                        src={
-                          isPhotoRemoved
-                            ? DefaultPhoto
-                            : previewUrl || userById.photo || DefaultPhoto
-                        }
-                        alt="avatar"
-                        className="w-[130px] h-[130px] rounded-full object-cover border"
-                      />
-
-                      <div className="flex flex-col gap-2">
-                        <Button
-                          type="button"
-                          onClick={handleRemovePhoto}
-                          variant="outline"
-                          className="cursor-pointer"
-                        >
-                          Удалит кардани сурат
-                        </Button>
-
-                        <label
-                          htmlFor="avatar-upload"
-                          className="inline-block cursor-pointer px-4 py-1.5 text-[15px] text-white bg-[#2c94a1] hover:bg-teal-800 rounded-md text-center"
-                        >
-                          Иваз кардани сурат
-                          <input
-                            id="avatar-upload"
-                            type="file"
-                            accept="image/*"
-                            className="hidden"
-                            ref={fileInputRef}
-                            onChange={handleFileChange}
-                          />
-                        </label>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div className="space-y-2">
+                      <Label className="text-xs font-bold text-md-on-surface-variant uppercase tracking-wider">Ихтисос</Label>
+                      <div className="relative">
+                        <Briefcase className="absolute left-3 top-3 w-4 h-4 text-md-outline" />
+                        <Input value={specialty} onChange={(e) => setSpecialty(e.target.value)} placeholder="Масалан: Терапевт" className="pl-10 h-11" />
                       </div>
                     </div>
 
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                      <div className="space-y-2">
-                        <Label htmlFor="firstName">Ному насаб</Label>
-                        <Input
-                          id="firstName"
-                          value={name}
-                          onChange={(e) => setName(e.target.value)}
-                        />
+                    <div className="space-y-2">
+                      <Label className="text-xs font-bold text-md-on-surface-variant uppercase tracking-wider">Таҷриба (сол)</Label>
+                      <div className="relative">
+                        <Clock className="absolute left-3 top-3 w-4 h-4 text-md-outline" />
+                        <Input type="number" value={experience} onChange={(e) => setExperience(e.target.value === "" ? "" : Number(e.target.value))} className="pl-10 h-11" />
                       </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="phone">Телефон</Label>
-                        <Input
-                          id="phone"
-                          placeholder="Телефон"
-                          value={phone}
-                          onChange={(e) => setPhone(e.target.value)}
-                        />
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label className="text-xs font-bold text-md-on-surface-variant uppercase tracking-wider">Клиника</Label>
+                      <div className="relative">
+                        <Building2 className="absolute left-3 top-3 w-4 h-4 text-md-outline" />
+                        <Input value={clinic} onChange={(e) => setClinic(e.target.value)} className="pl-10 h-11" />
                       </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="email">Email</Label>
-                        <Input
-                          id="email"
-                          type="email"
-                          value={email}
-                          onChange={(e) => setEmail(e.target.value)}
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="city-select">Шахрҳо</Label>
-                        <select
-                          id="city-select"
-                          value={city}
-                          className="
-                        w-full
-                        px-4 py-[5px]
-                                  text-base
-                                  border border-gray-200
-                                  rounded-lg
-                                  bg-white
-                                  transition-all duration-200
-                                  cursor-pointer
-                                  focus:outline-none
-                                  focus:ring-3
-                                  focus:ring-gray-300
-                                  focus:border-gray-400
-                                  appearance-none
-                                  pr-10
-                                  "
-                          onChange={(e: React.ChangeEvent<HTMLSelectElement>) =>
-                            setCity(e.target.value)
-                          }
-                        >
-                          <option value="all">Шаҳрҳо</option>
-                          <option value="Душанбе">Душанбе</option>
-                          <option value="Бохтар">Бохтар</option>
-                          <option value="Хуҷанд">Хуҷанд</option>
-                          <option value="Кӯлоб">Кӯлоб</option>
-                          <option value="Истарафшан">Истарафшан</option>
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label className="text-xs font-bold text-md-on-surface-variant uppercase tracking-wider">Нархи қабул</Label>
+                      <div className="flex gap-2">
+                        <div className="relative flex-1">
+                          <Wallet className="absolute left-3 top-3 w-4 h-4 text-md-outline" />
+                          <Input value={priceCurrent} onChange={(e) => setPriceCurrent(e.target.value)} className="pl-10 h-11" />
+                        </div>
+                        <select value={priceCurrency} onChange={(e) => setPriceCurrency(e.target.value)} className="w-24 h-11 bg-md-surface-container-low border border-md-outline-variant/30 rounded-lg text-sm">
+                          <option value="сом.">сом.</option>
+                          <option value="$">$</option>
                         </select>
                       </div>
                     </div>
+                  </div>
 
-                    <div className="flex justify-end my-[20px]">
-                      <Button
-                        type="submit"
-                        className="hover:bg-teal-800 bg-[#2c94a1]"
-                      >
-                        Иваз кардан
+                  <div className="space-y-2">
+                    <Label className="text-xs font-bold text-md-on-surface-variant uppercase tracking-wider">Дар бораи худ</Label>
+                    <textarea
+                      value={bio}
+                      onChange={(e) => setBio(e.target.value)}
+                      className="w-full border border-md-outline-variant/30 rounded-xl p-4 min-h-[120px] focus:ring-2 ring-md-primary/20 outline-none transition-all"
+                      placeholder="Маълумоти мухтасар дар бораи таҷриба ва фаъолият..."
+                    />
+                  </div>
+
+                  {/* Schedule */}
+                  <div className="space-y-4 bg-md-primary/5 p-6 rounded-3xl border border-md-primary/10">
+                    <div className="flex items-center justify-between">
+                      <h4 className="font-bold text-md-primary flex items-center gap-2 font-headline">
+                        <Clock className="w-4 h-4" /> Реҷаи корӣ
+                      </h4>
+                      <Button type="button" size="sm" onClick={handleAddSchedule} className="bg-white text-md-primary border border-md-primary/20 hover:bg-md-primary/10 shadow-sm cursor-pointer">
+                        <Plus className="w-4 h-4 mr-1" /> Илова
                       </Button>
                     </div>
-                  </form>
-                </CardContent>
-              </Card>
-            </TabsContent>
-          </Tabs>
-        </div>
+
+                    <div className="space-y-3">
+                      {schedule.map((slot, index) => (
+                        <div key={index} className="flex flex-col sm:flex-row items-center gap-4 bg-white p-3 rounded-2xl shadow-sm group">
+                          <Input
+                            value={slot.day}
+                            onChange={(e) => handleScheduleChange(index, "day", e.target.value)}
+                            className="sm:w-1/3 border-none bg-transparent font-semibold focus:ring-0"
+                          />
+                          <div className="flex items-center gap-2 flex-1 bg-md-surface-container-low px-3 py-1 rounded-xl">
+                            <Input type="time" value={slot.startTime} onChange={(e) => handleScheduleChange(index, "startTime", e.target.value)} className="border-none bg-transparent h-8 p-0" />
+                            <ChevronRight className="w-4 h-4 text-md-outline" />
+                            <Input type="time" value={slot.endTime} onChange={(e) => handleScheduleChange(index, "endTime", e.target.value)} className="border-none bg-transparent h-8 p-0" />
+                          </div>
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            onClick={() => handleRemoveSchedule(index)}
+                            className="text-md-error hover:text-md-error opacity-0 group-hover:opacity-100 transition-all cursor-pointer"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </Button>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Save Button */}
+              <div className="flex justify-end pt-6">
+                <Button
+                  type="submit"
+                  className="bg-md-secondary-container hover:bg-md-secondary text-md-on-secondary-container hover:text-white px-12 h-12 rounded-xl font-bold uppercase tracking-widest shadow-lg transition-all active:scale-95 cursor-pointer font-headline"
+                >
+                  Маҳфуз доштан
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        </form>
       </div>
     </div>
   );

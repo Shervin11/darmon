@@ -9,11 +9,14 @@ import {
 import Link from "next/link";
 import { useAuth } from "../hooks/useAuth/page";
 import { useRouter } from "next/navigation";
+import useStore from "@/store/store";
+import { User, Heart, LogOut, Settings } from "lucide-react";
 
 const BtnProfile = () => {
   const isAuth = useAuth();
   const [localIsAuth, setLocalIsAuth] = useState(isAuth);
-  let router = useRouter()
+  const router = useRouter();
+  const { userById } = useStore((state) => state);
 
   useEffect(() => {
     setLocalIsAuth(isAuth);
@@ -23,79 +26,42 @@ const BtnProfile = () => {
     <div>
       {!localIsAuth ? (
         <Link href={"/auth"}>
-          <Button className="hover:bg-teal-800 bg-[#2c94a1] text-white cursor-pointer">
-            Ҳуҷраи шахси
-          </Button>
+          <button className="bg-md-primary text-white px-6 py-2.5 rounded-full font-headline font-bold text-sm tracking-wide hover:scale-105 active:scale-95 transition-all duration-200 cursor-pointer">
+            Воридшавӣ
+          </button>
         </Link>
       ) : (
         <Popover>
           <PopoverTrigger asChild>
-            <Button className="hover:bg-teal-800 bg-[#2c94a1] text-white cursor-pointer">
-              Ҳуҷраи шахси
+            <Button size="icon" className="w-10 h-10 rounded-full bg-md-primary hover:bg-md-primary-container text-white cursor-pointer shadow-md transition-transform hover:scale-105">
+              <User className="w-5 h-5" />
             </Button>
           </PopoverTrigger>
-          <PopoverContent className="w-40 p-0">
+          <PopoverContent className="w-48 p-2 rounded-xl shadow-[0_20px_60px_rgba(0,78,159,0.12)] border-md-outline-variant/20">
             <Link href={"/profile"}>
-              <div className="flex hover:bg-gray-300 cursor-pointer rounded-t-[7px] items-center gap-2 p-3">
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  className="size-5"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                  strokeWidth={1.5}
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    d="M15.75 6a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0ZM4.501 20.118a7.5 7.5 0 0 1 14.998 0A17.933 17.933 0 0 1 12 21.75c-2.676 0-5.216-.584-7.499-1.632Z"
-                  />
-                </svg>
-                <p>Ҳуҷраи шахси</p>
+              <div className="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-md-surface-container-low cursor-pointer transition-colors text-md-on-surface text-sm font-medium">
+                <Settings className="w-4 h-4 text-md-primary" />
+                <span>Ҳуҷраи шахсӣ</span>
               </div>
             </Link>
-            <Link href={"/wishlist"}>
-              <div className="flex hover:bg-gray-300 cursor-pointer items-center gap-2 p-3">
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  className="size-5"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                  strokeWidth={1.5}
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12Z"
-                  />
-                </svg>
-                <p>Интихобшуда</p>
-              </div>
-            </Link>
+            {userById?.role !== "doctor" && (
+              <Link href={"/wishlist"}>
+                <div className="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-md-surface-container-low cursor-pointer transition-colors text-md-on-surface text-sm font-medium">
+                  <Heart className="w-4 h-4 text-md-primary" />
+                  <span>Интихобшуда</span>
+                </div>
+              </Link>
+            )}
             <div
-              className="flex hover:bg-gray-300 cursor-pointer rounded-b-[7px] items-center gap-2 p-3"
+              className="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-md-error-container cursor-pointer transition-colors text-md-error text-sm font-medium mt-1 border-t border-md-outline-variant/10 pt-2"
               onClick={() => {
                 localStorage.removeItem("accessToken");
                 setLocalIsAuth(!localIsAuth);
-                router.push('/')
+                router.push("/");
               }}
             >
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                className="size-5"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-                strokeWidth={1.5}
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  d="M8.25 9V5.25A2.25 2.25 0 0 1 10.5 3h6a2.25 2.25 0 0 1 2.25 2.25v13.5A2.25 2.25 0 0 1 16.5 21h-6a2.25 2.25 0 0 1-2.25-2.25V15m-3 0-3-3m0 0 3-3m-3 3H15"
-                />
-              </svg>
-              <p>Баромад</p>
+              <LogOut className="w-4 h-4" />
+              <span>Баромад</span>
             </div>
           </PopoverContent>
         </Popover>

@@ -1,104 +1,49 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import useStore from "@/store/store";
-import { Heart } from "lucide-react";
+import { Heart, ChevronRight, Search, ChevronDown, ChevronUp, MapPin, Star, Activity } from "lucide-react";
 import Link from "next/link";
 import FixedRating from "@/components/StarRating/page";
 import toast from "react-hot-toast";
+import { DefaultPhoto } from "@/config/config";
 
-interface Price {
-  current: number;
-  old: number;
-  currency: string;
-}
-
-interface Category {
-  id: number;
-  name: string;
-  image: string;
-  subcategories: string[];
-}
-
-interface User {
-  fullName: string;
-  photo: string;
-}
-
-interface Comment {
-  id: number;
-  user: User;
-  rating: number;
-  comment: string;
-  date: string;
-}
-
-interface AvailableSlot {
-  id: number;
-  day: string;
-  date: string;
-  time: string;
-  active?: boolean;
-  disabled?: boolean;
-}
-
-interface Doctor {
-  id: number;
-  fullName: string;
-  specialty: string;
-  experience: number;
-  recommendation?: number;
-  rating: number;
-  price?: Price;
-  city: string;
-  clinic: string;
-  image: string;
-  bio: string;
-  availableSlots: AvailableSlot[];
-  comments?: Comment[];
-}
+import { Doctor, Category } from "@/store/store";
 
 const Doctors = () => {
   const category: Category[] = useStore((state) => state.category);
   const doctor: Doctor[] = useStore((state) => state.doctor);
-  const [selectedCategory, setSelectedCategory] = useState<Category | null>(
-    null,
-  );
-  const { toggleWishlist, userById, loginMe } = useStore((state) => state);
+  const [selectedCategory, setSelectedCategory] = useState<Category | null>(null);
+
+  const [showAllCategories, setShowAllCategories] = useState(false);
+  const CATEGORY_LIMIT = 6;
+
+  const { toggleWishlist, userById, loginMe, isLoading, wishlist, wishlistUser } = useStore((state) => state);
+
   const [doc, setDoc] = useState("");
   const [city, setCity] = useState("all");
   const [filterData, setFilterData] = useState(doctor);
+
   const getCategory = useStore.getState().getCategory;
   const getDoctor = useStore.getState().getDoctor;
 
   function searchDoctor() {
-    if (doc && city != "all") {
-      setFilterData(
-        doctor.filter(
-          (e) =>
-            (e.fullName.toLowerCase().includes(doc.toLowerCase()) &&
-              e.city == city) ||
-            (e.clinic.toLowerCase().includes(doc.toLowerCase()) &&
-              e.city == city),
-        ),
+    let filtered = doctor;
+    if (doc) {
+      filtered = filtered.filter(e =>
+        e.fullName.toLowerCase().includes(doc.toLowerCase()) ||
+        (e.clinic && e.clinic.toLowerCase().includes(doc.toLowerCase()))
       );
-    } else if (doc) {
-      setFilterData(
-        doctor.filter(
-          (e) =>
-            e.fullName.toLowerCase().includes(doc.toLowerCase()) ||
-            e.clinic.toLowerCase().includes(doc.toLowerCase()),
-        ),
-      );
-    } else if (city != "all") {
-      setFilterData(doctor.filter((e) => e.city == city));
-    } else setFilterData(doctor);
+    }
+    if (city !== "all") {
+      filtered = filtered.filter(e => e.city === city);
+    }
+    setFilterData(filtered);
   }
 
   function searchDoctorByCategory(categoryName: string) {
-    setFilterData(doctor.filter((e) => e.specialty == categoryName));
+    setFilterData(doctor.filter((e) => e.specialty === categoryName));
   }
 
   useEffect(() => {
@@ -108,277 +53,177 @@ const Doctors = () => {
   }, []);
 
   useEffect(() => {
+    if (userById?.id) wishlistUser(userById.id);
+  }, [userById]);
+
+  useEffect(() => {
     setFilterData(doctor);
   }, [doctor]);
 
+  const displayedCategories = showAllCategories
+    ? category
+    : category.slice(0, CATEGORY_LIMIT);
+
   return (
-    <div>
-      <section className="py-16 max-w-[1440px] m-auto bg-gray-50">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-12">
-            <h2 className="text-3xl lg:text-4xl font-bold text-gray-800 mb-8">
-              Онлайн ба қабули духтур номнавис шавед.
-            </h2>
+    <div className="bg-md-surface-container-low min-h-screen pt-20">
+      {/* Gradient Banner */}
+      <header className="relative signature-gradient pt-20 pb-28 px-6 overflow-hidden">
+        <div className="absolute inset-0 opacity-10">
+          <div className="absolute -right-20 -top-20 w-96 h-96 bg-md-secondary-container rounded-full blur-3xl"></div>
+          <div className="absolute -left-20 -bottom-20 w-96 h-96 bg-blue-200 rounded-full blur-3xl"></div>
+        </div>
+        <div className="max-w-7xl mx-auto relative z-10 text-center">
+          <p className="text-blue-100 font-headline font-semibold tracking-[0.2em] uppercase text-xs mb-4">Мутахассисони мо</p>
+          <h1 className="text-white font-headline font-extrabold text-4xl md:text-5xl lg:text-6xl tracking-tight">Ҷустуҷӯи табибон</h1>
+        </div>
+      </header>
 
-            <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-200 max-w-4xl mx-auto">
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <Input
-                  value={doc}
-                  onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-                    setDoc(e.target.value)
-                  }
-                  placeholder="Табиб, Клиника"
-                  className="h-12 text-base border-gray-200 focus:border-teal-500"
-                />
-                <select
-                  id="city-select"
-                  value={city}
-                  className="
-            w-full
-            px-4 py-3
-            text-base
-            border border-gray-200
-            rounded-lg
-            bg-white
-            text-[gray]
-            transition-all duration-200
-            cursor-pointer
-            focus:outline-none
-            focus:ring-3
-            focus:ring-gray-300
-            focus:border-gray-400
-            hover:border-gray-400
-            appearance-none
-            pr-10
-          "
-                  onChange={(e: React.ChangeEvent<HTMLSelectElement>) =>
-                    setCity(e.target.value)
-                  }
-                >
-                  <option value="all">Шаҳрҳо</option>
-                  <option value="Душанбе">Душанбе</option>
-                  <option value="Бохтар">Бохтар</option>
-                  <option value="Хуҷанд">Хуҷанд</option>
-                  <option value="Кулоб">Кӯлоб</option>
-                  <option value="Истарафшан">Истарафшан</option>
-                </select>
-                <Button
-                  onClick={searchDoctor}
-                  className="w-full h-12 cursor-pointer hover:bg-teal-800 bg-[#2c94a1] text-white font-semibold text-base rounded-lg"
-                >
-                  Ёфтан
-                </Button>
-              </div>
-            </div>
+      {/* Search Bar */}
+      <section className="max-w-5xl mx-auto px-6 -mt-12 relative z-20">
+        <div className="bg-md-surface-container-lowest p-4 rounded-2xl shadow-[0_20px_50px_rgba(0,78,159,0.12)] flex flex-col md:flex-row gap-4 items-center">
+          <div className="flex-1 w-full flex items-center bg-md-surface-container-low rounded-xl px-4 py-3 gap-3">
+            <Search className="w-5 h-5 text-md-outline" />
+            <input
+              value={doc}
+              onChange={(e) => setDoc(e.target.value)}
+              className="bg-transparent border-none focus:ring-0 w-full text-md-on-surface text-sm placeholder:text-md-outline outline-none"
+              placeholder="Табиб, Клиника..."
+              type="text"
+            />
           </div>
-
-          <div className="text-center">
-            <h3 className="text-2xl font-bold text-gray-800 mb-8">
-              Мутахассисҳои машҳур
-            </h3>
-
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-6">
-              {category.map((e) => (
-                <div
-                  onClick={() => setSelectedCategory(e)}
-                  key={e.id}
-                  className="flex flex-col items-center p-6 bg-white rounded-2xl shadow-sm border border-gray-100 hover:shadow-md transition-shadow cursor-pointer group"
-                >
-                  <div className="w-16 h-16 rounded-2xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
-                    <img src={e.image} alt={"image"} />
-                  </div>
-                  <span className="text-sm font-medium text-gray-700 text-center leading-tight whitespace-pre-line">
-                    {e.name}
-                  </span>
-                </div>
-              ))}
-            </div>
-            <div>
-              {selectedCategory && (
-                <div className="mt-8 flex flex-wrap justify-center gap-4">
-                  {selectedCategory.subcategories.map((sub, index) => (
-                    <div
-                      key={index}
-                      onClick={() => searchDoctorByCategory(sub)}
-                      className="px-4 py-2 bg-white border rounded-lg cursor-pointer hover:bg-gray-100"
-                    >
-                      {sub}
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
+          <div className="w-full md:w-64 flex items-center bg-md-surface-container-low rounded-xl px-4 py-3 gap-3">
+            <MapPin className="w-5 h-5 text-md-outline" />
+            <select
+              value={city}
+              onChange={(e) => setCity(e.target.value)}
+              className="bg-transparent border-none focus:ring-0 w-full text-md-on-surface text-sm appearance-none outline-none"
+            >
+              <option value="all">Ҳамаи шаҳрҳо</option>
+              <option value="Душанбе">Душанбе</option>
+              <option value="Хуҷанд">Хуҷанд</option>
+              <option value="Бохтар">Бохтар</option>
+              <option value="Кулоб">Кӯлоб</option>
+              <option value="Истаравшан">Истаравшан</option>
+            </select>
           </div>
+          <button
+            onClick={searchDoctor}
+            className="w-full md:w-auto bg-md-primary text-white font-headline font-bold px-10 py-3.5 rounded-full hover:bg-md-primary-container transition-all active:scale-95 shadow-lg cursor-pointer"
+          >
+            Ёфтан
+          </button>
         </div>
       </section>
 
-      <section className="py-8 bg-gray-50 max-w-[1440px] m-auto min-h-screen">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-          <h1 className="text-2xl lg:text-3xl font-bold text-gray-900 mb-4">
-            Ба қабули беҳтарин духтурон навиштан{" "}
-          </h1>
-
-          <div className="bg-blue-50 p-4 rounded-lg mb-4">
-            <p className="text-gray-700 leading-relaxed">
-              <span className="font-semibold text-blue-600">Духтури хуб</span> —
-              мутахассиси васеъпрофил мебошад, ки бар асоси нишонаҳои шуморо
-              ташхис мекунад, ташхиси дурустро мегузорад ва табобати самаранок
-              таъин менамояд.
-            </p>
-          </div>
-
-          <div className="flex flex-col gap-7">
-            {filterData.map(
-              (e) =>
-                e.availableSlots &&
-                e.bio &&
-                e.city &&
-                e.fullName &&
-                e.specialty &&
-                e.clinic &&
-                e.price && (
-                  <div
-                    key={e.id}
-                    className="bg-white group hover:shadow-lg transition-all duration-300 border-0 shadow-md rounded-2xl p-6"
+      {/* Main Content */}
+      <section className="max-w-7xl mx-auto px-6 py-16 grid grid-cols-1 lg:grid-cols-12 gap-12">
+        {/* Doctor List */}
+        <div className="lg:col-span-8 space-y-6">
+          {isLoading ? (
+            <div className="flex justify-center py-20">
+              <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-md-primary"></div>
+            </div>
+          ) : filterData.length > 0 ? (
+            filterData.map((e) => (
+              <div key={e.id} className="bg-md-surface-container-lowest p-6 rounded-[1.5rem] shadow-[0_12px_40px_rgba(0,78,159,0.06)] flex flex-col md:flex-row gap-6 hover:shadow-[0_20px_60px_rgba(0,78,159,0.1)] transition-shadow duration-300">
+                <div className="relative w-full md:w-32 h-32 flex-shrink-0">
+                  <Link href={`/doctors/${e.id}`}>
+                    <img className="w-full h-full object-cover rounded-xl" src={e.image || DefaultPhoto} alt={e.fullName} />
+                  </Link>
+                  <button
+                    onClick={() => userById?.id ? toggleWishlist(userById.id, e) : toast.error("Ворид шавед")}
+                    className="absolute top-2 right-2 bg-white/90 backdrop-blur-sm p-1.5 rounded-full shadow-sm hover:text-red-500 transition-colors cursor-pointer"
                   >
-                    <div className="flex justify-between gap-6">
-                      <div>
-                        <div className="flex gap-4 mb-6">
-                          <div className="relative flex w-[200px] flex-col items-center">
-                            <Link href={`/doctors/${e.id}`}>
-                              <div className="w-24 h-24 rounded-full overflow-hidden mb-2 bg-gray-100">
-                                <img
-                                  src={e.image}
-                                  alt={e.fullName}
-                                  width={96}
-                                  height={96}
-                                  className="w-full h-full object-cover"
-                                />
-                              </div>
-                            </Link>
-                            <button
-                              onClick={() => {
-                                if (userById?.id) {
-                                  toggleWishlist(userById.id, e);
-                                } else {
-                                  toast.error("Лутфан ворид шавед!");
-                                }
-                              }}
-                              className="absolute text-white bg-gray-200 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-all duration-300 -top-2 cursor-pointer right-0 w-8 h-8 rounded-full shadow-md flex items-center justify-center"
-                            >
-                              <Heart className="w-4 h-4 fill-current" />
-                            </button>
-                            <div className="flex flex-col items-center gap-2 mb-4">
-                              <FixedRating rating={e.rating} />
-                              <span
-                                style={{
-                                  display:
-                                    e.recommendation == 0 ? "none" : "block",
-                                }}
-                                className="text-sm text-center text-gray-600"
-                              >
-                                {e.recommendation}% беморон <br /> духтурро
-                                тавсия медиҳанд
-                              </span>
-                              <p className="text-blue-600 hover:text-blue-700 text-sm font-medium">
-                                {e.comments?.length} шарҳ
-                              </p>
-                            </div>
-                          </div>
-
-                          <div className="flex flex-col">
-                            <span className="text-sm text-gray-500 font-semibold mb-2">
-                              {e.specialty}
-                            </span>
-                            <Link href={`/doctors/${e.id}`}>
-                              <h3 className="text-xl font-bold text-gray-900 mb-2">
-                                {e.fullName}
-                              </h3>
-                            </Link>
-                            <p className="text-gray-600 mb-3">{e.bio}</p>
-                            <div className="mb-4 w-[195px]">
-                              <h4 className="font-medium text-gray-900 mb-3">
-                                Навъи қабули духтур
-                              </h4>
-                              <div className="border-2 h-[150px] border-gray-200 rounded-lg p-3">
-                                <div className="w-8 h-8 flex items-center justify-center mb-2 rounded-full bg-gray-300">
-                                  🏥
-                                </div>
-                                <div className="text-sm">
-                                  <div className="font-medium">
-                                    Дар {e.clinic}
-                                  </div>
-                                  <div className="text-gray-600">
-                                    от {e.price?.current} {e.price?.currency}
-                                  </div>
-                                  <div className="text-xs line-through text-gray-400">
-                                    {e.price?.old} {e.price?.currency}
-                                  </div>
-                                </div>
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-
-                      <div>
-                        <div className="p-4">
-                          <div className="flex items-center gap-2 mb-4">
-                            {e.availableSlots.map((el) => (
-                              <button
-                                key={el.id}
-                                disabled={el.disabled}
-                                className={`p-2 rounded-lg text-start h-[55px] border transition-colors ${
-                                  el.active
-                                    ? "bg-blue-500 text-white"
-                                    : el.disabled
-                                      ? "bg-gray-200 text-gray-400 cursor-not-allowed"
-                                      : "bg-white text-gray-700 hover:bg-gray-100"
-                                }`}
-                              >
-                                <div className="font-medium">{el.day}</div>
-                              </button>
-                            ))}
-                          </div>
-
-                          <div className="flex gap-3 mb-4">
-                            {e.availableSlots.map((el) => (
-                              <Button
-                                key={el.id}
-                                variant="outline"
-                                size="sm"
-                                className="bg-blue-500 text-white text-xs border-blue-500 hover:text-[white] hover:bg-blue-600"
-                              >
-                                {el.time}
-                              </Button>
-                            ))}
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                ),
-            )}
-
-            {filterData.length === 0 && (
-              <div className="flex flex-col items-center justify-center py-16 text-center">
-                <div className="w-21 h-20 text-2xl flex items-center justify-center rounded-full bg-blue-50 mb-6">
-                  🩺
+                    <Heart className={`w-4 h-4 ${wishlist?.favorites?.some(f => f.doctorId == e.id) ? "fill-red-500 text-red-500" : ""}`} />
+                  </button>
                 </div>
-
-                <h2 className="text-2xl font-semibold text-gray-900 mb-2">
-                  Табибе ёфт нашуд
-                </h2>
-
-                <p className="text-gray-500 max-w-md mb-6">
-                  Мутаассифона, бо параметрҳои интихобшуда ягон духтур ёфт
-                  нашуд. Лутфан филтрҳоро тағйир диҳед ё ҷустуҷӯро аз нав
-                  санҷед.
-                </p>
+                <div className="flex-1 flex flex-col md:flex-row justify-between gap-6">
+                  <div className="space-y-2">
+                    <span className="text-[10px] font-headline font-bold text-md-primary tracking-widest uppercase py-1 px-3 bg-md-primary/5 rounded-full">{e.specialty}</span>
+                    <Link href={`/doctors/${e.id}`} className="text-xl font-headline font-extrabold text-md-on-surface hover:text-md-primary cursor-pointer transition-colors block">{e.fullName}</Link>
+                    <div className="flex items-center gap-2">
+                      <FixedRating rating={e.rating || 0} />
+                      <span className="text-md-outline text-xs font-medium">({e.comments?.length || 0} шарҳ)</span>
+                    </div>
+                    <p className="text-md-on-surface-variant text-sm line-clamp-2 leading-relaxed">{e.bio}</p>
+                  </div>
+                  <div className="flex flex-col items-start md:items-end justify-between min-w-[140px] border-t md:border-t-0 md:border-l border-md-outline-variant/20 pt-4 md:pt-0 md:pl-6">
+                    <div className="md:text-right">
+                      <p className="text-[10px] text-md-outline font-bold uppercase tracking-wider mb-1">Нархи қабул</p>
+                      <p className="text-xl font-black text-md-primary">{e.price?.current} {e.price?.currency}</p>
+                    </div>
+                    <Link href={`/doctors/${e.id}`} className="w-full md:w-auto bg-md-secondary-container text-md-on-secondary-container font-headline font-extrabold px-8 py-3 rounded-full hover:bg-md-secondary hover:text-white transition-all active:scale-95 shadow-sm mt-4 text-center">
+                      Навиштан
+                    </Link>
+                  </div>
+                </div>
               </div>
+            ))
+          ) : (
+            <div className="bg-md-surface-container-lowest rounded-2xl p-20 text-center border border-dashed border-md-outline-variant">
+              <p className="text-md-on-surface-variant">Табиб ёфт нашуд</p>
+            </div>
+          )}
+        </div>
+
+        {/* Sidebar */}
+        <aside className="lg:col-span-4 space-y-8">
+          <div className="bg-md-surface-container-low p-8 rounded-[2rem] sticky top-28">
+            <h2 className="text-2xl font-headline font-extrabold text-md-on-surface mb-8 flex items-center gap-3">
+              <span className="w-2 h-8 bg-md-secondary rounded-full"></span>
+              Категорияҳо
+            </h2>
+            <ul className="space-y-4">
+              {displayedCategories.map((cat) => (
+                <li key={cat.id} className="group">
+                  <div
+                    onClick={() => setSelectedCategory(selectedCategory?.id === cat.id ? null : cat)}
+                    className={`flex items-center justify-between p-4 bg-white rounded-2xl cursor-pointer group-hover:translate-x-1 transition-transform shadow-sm ${selectedCategory?.id === cat.id ? "ring-2 ring-md-primary" : ""}`}
+                  >
+                    <div className="flex items-center gap-4">
+                      <div className="w-10 h-10 bg-md-primary/5 text-md-primary rounded-xl flex items-center justify-center overflow-hidden">
+                        {cat.image ? (
+                          <img src={cat.image} alt={cat.name} className="w-full h-full object-contain" />
+                        ) : (
+                          <Activity className="w-5 h-5" />
+                        )}
+                      </div>
+                      <span className="font-headline font-bold text-sm text-md-on-surface">{cat.name}</span>
+                    </div>
+                    <ChevronRight className={`w-5 h-5 text-md-outline group-hover:text-md-primary transition-transform ${selectedCategory?.id === cat.id ? "rotate-90" : ""}`} />
+                  </div>
+
+                  {selectedCategory?.id === cat.id && (
+                    <div className="grid grid-cols-1 gap-1 ml-4 border-l-2 border-md-outline-variant/20 pl-4 py-2 mt-2">
+                      {cat.subcategories?.map((sub, idx) => (
+                        <button
+                          key={idx}
+                          onClick={() => searchDoctorByCategory(sub)}
+                          className="text-left text-xs py-2 px-3 rounded-lg hover:bg-md-primary/5 text-md-on-surface-variant hover:text-md-primary transition-colors cursor-pointer"
+                        >
+                          {sub}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </li>
+              ))}
+            </ul>
+
+            {category.length > CATEGORY_LIMIT && (
+              <button
+                onClick={() => setShowAllCategories(!showAllCategories)}
+                className="w-full mt-8 py-4 border border-md-outline-variant/30 text-md-outline font-headline font-bold text-sm rounded-full hover:bg-white transition-colors cursor-pointer flex items-center justify-center gap-2"
+              >
+                {showAllCategories ? (
+                  <>Суръат бастан <ChevronUp className="w-4 h-4" /></>
+                ) : (
+                  <>Намоиши ҳама ({category.length}) <ChevronDown className="w-4 h-4" /></>
+                )}
+              </button>
             )}
           </div>
-        </div>
+        </aside>
       </section>
     </div>
   );

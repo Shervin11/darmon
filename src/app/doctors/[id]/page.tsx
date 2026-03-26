@@ -1,221 +1,332 @@
 "use client";
 
 import React, { use, useEffect, useState } from "react";
-import { Info, Phone, Zap } from "lucide-react";
+import { Phone, Stethoscope, MessageCircle, CalendarCheck, Star, Send } from "lucide-react";
 import useStore from "@/store/store";
 import FixedRating from "@/components/StarRating/page";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-
-interface Price {
-  current: number;
-  old: number;
-  currency: string;
-}
-
-interface User {
-  fullName: string;
-  photo: string;
-}
-
-interface Comment {
-  id: number;
-  user: User;
-  rating: number;
-  comment: string;
-  date: string;
-}
-
-interface AvailableSlot {
-  id: number;
-  day: string;
-  date: string;
-  time: string;
-  active?: boolean;
-  disabled?: boolean;
-}
-
-interface Doctor {
-  id: number;
-  fullName: string;
-  specialty: string;
-  experience: number;
-  recommendation?: number;
-  rating: number;
-  price?: Price;
-  city: string;
-  clinic: string;
-  image: string;
-  bio: string;
-  availableSlots: AvailableSlot[];
-  comments?: Comment[];
-  phone: string;
-}
+import toast from "react-hot-toast";
+import { useRouter } from "next/navigation";
+import { DefaultPhoto } from "@/config/config";
+import { Comment } from "@/store/store";
+import Link from "next/link";
 
 const DoctorById = ({ params }: { params: Promise<{ id: string }> }) => {
   const { id } = use(params);
-  const getDoctorById = useStore.getState().getDoctorById;
-  const doctorById: Doctor = useStore((state) => state.doctorById);
-  const [phoneNumber, setPhoneNumber] = useState("");
+  const {
+    getDoctorById,
+    doctorById,
+    addComment,
+    updateComment,
+    deleteComment,
+    userById,
+    loginMe,
+    createAppointment,
+  } = useStore((state) => state);
+
+  const router = useRouter();
+
   const [showFullNumber, setShowFullNumber] = useState(false);
+  const [bookingDate, setBookingDate] = useState("");
+  const [bookingTime, setBookingTime] = useState("");
+  const [symptoms, setSymptoms] = useState("");
+  const [booking, setBooking] = useState(false);
+
+  const [commentText, setCommentText] = useState("");
+  const [rating, setRating] = useState(5);
+  const [submitting, setSubmitting] = useState(false);
+
+  const [editingCommentId, setEditingCommentId] = useState<number | null>(null);
+  const [editText, setEditText] = useState("");
+  const [editRating, setEditRating] = useState(5);
+
+  const handleUpdateComment = async (commentId: number) => {
+    if (!editText.trim()) return;
+    setSubmitting(true);
+    const res = await updateComment(doctorById.id!, commentId, editText, editRating);
+    if (res.success) setEditingCommentId(null);
+    setSubmitting(false);
+  };
+
+  const handleDeleteComment = async (commentId: number) => {
+    if (confirm("Оё шумо мехоҳед ин шарҳро нест кунед?")) {
+      await deleteComment(doctorById.id!, commentId);
+    }
+  };
+
+  const handleSubmitComment = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!userById?.id) {
+      toast.error("Барои иловаи шарҳ шумо бояд ворид шавед");
+      return;
+    }
+    if (!commentText.trim()) return;
+
+    setSubmitting(true);
+    const newComment = {
+      id: Date.now(),
+      user: {
+        fullName: userById.fullName || "",
+        image: userById.image || "/logo1.png",
+      },
+      rating,
+      comment: commentText,
+      date: new Date().toLocaleDateString("ru-RU"),
+    };
+
+    const res = await addComment(doctorById.id!, newComment, doctorById.comments);
+    if (res.success) {
+      setCommentText("");
+      setRating(5);
+    }
+    setSubmitting(false);
+  };
 
   const handleShowNumber = () => {
     setShowFullNumber(true);
-    setPhoneNumber(doctorById?.phone);
   };
 
   useEffect(() => {
     getDoctorById(id);
-  }, []);
+    loginMe();
+  }, [id]);
 
   return (
-    <div className="max-w-[1200px] m-auto p-4">
-      {doctorById && (
-        <div className="bg-white flex items-center justify-between">
-          <div className="p-6">
-            <h2 className="text-3xl font-bold mb-2">{doctorById.fullName}</h2>
-            <div className="flex items-center gap-5 mb-4">
-              <div className="flex items-center gap-2">
-                <FixedRating rating={doctorById.rating} />
-                <p>{doctorById.rating}</p>
-              </div>
-              <p className="text-blue-600 hover:text-blue-700 text-md font-medium">
-                {doctorById.comments?.length} шарҳ
-              </p>
-            </div>
-            <div className="flex flex-col lg:flex-row gap-6">
-              <div className="flex-shrink-0">
-                <div className="w-48 h-56 relative">
-                  <img
-                    src={doctorById.image}
-                    alt="image"
-                    className="rounded-lg object-cover"
-                  />
-                </div>
-              </div>
-
-              <div className="flex-1 space-y-4">
-                <div className="flex flex-col gap-2">
-                  <div>
-                    <span className="text-gray-600">Таҷрибаи корӣ:</span>
-                    <span className="ml-2 font-medium">
-                      {doctorById.experience} сол
-                    </span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <span className="text-gray-600">Квалификатсия:</span>
-                    <span className="font-medium">Табиби дараҷаи олӣ</span>
-                    <Info className="w-4 h-4 text-gray-400" />
-                  </div>
-                  <div>
-                    <span className="text-gray-600">Навъи қабул:</span>
-                    <span className="ml-2 font-medium">Дар клиника</span>
-                  </div>
-                  <div className="md:col-span-2">
-                    <span className="text-gray-600">Клиника:</span>
-                    <span className="ml-2 font-medium text-blue-600">
-                      {doctorById.clinic}
-                    </span>
-                  </div>
-                </div>
-
-                <div className="flex items-center gap-2">
-                  <span>
-                    {doctorById.recommendation}% беморон табибро тавсия медиҳанд
-                  </span>
-                </div>
-
-                <div>
-                  <span className="text-gray-600">Ихтисос:</span>
-                  <span className="ml-2 font-medium">
-                    {doctorById.specialty}
-                  </span>
-                </div>
-
-                <div className="text-md text-gray-700">
-                  <p>{doctorById.bio}</p>
-                </div>
-              </div>
-            </div>
-          </div>
-          <div>
-            <div className="w-[360px] p-4 bg-gray-100 rounded-lg overflow-hidden">
-              <div className="pb-4">
-                <div className="flex justify-start mb-3">
-                  <p className="bg-[#2c94a1] hover:bg-teal-600 text-white px-3 py-1 rounded-full text-sm font-medium">
-                    -30% аз Darmon
-                  </p>
-                </div>
-
-                <div className="space-y-1">
-                  <div className="flex items-baseline gap-3">
-                    <span className="text-3xl font-bold text-gray-900">
-                      {doctorById.price?.current} {doctorById.price?.currency}
-                    </span>
-                    <span className="text-lg text-gray-400 line-through">
-                      {doctorById.price?.old} {doctorById.price?.currency}
-                    </span>
-                  </div>
-
-                  <p className="text-[#2c94a1] font-medium text-sm">
-                    Тахфифи махсус барои қабули аввалин
-                  </p>
-                </div>
-              </div>
-
-              <div className="space-y-4">
-                <div className="space-y-2 text-sm text-gray-600">
-                  <p>Пардохти қабул дар клиника анҷом дода мешавад</p>
-                  <p>
-                    Қайд шудан ба қабул —
-                    <span className="text-[#2c94a1] font-medium">ройгон</span>
-                  </p>
-                </div>
-
-                <Button
-                  className="w-full cursor-pointer bg-[#2c94a1] hover:bg-teal-600 text-white py-3 rounded-xl font-medium"
-                  size="lg"
-                >
-                  Қайд шудан ба қабул
-                </Button>
-
-                <div className="flex items-center gap-2 text-xs text-gray-500">
-                  <Zap className="h-3 w-3 text-orange-500" />
-                  <span>Тасдиқи фаврии қайд</span>
-                </div>
-
-                <div className="space-y-2">
-                  <div className="flex items-center gap-2 text-sm text-gray-600">
-                    <Phone className="h-4 w-4" />
-                    <span>Рақами телефон барои қайд кардан —</span>
-                  </div>
-
-                  <div className="flex items-center gap-2">
-                    <Input
-                      type="tel"
-                      placeholder="+992 ..."
-                      value={phoneNumber}
-                      onChange={(e) => setPhoneNumber(e.target.value)}
-                      className="flex-1 text-sm"
-                      disabled={showFullNumber}
-                    />
-                    {!showFullNumber && (
-                      <Button
-                        variant="link"
-                        size="sm"
-                        onClick={handleShowNumber}
-                        className="text-teal-500 cursor-pointer hover:text-teal-800 p-0 h-auto font-normal text-sm"
-                      >
-                        Показать номер
-                      </Button>
-                    )}
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
+    <div className="bg-md-surface-container-low min-h-screen pt-20 pb-12">
+      {/* Banner */}
+      <header className="signature-gradient rounded-none md:rounded-xl md:mx-auto md:max-w-7xl p-8 md:p-12 mb-8 text-white relative overflow-hidden mt-4">
+        <div className="relative z-10">
+          <span className="text-blue-100 font-headline font-semibold tracking-widest uppercase text-sm mb-2 block">Мутахассис</span>
+          <h1 className="text-4xl md:text-5xl font-headline font-extrabold tracking-tight">Профили духтур</h1>
         </div>
-      )}
+        <div className="absolute right-0 top-0 h-full w-1/3 opacity-10 pointer-events-none">
+          <svg className="h-full w-full" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+            <path d="M44.7,-76.4C58.1,-69.2,69.2,-58.1,77.3,-44.7C85.4,-31.3,90.5,-15.7,89.2,-0.7C87.9,14.2,80.3,28.4,70.9,40.4C61.5,52.4,50.3,62.1,37.6,69.5C24.9,76.9,10.7,82,-3.2,87.5C-17.1,93,-30.7,98.9,-43.3,94.5C-55.9,90.1,-67.5,75.4,-75.7,60.2C-83.9,45,-88.7,29.3,-90,13.2C-91.3,-2.8,-89.1,-19.2,-81.9,-33.5C-74.7,-47.8,-62.5,-60,-48.5,-67.1C-34.5,-74.2,-18.7,-76.2,-2.1,-72.6C14.5,-69,29,-59.8,44.7,-76.4Z" fill="#FFFFFF" transform="translate(100 100)"></path>
+          </svg>
+        </div>
+      </header>
+
+      <div className="max-w-7xl mx-auto px-4 grid grid-cols-1 lg:grid-cols-3 gap-8">
+        {/* Main Content */}
+        <div className="lg:col-span-2 space-y-8">
+          {doctorById && (
+            <>
+              {/* Doctor Info */}
+              <section className="bg-md-surface-container-lowest rounded-xl p-6 md:p-8 clinical-shadow">
+                <div className="flex flex-col md:flex-row gap-8 items-start">
+                  <div className="relative w-full md:w-56 shrink-0">
+                    <img className="w-full h-64 object-cover rounded-xl shadow-lg" src={doctorById.image || DefaultPhoto} alt={doctorById.fullName || ""} />
+                    <div className="absolute -bottom-4 left-1/2 -translate-x-1/2 bg-md-secondary-container px-4 py-1 rounded-full flex items-center gap-1 shadow-sm">
+                      <Star className="w-4 h-4 fill-md-secondary text-md-on-secondary-container" />
+                      <span className="text-md-on-secondary-container font-bold">{doctorById.rating}</span>
+                      <span className="text-md-on-secondary-container/70 text-xs font-medium ml-1">({doctorById.comments?.length || 0} шарҳ)</span>
+                    </div>
+                  </div>
+                  <div className="flex-1 space-y-6">
+                    <div>
+                      <h2 className="text-3xl font-headline font-bold text-md-on-surface mb-2">{doctorById.fullName}</h2>
+                      <p className="text-md-primary font-semibold tracking-wide flex items-center gap-2">
+                        <Stethoscope className="w-5 h-5" />
+                        {doctorById.specialty}
+                      </p>
+                    </div>
+                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 border-y border-md-surface-variant/30 py-6">
+                      <div className="space-y-1">
+                        <p className="text-md-on-surface-variant text-xs uppercase tracking-wider font-bold">Таҷриба</p>
+                        <p className="text-md-on-surface font-semibold text-lg">{doctorById.experience} сол</p>
+                      </div>
+                      <div className="space-y-1">
+                        <p className="text-md-on-surface-variant text-xs uppercase tracking-wider font-bold">Тавсия</p>
+                        <p className="text-md-secondary font-bold text-lg">{doctorById.recommendation}%</p>
+                      </div>
+                      <div className="space-y-1 col-span-2 sm:col-span-1">
+                        <p className="text-md-on-surface-variant text-xs uppercase tracking-wider font-bold">Клиника</p>
+                        <p className="text-md-primary-container font-semibold">{doctorById.clinic}</p>
+                      </div>
+                    </div>
+                    <div className="space-y-3">
+                      <h3 className="font-headline font-bold text-lg text-md-on-surface">Дар бораи мутахассис</h3>
+                      <p className="text-md-on-surface-variant leading-relaxed">{doctorById.bio}</p>
+                    </div>
+                  </div>
+                </div>
+              </section>
+
+              {/* Reviews */}
+              <section className="bg-md-surface-container-lowest rounded-xl p-6 md:p-8 clinical-shadow">
+                <div className="flex items-center gap-3 mb-8">
+                  <MessageCircle className="w-8 h-8 text-md-primary" />
+                  <h2 className="text-2xl font-headline font-bold text-md-on-surface">Шарҳҳои беморон</h2>
+                </div>
+                <div className="space-y-8 mb-12">
+                  {doctorById.comments?.map((c: Comment) => (
+                    <div key={c.id} className="space-y-3">
+                      <div className="flex justify-between items-start">
+                        <div className="flex gap-4 items-center">
+                          <div className="w-12 h-12 rounded-full bg-blue-100 flex items-center justify-center overflow-hidden">
+                            <img src={c.user.image || DefaultPhoto} alt="" className="w-full h-full object-cover" />
+                          </div>
+                          <div>
+                            <p className="font-bold text-md-on-surface">{c.user.fullName}</p>
+                            <p className="text-md-on-surface-variant text-xs">{c.date}</p>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-3">
+                          {userById?.fullName === c.user.fullName && editingCommentId !== c.id && (
+                            <div className="flex gap-2">
+                              <button onClick={() => { setEditingCommentId(c.id); setEditText(c.comment); setEditRating(c.rating); }} className="text-[10px] font-bold text-blue-600 hover:underline cursor-pointer">ИВАЗ</button>
+                              <button onClick={() => handleDeleteComment(c.id)} className="text-[10px] font-bold text-red-500 hover:underline cursor-pointer">НЕСТ</button>
+                            </div>
+                          )}
+                          {editingCommentId !== c.id && (
+                            <div className="flex text-md-secondary-container">
+                              {[...Array(5)].map((_, j) => <Star key={j} className={`w-4 h-4 ${j < c.rating ? "fill-md-secondary" : ""}`} />)}
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                      {editingCommentId === c.id ? (
+                        <div className="space-y-3">
+                          <select value={editRating} onChange={(e) => setEditRating(Number(e.target.value))} className="text-xs border rounded p-1">
+                            {[5, 4, 3, 2, 1].map(n => <option key={n} value={n}>{n} Ситора</option>)}
+                          </select>
+                          <textarea value={editText} onChange={(e) => setEditText(e.target.value)} className="w-full p-3 border rounded-xl text-sm focus:ring-2 ring-md-primary outline-none" />
+                          <div className="flex gap-2 justify-end">
+                            <Button onClick={() => setEditingCommentId(null)} variant="ghost" className="h-8 text-xs cursor-pointer">Бекор</Button>
+                            <Button onClick={() => handleUpdateComment(c.id)} className="bg-md-secondary-container text-md-on-secondary-container h-8 text-xs cursor-pointer">Захира</Button>
+                          </div>
+                        </div>
+                      ) : (
+                        <blockquote className="text-md-on-surface-variant italic pl-4 border-l-4 border-md-secondary/20">
+                          &ldquo;{c.comment}&rdquo;
+                        </blockquote>
+                      )}
+                    </div>
+                  ))}
+                </div>
+
+                {/* Write Review */}
+                {userById?.id && !editingCommentId && (
+                  <div className="bg-md-surface-container-low rounded-xl p-6">
+                    <h3 className="font-headline font-bold text-lg mb-4 text-md-on-surface">Назари худро нависед</h3>
+                    <form onSubmit={handleSubmitComment} className="space-y-4">
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                          <label className="block text-xs font-bold text-md-on-surface-variant uppercase tracking-wider mb-1 ml-2">Баҳодиҳӣ</label>
+                          <select
+                            value={rating}
+                            onChange={(e) => setRating(Number(e.target.value))}
+                            className="w-full bg-white border-none rounded-lg p-3 text-sm focus:ring-2 focus:ring-md-primary"
+                          >
+                            <option value={5}>5 ситора — Хеле хуб</option>
+                            <option value={4}>4 ситора — Хуб</option>
+                            <option value={3}>3 ситора — Миёна</option>
+                            <option value={2}>2 ситора — Бад</option>
+                            <option value={1}>1 ситора — Хеле бад</option>
+                          </select>
+                        </div>
+                      </div>
+                      <div>
+                        <label className="block text-xs font-bold text-md-on-surface-variant uppercase tracking-wider mb-1 ml-2">Шарҳи шумо</label>
+                        <textarea
+                          value={commentText}
+                          onChange={(e) => setCommentText(e.target.value)}
+                          className="w-full bg-white border-none rounded-lg p-3 text-sm focus:ring-2 focus:ring-md-primary"
+                          placeholder="Таассуроти худро нависед..."
+                          rows={3}
+                          required
+                        />
+                      </div>
+                      <button
+                        type="submit"
+                        disabled={submitting}
+                        className="bg-md-secondary-container text-md-on-secondary-container px-8 py-3 rounded-full font-bold uppercase tracking-widest text-sm hover:translate-x-1 transition-transform inline-flex items-center gap-2 cursor-pointer disabled:opacity-50"
+                      >
+                        {submitting ? "ИРСОЛ..." : "ИРСОЛ"}
+                        <Send className="w-4 h-4" />
+                      </button>
+                    </form>
+                  </div>
+                )}
+              </section>
+            </>
+          )}
+        </div>
+
+        {/* Booking Sidebar */}
+        {doctorById && (
+          <aside className="space-y-6">
+            <section className="bg-md-surface-container-lowest rounded-xl shadow-[0_20px_60px_rgba(0,78,159,0.12)] sticky top-28 overflow-hidden border-2 border-md-primary/5">
+              <div className="bg-md-primary/5 p-6 flex items-center gap-3 border-b border-md-surface-variant/20">
+                <CalendarCheck className="w-6 h-6 text-md-primary" />
+                <h2 className="text-xl font-headline font-bold text-md-primary">Қайд шудан ба қабул</h2>
+              </div>
+              <div className="p-6 space-y-6">
+                <div className="flex justify-between items-end">
+                  <p className="text-md-on-surface-variant text-sm font-medium">Арзиши қабул</p>
+                  <p className="text-2xl font-black text-md-on-surface">{doctorById.price?.current} <span className="text-sm font-bold opacity-70">{doctorById.price?.currency}</span></p>
+                </div>
+                <button
+                  onClick={handleShowNumber}
+                  className="w-full py-3 px-4 rounded-xl border-2 border-md-primary/20 text-md-primary font-bold flex items-center justify-center gap-3 hover:bg-md-primary/5 transition-colors cursor-pointer"
+                >
+                  <Phone className="w-5 h-5" />
+                  {showFullNumber ? doctorById.phone : "Нишон додани рақам"}
+                </button>
+                <div className="space-y-4">
+                  <div>
+                    <label className="block text-xs font-bold text-md-on-surface-variant uppercase tracking-wider mb-2 ml-1">Интихоби рӯз</label>
+                    <Input type="date" value={bookingDate} min={new Date().toISOString().split("T")[0]} onChange={(e) => setBookingDate(e.target.value)} className="rounded-xl h-12" />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-bold text-md-on-surface-variant uppercase tracking-wider mb-2 ml-1">Интихоби вақт</label>
+                    <Input type="time" value={bookingTime} onChange={(e) => setBookingTime(e.target.value)} className="rounded-xl h-12" />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-bold text-md-on-surface-variant uppercase tracking-wider mb-2 ml-1">Нишонаҳои беморӣ</label>
+                    <textarea
+                      value={symptoms}
+                      onChange={(e) => setSymptoms(e.target.value)}
+                      className="w-full bg-md-surface-container-low border-none rounded-lg p-3 text-sm focus:ring-2 focus:ring-md-primary outline-none"
+                      placeholder="Кӯтоҳ шарҳ диҳед..."
+                      rows={2}
+                    />
+                  </div>
+                  <button
+                    disabled={booking}
+                    onClick={async () => {
+                      if (!userById?.id) { toast.error("Ворид шавед"); return; }
+                      if (!bookingDate || !bookingTime) { toast.error("Сана ва вақтро интихоб кунед"); return; }
+                      setBooking(true);
+                      const res = await createAppointment({
+                        doctorId: doctorById.id,
+                        clientId: userById.id,
+                        doctorName: doctorById.fullName,
+                        clientName: userById.fullName,
+                        specialty: doctorById.specialty,
+                        date: bookingDate,
+                        time: bookingTime,
+                        symptoms: symptoms,
+                      });
+                      setBooking(false);
+                      if (res.success) router.push("/appointments");
+                    }}
+                    className="w-full signature-gradient text-white py-4 rounded-full font-headline font-extrabold tracking-wide shadow-lg shadow-md-primary/20 hover:scale-[1.02] transition-transform active:scale-95 uppercase text-sm cursor-pointer disabled:opacity-50"
+                  >
+                    {booking ? "ИРСОЛ..." : "ТАСДИҚ ВА ҚАЙД ШУДАН"}
+                  </button>
+                </div>
+              </div>
+              <div className="bg-md-surface-container-low p-4 text-center">
+                <p className="text-[10px] text-md-on-surface-variant/60 leading-tight">
+                  Бо пахш кардани тугма шумо ба коркарди маълумоти шахсии худ розӣ мешавед.
+                </p>
+              </div>
+            </section>
+          </aside>
+        )}
+      </div>
     </div>
   );
 };

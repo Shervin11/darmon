@@ -6,20 +6,16 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import Link from "next/link";
+import { DefaultPhoto } from "@/config/config";
 
-interface Doctor {
-  doctorId: string;
-  name: string;
-  specialty: string;
-  photo: string;
-}
+import { FavoriteDoctor } from "@/store/store";
 
 const Wishlist = () => {
-  const { loginMe, wishlistUser, userById, wishlist, toggleWishlist } =
+  const { loginMe, wishlistUser, userById, wishlist, deleteWishlist } =
     useStore((state) => state);
 
-  function handleRemoveFromFavorites(doctor: Doctor) {
-    toggleWishlist(userById.id, doctor);
+  function handleRemoveFromFavorites(doctor: FavoriteDoctor) {
+    deleteWishlist(userById.id!, doctor.doctorId);
   }
   useEffect(() => {
     loginMe();
@@ -32,24 +28,27 @@ const Wishlist = () => {
   }, [userById]);
 
   return (
-    <div className="container max-w-[1250px] mx-auto p-6">
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-900 mb-2">
-          Избранные врачи
-        </h1>
-        <p className="text-gray-600">Ваши любимые специалисты в одном месте</p>
-      </div>
+    <div className="pt-20 pb-12">
+      {/* Hero Banner */}
+      <section className="max-w-7xl mx-auto px-6 mb-12 mt-4">
+        <div className="signature-gradient rounded-xl p-10 md:p-16 relative overflow-hidden">
+          <div className="relative z-10">
+            <span className="bg-md-secondary-container text-md-on-secondary-container px-4 py-1.5 rounded-full text-xs font-bold tracking-widest uppercase mb-4 inline-block font-headline">Тасдиқшуда ✓</span>
+            <h1 className="text-white font-headline font-extrabold text-4xl md:text-5xl tracking-tight">Духтурони интихобшуда</h1>
+          </div>
+          <div className="absolute right-[-5%] top-[-10%] w-64 h-64 bg-white/10 rounded-full blur-3xl"></div>
+        </div>
+      </section>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-        {wishlist?.favorites?.length > 0 ? (
-          wishlist?.favorites.map((doctor: Doctor, i: number) => (
-            <Card
-              key={i}
-              className="group relative overflow-hidden py-0 hover:shadow-xl transition-all duration-500 border-0 shadow-lg bg-gradient-to-br from-white to-gray-50/50 hover:from-teal-50/30 hover:to-white"
-            >
-              <CardContent className="p-0">
-                <div className="h-20 bg-gradient-to-r from-teal-500 to-teal-600 relative">
-                  <div className="absolute inset-0 bg-black/10"></div>
+      <section className="max-w-7xl mx-auto px-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+          {wishlist?.favorites?.length > 0 ? (
+            wishlist?.favorites.map((doctor: FavoriteDoctor, i: number) => (
+              <div
+                key={i}
+                className="group relative overflow-hidden rounded-xl bg-md-surface-container-lowest clinical-shadow hover:shadow-[0_20px_60px_rgba(0,78,159,0.12)] transition-all duration-500"
+              >
+                <div className="h-20 card-header-gradient relative">
                   <Button
                     size="sm"
                     variant="ghost"
@@ -66,19 +65,19 @@ const Wishlist = () => {
                       <div className="w-24 h-24 rounded-full border-4 border-white shadow-lg overflow-hidden bg-white">
                         <img
                           className="w-full h-full object-cover"
-                          alt="avatar"
-                          src={doctor.photo || "/placeholder.svg"}
+                          src={doctor.photo || DefaultPhoto}
+                          alt={doctor.name}
                         />
                       </div>
-                      <div className="absolute -bottom-1 -right-1 w-6 h-6 bg-green-500 rounded-full border-2 border-white flex items-center justify-center">
+                      <div className="absolute -bottom-1 -right-1 w-6 h-6 bg-md-secondary rounded-full border-2 border-white flex items-center justify-center">
                         <div className="w-2 h-2 bg-white rounded-full"></div>
                       </div>
                     </div>
                   </div>
 
-                  <div className="text-center space-y-4">
+                  <div className="text-center space-y-4 py-4">
                     <div>
-                      <h3 className="font-bold text-lg text-gray-900 leading-tight mb-1">
+                      <h3 className="font-bold text-lg text-md-on-surface leading-tight mb-1 font-headline">
                         {doctor.name}
                       </h3>
                     </div>
@@ -86,7 +85,7 @@ const Wishlist = () => {
                     <div className="space-y-2">
                       <Badge
                         variant="secondary"
-                        className="bg-teal-100 text-teal-700 hover:bg-teal-200 font-medium px-3 py-1"
+                        className="bg-md-primary/10 text-md-primary hover:bg-md-primary/20 font-medium px-3 py-1"
                       >
                         <Stethoscope className="w-3 h-3 mr-1" />
                         {doctor.specialty}
@@ -95,42 +94,41 @@ const Wishlist = () => {
 
                     <Link
                       href={`/doctors/${doctor.doctorId}`}
-                      className="block my-4"
+                      className="block pb-4"
                     >
-                      <Button className="w-full cursor-pointer bg-gradient-to-r from-teal-600 to-teal-700 hover:from-teal-700 hover:to-teal-800 text-white font-medium py-2.5 rounded-lg shadow-md hover:shadow-lg transition-all duration-300 transform hover:-translate-y-0.5">
-                        Записаться на прием
-                      </Button>
+                      <button className="w-full cursor-pointer signature-gradient hover:opacity-90 text-white font-semibold py-2.5 rounded-full shadow-md hover:shadow-lg transition-all duration-300 transform hover:-translate-y-0.5 uppercase tracking-wider font-headline text-sm">
+                        Қайд шудан ба қабул
+                      </button>
                     </Link>
                   </div>
                 </div>
-              </CardContent>
-            </Card>
-          ))
-        ) : (
-          <div className="col-span-full">
-            <div className="text-center py-16 px-6">
-              <div className="w-24 h-24 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-6">
-                <Heart className="w-12 h-12 text-gray-400" />
               </div>
-              <h3 className="text-2xl font-bold text-gray-900 mb-3">
-                Нет избранных врачей
-              </h3>
-              <p className="text-gray-600 mb-6 max-w-md mx-auto">
-                Добавьте врачей в избранное, чтобы быстро находить их здесь и
-                записываться на прием
-              </p>
-              <Link href={"/doctors"}>
-                <Button
-                  variant="outline"
-                  className="border-teal-200 cursor-pointer text-teal-600 hover:bg-teal-50 bg-transparent"
-                >
-                  Найти врачей
-                </Button>
-              </Link>
+            ))
+          ) : (
+            <div className="col-span-full">
+              <div className="text-center py-16 px-6">
+                <div className="w-24 h-24 bg-md-surface-container-low rounded-full flex items-center justify-center mx-auto mb-6">
+                  <Heart className="w-12 h-12 text-md-on-surface-variant" />
+                </div>
+                <h3 className="text-2xl font-bold text-md-on-surface mb-3 font-headline">
+                  Духтурони интихобшуда нест
+                </h3>
+                <p className="text-md-on-surface-variant mb-6 max-w-md mx-auto">
+                  Духтуронро ба интихобшудаҳо илова кунед, то онҳоро зуд пайдо кунед ва ба қабул навистед
+                </p>
+                <Link href={"/doctors"}>
+                  <Button
+                    variant="outline"
+                    className="border-md-primary cursor-pointer text-md-primary hover:bg-md-primary/5 bg-transparent"
+                  >
+                    Пайдо кардани духтурон
+                  </Button>
+                </Link>
+              </div>
             </div>
-          </div>
-        )}
-      </div>
+          )}
+        </div>
+      </section>
     </div>
   );
 };

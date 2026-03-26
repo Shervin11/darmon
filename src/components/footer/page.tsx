@@ -1,141 +1,66 @@
 import React from "react";
-import {
-  Facebook,
-  Twitter,
-  Linkedin,
-  Instagram,
-  Youtube,
-  Phone,
-  Mail,
-} from "lucide-react";
+import Link from "next/link";
+import { MapPin, Phone, Mail } from "lucide-react";
 
 const Footer = () => {
   return (
-    <footer className="bg-teal-600 max-w-[1440px] m-auto text-white">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
-          <div className="lg:col-span-1">
-            <div className="flex items-center mb-6">
-              <div className="w-8 h-8 bg-white rounded-lg flex items-center justify-center mr-3">
-                <div className="w-5 h-5 text-teal-600">
-                  <svg viewBox="0 0 24 24" fill="currentColor">
-                    <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z" />
-                  </svg>
-                </div>
-              </div>
-              <span className="text-2xl font-bold">DARMON</span>
-            </div>
-
-            <p className="text-white/90 mb-6 leading-relaxed">
-              Мо ҳамеша кӯшиш мекунем, ки ба шумо хидматрасонии босифат ва
-              эътимодбахш пешниҳод намоем.
-            </p>
-
-            <div className="space-y-3">
-              <div>
-                <p className="text-white/90 mb-1">
-                  Ба кӯмаки бештар ниёз доред?
-                </p>
-                <div className="flex items-center">
-                  <Phone className="w-4 h-4 mr-2" />
-                  <span className="text-xl font-semibold">+123 456 789</span>
-                </div>
-              </div>
-
-              <div>
-                <p className="text-white/90 mb-1">Почтаи дастгирӣ</p>
-                <div className="flex items-center">
-                  <Mail className="w-4 h-4 mr-2" />
-                  <span className="text-lg">hello@darmon.tj</span>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div>
-            <h3 className="text-xl font-semibold mb-6">Хизматҳо</h3>
-            <ul className="space-y-3">
-              <li>Муоинаи умумии саломатӣ</li>
-              <li>Ёрии таъҷилӣ ва саривақтӣ</li>
-              <li>Кардиология ва саломатии дил</li>
-              <li>Кӯдакона ва тибби оилавӣ</li>
-              <li>Орторопедия ва физиотерапия</li>
-              <li>Ташхисҳои радиологӣ ва лабораторӣ</li>
-            </ul>
-          </div>
-
-          <div>
-            <h3 className="text-xl font-semibold mb-6">Пайвандҳои зуд</h3>
-            <ul className="space-y-3">
-              <li>Саҳифаи асосӣ</li>
-              <li>Дар бораи мо</li>
-              <li>Таъинот</li>
-              <li>Хидматҳо</li>
-            </ul>
-          </div>
-
-          <div>
-            <h3 className="text-xl font-semibold mb-6">Шабакаҳои иҷтимоӣ</h3>
-            <ul className="space-y-3">
-              <li>
-                <a
-                  href="#"
-                  className="flex items-center text-white/90 hover:text-white transition-colors"
-                >
-                  <Facebook className="w-4 h-4 mr-3" />
-                  Facebook
-                </a>
-              </li>
-              <li>
-                <a
-                  href="#"
-                  className="flex items-center text-white/90 hover:text-white transition-colors"
-                >
-                  <Twitter className="w-4 h-4 mr-3" />
-                  Twitter
-                </a>
-              </li>
-              <li>
-                <a
-                  href="#"
-                  className="flex items-center text-white/90 hover:text-white transition-colors"
-                >
-                  <Linkedin className="w-4 h-4 mr-3" />
-                  LinkedIn
-                </a>
-              </li>
-              <li>
-                <a
-                  href="#"
-                  className="flex items-center text-white/90 hover:text-white transition-colors"
-                >
-                  <Instagram className="w-4 h-4 mr-3" />
-                  Instagram
-                </a>
-              </li>
-              <li>
-                <a
-                  href="#"
-                  className="flex items-center text-white/90 hover:text-white transition-colors"
-                >
-                  <Youtube className="w-4 h-4 mr-3" />
-                  Youtube
-                </a>
-              </li>
-            </ul>
-          </div>
+    <footer className="bg-md-primary text-white w-full rounded-t-[3rem] mt-20">
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-12 px-8 py-16 max-w-7xl mx-auto text-sm leading-relaxed">
+        {/* Brand */}
+        <div className="space-y-4">
+          <span className="text-2xl font-black text-white mb-4 block font-headline">DARMON</span>
+          <p className="text-blue-100/80">
+            Саломатии шумо - афзалияти мо. Мо бо технологияҳои муосир ва мутахассисони ботаҷриба дар хидмати шумоем.
+          </p>
         </div>
 
-        <div className="border-t border-white/20 mt-12 pt-8">
-          <div className="flex flex-col md:flex-row justify-between items-center">
-            <p className="text-white/90 text-sm mb-4 md:mb-0">
-              Шаблон бемористон ва клиникаи тиббӣ аз{" "}
-              <span className="font-semibold">FoxCreation Studio</span>
-            </p>
-            <p className="text-white/90 text-sm">
-              Ҳуқуқи муаллиф © 2025. Ҳамаи ҳуқуқҳо ҳифз шудаанд
-            </p>
+        {/* Links */}
+        <div>
+          <h4 className="font-bold text-lg mb-6 text-white font-headline">Пайвандҳо</h4>
+          <ul className="space-y-3">
+            <li><Link href="/" className="text-blue-100/80 hover:text-white transition-colors hover:translate-x-1 inline-block">Асосӣ</Link></li>
+            <li><Link href="/doctors" className="text-blue-100/80 hover:text-white transition-colors hover:translate-x-1 inline-block">Духтурон</Link></li>
+            <li><Link href="/about" className="text-blue-100/80 hover:text-white transition-colors hover:translate-x-1 inline-block">Хизматрасонӣ</Link></li>
+            <li><Link href="/appointments" className="text-blue-100/80 hover:text-white transition-colors hover:translate-x-1 inline-block">Навбатҳо</Link></li>
+          </ul>
+        </div>
+
+        {/* Info */}
+        <div>
+          <h4 className="font-bold text-lg mb-6 text-white font-headline">Маълумот</h4>
+          <ul className="space-y-3">
+            <li><Link href="/about" className="text-blue-100/80 hover:text-white transition-colors hover:translate-x-1 inline-block">Тамос</Link></li>
+            <li><Link href="#" className="text-blue-100/80 hover:text-white transition-colors hover:translate-x-1 inline-block">Сиёсати махфият</Link></li>
+            <li><Link href="#" className="text-blue-100/80 hover:text-white transition-colors hover:translate-x-1 inline-block">Саволу ҷавоб</Link></li>
+          </ul>
+        </div>
+
+        {/* Contact */}
+        <div>
+          <h4 className="font-bold text-lg mb-6 text-white font-headline">Тамос</h4>
+          <div className="space-y-4">
+            <div className="flex items-center gap-3 text-blue-100/80">
+              <MapPin className="w-5 h-5 text-md-secondary-container" />
+              ш. Душанбе, кӯч. Бухоро, 45
+            </div>
+            <div className="flex items-center gap-3 text-blue-100/80">
+              <Phone className="w-5 h-5 text-md-secondary-container" />
+              +992 44 600 60 60
+            </div>
+            <div className="flex items-center gap-3 text-blue-100/80">
+              <Mail className="w-5 h-5 text-md-secondary-container" />
+              info@darmon.tj
+            </div>
           </div>
+        </div>
+      </div>
+
+      <div className="border-t border-white/10 max-w-7xl mx-auto px-8 py-8 flex flex-col md:flex-row justify-between items-center gap-4 text-xs font-medium text-blue-100/60 uppercase tracking-widest">
+        <span>© 2025 DARMON — Ҳамаи ҳуқуқҳо маҳфузанд</span>
+        <div className="flex gap-6">
+          <a href="#" className="hover:text-white transition-colors">Facebook</a>
+          <a href="#" className="hover:text-white transition-colors">Instagram</a>
+          <a href="#" className="hover:text-white transition-colors">Telegram</a>
         </div>
       </div>
     </footer>
