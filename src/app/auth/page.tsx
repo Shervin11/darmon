@@ -88,6 +88,44 @@ export default function Auth() {
 
   return (
     <div className="min-h-screen w-full flex">
+      {/* Left - Illustration */}
+      <div className="hidden lg:flex w-1/2 relative signature-gradient items-center justify-center overflow-hidden">
+        <div className="absolute inset-0">
+          <div className="absolute -right-20 -top-20 w-96 h-96 bg-white/5 rounded-full blur-3xl"></div>
+          <div className="absolute -left-20 -bottom-20 w-96 h-96 bg-md-secondary-container/10 rounded-full blur-3xl"></div>
+        </div>
+        <div className="relative z-10 flex flex-col items-center px-12 text-center">
+          <div className="w-80 h-80 rounded-3xl overflow-hidden shadow-2xl mb-8 border-4 border-white/10">
+            <Image
+              src={"/register.jpg"}
+              alt="Medical illustration"
+              width={320}
+              height={320}
+              className="w-full h-full object-cover"
+            />
+          </div>
+          <h2 className="text-3xl font-bold text-white mb-3 text-balance font-headline">
+            {t("auth.joinCommunity")}
+          </h2>
+          <p className="text-teal-100/80 leading-relaxed max-w-xs">
+            {t("auth.joinDesc")}
+          </p>
+          <div className="flex gap-6 mt-8">
+            {[
+              { icon: <Shield className="w-4 h-4" />, label: t("auth.secure") },
+              { icon: <Heart className="w-4 h-4" />, label: t("auth.trustworthy") },
+              { icon: <Stethoscope className="w-4 h-4" />, label: t("auth.professional") },
+            ].map((item, i) => (
+              <div key={i} className="flex items-center gap-2 text-white/70 text-sm bg-white/10 px-4 py-2 rounded-full backdrop-blur-sm">
+                {item.icon}
+                {item.label}
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* Right - Form */}
       <div className="flex flex-col justify-center w-full lg:w-1/2 px-8 sm:px-16 xl:px-24 py-12 bg-white dark:bg-[#121218]">
         <div className="flex items-center gap-2 mb-10">
           <div className="w-9 h-9 rounded-lg bg-md-primary flex items-center justify-center">
@@ -163,3 +201,51 @@ export default function Auth() {
               </RadioGroup>
             </div>
 
+            {/* Doctor Specialty Select */}
+            {docReg && (
+              <div className="flex flex-col gap-1.5">
+                <label htmlFor="specialty-reg" className="text-sm font-medium text-md-on-surface-variant">{t("auth.specialty")}</label>
+                <select
+                  id="specialty-reg"
+                  value={specialtyReg}
+                  onChange={(e) => setSpecialtyReg(e.target.value)}
+                  className="w-full border border-md-outline-variant/30 text-md-on-surface px-4 py-3 rounded-xl focus:outline-none focus:ring-2 focus:ring-md-primary focus:border-transparent transition-all bg-md-surface-container-low appearance-none"
+                >
+                  <option value="">{t("auth.selectSpecialty")}</option>
+                  {subcategories.map((sub, idx) => (
+                    <option key={idx} value={sub}>{sub}</option>
+                  ))}
+                </select>
+              </div>
+            )}
+
+            <button
+              type="submit"
+              disabled={loading}
+              className="w-full bg-md-primary text-white py-3 rounded-xl font-semibold hover:bg-md-primary-container active:scale-[0.98] transition-all flex items-center justify-center gap-2 mt-2 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer font-headline"
+            >
+              {loading ? (
+                <div className="animate-spin rounded-full h-5 w-5 border-t-2 border-b-2 border-white"></div>
+              ) : (
+                <>
+                  <UserPlus className="w-4 h-4" />
+                  {t("auth.register")}
+                </>
+              )}
+            </button>
+          </form>
+
+          <p className="mt-6 text-center text-sm text-md-on-surface-variant">
+            {t("auth.haveAccount")}{" "}
+            <button
+              onClick={() => router.push("/auth/login")}
+              className="text-md-primary cursor-pointer font-semibold hover:underline"
+            >
+              {t("auth.login")}
+            </button>
+          </p>
+        </div>
+      </div>
+    </div>
+  );
+}

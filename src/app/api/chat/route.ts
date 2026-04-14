@@ -17,7 +17,7 @@ export async function POST(req: NextRequest) {
 Ты можешь советовать записаться на платформе DARMON к нужному специалисту.`,
     };
 
-    const response = await fetch("https:
+    const response = await fetch("https://api.groq.com/openai/v1/chat/completions", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",

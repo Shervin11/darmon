@@ -51,6 +51,99 @@ export default function Login() {
 
   return (
     <div className="min-h-screen w-full flex">
+      {/* Left - Form */}
+      <div className="flex flex-col justify-center w-full lg:w-1/2 px-8 sm:px-16 xl:px-24 py-12 bg-white dark:bg-[#121218]">
+        <div className="flex items-center gap-2 mb-10">
+          <div className="w-9 h-9 rounded-lg bg-md-primary flex items-center justify-center">
+            <Stethoscope className="w-5 h-5 text-white" />
+          </div>
+          <span className="text-xl font-bold text-md-on-surface font-headline">D A R M O N</span>
+        </div>
+
+        <div className="max-w-sm w-full">
+          <h1 className="text-3xl font-bold text-md-on-surface mb-2 text-balance font-headline">{t("auth.welcome")}</h1>
+          <p className="text-md-on-surface-variant mb-8 leading-relaxed">
+            {t("auth.loginDesc")}
+          </p>
+
+          <form onSubmit={login} className="flex flex-col gap-4">
+            <div className="flex flex-col gap-1.5">
+              <label htmlFor="email-login" className="text-sm font-medium text-md-on-surface-variant">{t("auth.email")}</label>
+              <input
+                id="email-login"
+                type="email"
+                value={emailLogin}
+                onChange={(e) => setEmailLogin(e.target.value)}
+                placeholder="example@mail.com"
+                className="w-full border border-md-outline-variant/30 text-md-on-surface px-4 py-3 rounded-xl focus:outline-none focus:ring-2 focus:ring-md-primary focus:border-transparent placeholder-md-outline transition-all bg-md-surface-container-low"
+              />
+            </div>
+
+            <div className="flex flex-col gap-1.5">
+              <label htmlFor="pass-login" className="text-sm font-medium text-md-on-surface-variant">{t("auth.password")}</label>
+              <input
+                id="pass-login"
+                type="password"
+                value={passLogin}
+                onChange={(e) => setPassLogin(e.target.value)}
+                placeholder="••••••••"
+                className="w-full border border-md-outline-variant/30 text-md-on-surface px-4 py-3 rounded-xl focus:outline-none focus:ring-2 focus:ring-md-primary focus:border-transparent placeholder-md-outline transition-all bg-md-surface-container-low"
+              />
+            </div>
+
+            <div className="border border-md-outline-variant/30 rounded-xl p-4 bg-md-surface-container-low">
+              <p className="text-sm font-medium text-md-on-surface-variant mb-3">{t("auth.iAm")}</p>
+              <RadioGroup
+                value={docLog ? "doctor" : "patient"}
+                onValueChange={(value) => setDocLog(value === "doctor")}
+                className="flex gap-4"
+              >
+                <div className="flex items-center gap-2 cursor-pointer">
+                  <RadioGroupItem value="doctor" id="login-doctor" />
+                  <Label htmlFor="login-doctor" className="cursor-pointer flex items-center gap-1.5 text-md-on-surface-variant">
+                    <Stethoscope className="w-4 h-4 text-md-primary" />
+                    {t("auth.doctor")}
+                  </Label>
+                </div>
+                <div className="flex items-center gap-2 cursor-pointer">
+                  <RadioGroupItem value="patient" id="login-patient" />
+                  <Label htmlFor="login-patient" className="cursor-pointer flex items-center gap-1.5 text-md-on-surface-variant">
+                    <Heart className="w-4 h-4 text-md-primary" />
+                    {t("auth.patient")}
+                  </Label>
+                </div>
+              </RadioGroup>
+            </div>
+
+            <button
+              type="submit"
+              disabled={loading}
+              className="w-full bg-md-primary text-white py-3 rounded-xl font-semibold hover:bg-md-primary-container active:scale-[0.98] transition-all flex items-center justify-center gap-2 mt-2 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer font-headline"
+            >
+              {loading ? (
+                <div className="animate-spin rounded-full h-5 w-5 border-t-2 border-b-2 border-white"></div>
+              ) : (
+                <>
+                  <LogIn className="w-4 h-4" />
+                  {t("auth.login")}
+                </>
+              )}
+            </button>
+          </form>
+
+          <p className="mt-6 text-center text-sm text-md-on-surface-variant">
+            {t("auth.noAccount")}{" "}
+            <button
+              onClick={() => router.push("/auth")}
+              className="text-md-primary cursor-pointer font-semibold hover:underline"
+            >
+              {t("auth.register")}
+            </button>
+          </p>
+        </div>
+      </div>
+
+      {/* Right - Illustration */}
       <div className="hidden lg:flex w-1/2 relative signature-gradient items-center justify-center overflow-hidden">
         <div className="absolute inset-0">
           <div className="absolute -right-20 -top-20 w-96 h-96 bg-white/5 rounded-full blur-3xl"></div>

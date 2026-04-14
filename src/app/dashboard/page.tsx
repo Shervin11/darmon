@@ -98,6 +98,10 @@ const Dashboard = () => {
 
   return (
     <div className="pt-20 pb-16 min-h-screen">
+      {/* ── Hero Banner ── */}
+      <section className="max-w-7xl mx-auto px-6 mb-10 mt-4">
+        <div className="relative overflow-hidden rounded-2xl bg-[#00A191] text-white p-8 md:p-12">
+          {/* Glow effects for volume */}
           <div className="absolute inset-0 opacity-20">
             <div className="absolute -right-20 -top-20 w-96 h-96 bg-[#00C4B0] rounded-full blur-[120px]"></div>
             <div className="absolute -left-20 -bottom-20 w-96 h-96 bg-[#007D70] rounded-full blur-[120px]"></div>
@@ -125,13 +129,115 @@ const Dashboard = () => {
               </p>
             </div>
 
+            {/* Quick stats */}
+            <div className="flex gap-4 shrink-0">
+              {[
+                {
+                  icon: <Users className="w-5 h-5" />,
+                  val: doctorAppointments.filter((a: any) => a.status === "approved").length,
+                  label: "Принятых",
+                },
+                {
+                  icon: <Star className="w-5 h-5" />,
+                  val: avgRating,
+                  label: "Рейтинг",
+                },
+                {
+                  icon: <MessageSquare className="w-5 h-5" />,
+                  val: comments.length,
+                  label: "Отзывов",
+                },
+              ].map((s, i) => (
+                <div
+                  key={i}
+                  className="bg-white/10 backdrop-blur-md border border-white/20 rounded-xl px-4 py-3 text-center min-w-[80px]"
+                >
+                  <div className="text-white/70 mb-1 flex justify-center">{s.icon}</div>
+                  <div className="font-headline font-black text-xl text-white">{s.val}</div>
+                  <div className="text-[#A7F3EB] text-[10px] font-medium mt-0.5">{s.label}</div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ── Main ── */}
       <section className="max-w-7xl mx-auto px-6">
+        {/* Tabs */}
+        <div className="flex gap-2 mb-8 p-1.5 bg-md-surface-container rounded-2xl w-fit">
+          {tabs.map(({ key, label, icon }) => (
+            <button
+              key={key}
+              onClick={() => setTab(key)}
+              className={`flex items-center gap-2 px-6 py-2.5 rounded-xl font-headline font-semibold text-sm transition-all duration-200 cursor-pointer ${
+                tab === key
+                  ? "tab-active text-white shadow-md"
+                  : "text-md-on-surface-variant hover:text-md-on-surface hover:bg-md-surface-container-high"
+              }`}
+            >
+              {icon}
+              {label}
+            </button>
+          ))}
+        </div>
+
+        {/* ── REVIEWS TAB ── */}
         {tab === "reviews" && (
           <div className="animate-fade-in-scale">
             {comments.length === 0 ? (
               <EmptyState icon={<MessageSquare />} text="У вас пока нет отзывов" />
             ) : (
               <>
+                {/* Rating summary */}
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                  <div className="premium-card rounded-2xl p-6 flex items-center gap-5">
+                    <div className="w-14 h-14 rounded-2xl bg-amber-50 dark:bg-amber-900/20 flex items-center justify-center">
+                      <Star className="w-7 h-7 text-amber-400" fill="currentColor" />
+                    </div>
+                    <div>
+                      <div className="text-3xl font-headline font-black text-md-on-surface">
+                        {avgRating}
+                      </div>
+                      <div className="text-md-on-surface-variant text-sm">Средний рейтинг</div>
+                      <div className="flex gap-0.5 mt-1">
+                        {[1, 2, 3, 4, 5].map((n) => (
+                          <Star
+                            key={n}
+                            className={`w-3.5 h-3.5 ${n <= Math.round(Number(avgRating)) ? "text-amber-400" : "text-md-outline-variant"}`}
+                            fill={n <= Math.round(Number(avgRating)) ? "currentColor" : "none"}
+                          />
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="premium-card rounded-2xl p-6 flex items-center gap-5">
+                    <div className="w-14 h-14 rounded-2xl bg-teal-50 dark:bg-[#0A2342]/40 flex items-center justify-center">
+                      <MessageSquare className="w-7 h-7 text-md-primary" />
+                    </div>
+                    <div>
+                      <div className="text-3xl font-headline font-black text-md-on-surface">
+                        {comments.length}
+                      </div>
+                      <div className="text-md-on-surface-variant text-sm">Всего отзывов</div>
+                    </div>
+                  </div>
+
+                  <div className="premium-card rounded-2xl p-6 flex items-center gap-5">
+                    <div className="w-14 h-14 rounded-2xl bg-teal-50 dark:bg-teal-900/20 flex items-center justify-center">
+                      <TrendingUp className="w-7 h-7 text-md-secondary" />
+                    </div>
+                    <div>
+                      <div className="text-3xl font-headline font-black text-md-on-surface">
+                        {rating5Count}
+                      </div>
+                      <div className="text-md-on-surface-variant text-sm">Оценок «5 звёзд»</div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Rating distribution */}
                 <div className="premium-card rounded-2xl p-6 mb-8">
                   <h3 className="font-headline font-bold text-md-on-surface mb-5 flex items-center gap-2">
                     <Activity className="w-5 h-5 text-md-primary" />
@@ -170,6 +276,65 @@ const Dashboard = () => {
                   </div>
                 </div>
 
+                {/* Review cards */}
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+                  {[...comments].reverse().map((c: any) => (
+                    <div key={c.id} className="premium-card rounded-2xl p-5 space-y-4">
+                      <div className="flex items-start gap-3">
+                        {c.user?.image ? (
+                          <img
+                            src={c.user.image}
+                            alt={c.user.fullName}
+                            className="w-10 h-10 rounded-full object-cover ring-2 ring-md-primary/20"
+                          />
+                        ) : (
+                          <div className="w-10 h-10 rounded-full bg-md-primary/10 flex items-center justify-center shrink-0">
+                            <User className="w-5 h-5 text-md-primary" />
+                          </div>
+                        )}
+                        <div className="flex-1 min-w-0">
+                          <p className="font-semibold text-md-on-surface text-sm truncate">
+                            {c.user?.fullName || "Аноним"}
+                          </p>
+                          <p className="text-xs text-md-on-surface-variant">{c.date}</p>
+                        </div>
+                        <div
+                          className={`shrink-0 text-xs font-black px-2.5 py-1 rounded-full font-headline ${
+                            c.rating >= 4
+                              ? "bg-teal-100 text-teal-700 dark:bg-teal-900/30 dark:text-teal-300"
+                              : c.rating === 3
+                              ? "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-300"
+                              : "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300"
+                          }`}
+                        >
+                          ★ {c.rating}
+                        </div>
+                      </div>
+
+                      <div className="flex gap-0.5">
+                        {[1, 2, 3, 4, 5].map((n) => (
+                          <Star
+                            key={n}
+                            className={`w-4 h-4 ${n <= c.rating ? "text-amber-400" : "star-empty"}`}
+                            fill={n <= c.rating ? "currentColor" : "none"}
+                          />
+                        ))}
+                      </div>
+
+                      {c.comment && (
+                        <p className="text-sm text-md-on-surface leading-relaxed border-l-2 border-md-primary/30 pl-3">
+                          {c.comment}
+                        </p>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </>
+            )}
+          </div>
+        )}
+
+        {/* ── APPOINTMENTS TABS ── */}
         {tab !== "reviews" && (
           <>
             {appointmentsLoading ? (
@@ -188,6 +353,19 @@ const Dashboard = () => {
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 animate-fade-in-scale">
                 {doctorAppointments.map((apt: any) => (
                   <div key={apt.id} className="premium-card rounded-2xl overflow-hidden">
+                    {/* Card top accent */}
+                    <div
+                      className={`h-1 w-full ${
+                        apt.status === "approved"
+                          ? "bg-gradient-to-r from-md-secondary to-teal-400"
+                          : apt.status === "rejected"
+                          ? "bg-gradient-to-r from-md-error to-red-400"
+                          : "bg-gradient-to-r from-amber-400 to-orange-400"
+                      }`}
+                    />
+
+                    <div className="p-5 space-y-4">
+                      {/* Patient info */}
                       <div className="flex items-center gap-3">
                         <div className="w-11 h-11 rounded-xl bg-md-primary/10 flex items-center justify-center shrink-0">
                           <User className="w-5 h-5 text-md-primary" />
@@ -200,6 +378,19 @@ const Dashboard = () => {
                         </div>
                       </div>
 
+                      {/* Meta info */}
+                      <div className="grid grid-cols-2 gap-3">
+                        <div className="bg-md-surface-container rounded-xl p-3 flex items-center gap-2">
+                          <Calendar className="w-4 h-4 text-md-primary shrink-0" />
+                          <span className="text-xs font-semibold text-md-on-surface">{apt.date}</span>
+                        </div>
+                        <div className="bg-md-surface-container rounded-xl p-3 flex items-center gap-2">
+                          <Clock className="w-4 h-4 text-md-secondary shrink-0" />
+                          <span className="text-xs font-semibold text-md-on-surface">{apt.time}</span>
+                        </div>
+                      </div>
+
+                      {/* Symptoms */}
                       {apt.symptoms && (
                         <div className="bg-md-surface-container-low rounded-xl p-3 border-l-2 border-md-primary/40">
                           <p className="text-[10px] font-black text-md-outline uppercase tracking-widest mb-1">
@@ -209,6 +400,17 @@ const Dashboard = () => {
                         </div>
                       )}
 
+                      {/* Reject reason */}
+                      {apt.status === "rejected" && apt.rejectReason && (
+                        <div className="bg-md-error-container/30 rounded-xl p-3 border-l-2 border-md-error/50">
+                          <p className="text-[10px] font-black text-md-error uppercase tracking-widest mb-1">
+                            Причина отказа
+                          </p>
+                          <p className="text-sm text-md-on-surface">{apt.rejectReason}</p>
+                        </div>
+                      )}
+
+                      {/* Actions */}
                       {tab === "pending" && (
                         <div className="flex gap-2 pt-1">
                           <button
@@ -237,3 +439,53 @@ const Dashboard = () => {
         )}
       </section>
 
+      {/* ── Reject Modal ── */}
+      {rejectModal.open && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-fade-in-scale">
+          <div className="premium-card rounded-2xl p-6 w-full max-w-md">
+            <h3 className="font-headline text-lg font-bold text-md-on-surface mb-1">
+              {t("dashboard.rejectReason")}
+            </h3>
+            <p className="text-sm text-md-on-surface-variant mb-5">
+              Объясните пациенту причину отказа
+            </p>
+            <textarea
+              value={rejectReason}
+              onChange={(e) => setRejectReason(e.target.value)}
+              placeholder={t("dashboard.rejectPlaceholder")}
+              className="w-full border border-md-outline-variant/50 rounded-xl p-4 min-h-[110px] focus:outline-none bg-md-surface-container text-md-on-surface text-sm resize-none mb-4"
+              required
+            />
+            <div className="flex gap-3 justify-end">
+              <Button
+                variant="outline"
+                onClick={() => { setRejectModal({ open: false, id: null }); setRejectReason(""); }}
+                className="cursor-pointer rounded-xl"
+              >
+                {t("dashboard.cancel")}
+              </Button>
+              <Button
+                onClick={handleReject}
+                disabled={actionLoading || !rejectReason.trim()}
+                className="bg-md-error hover:bg-md-error/90 text-white cursor-pointer disabled:opacity-50 rounded-xl"
+              >
+                {actionLoading ? t("dashboard.rejecting") : t("dashboard.reject")}
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
+const EmptyState = ({ icon, text }: { icon: React.ReactNode; text: string }) => (
+  <div className="flex flex-col items-center justify-center py-24 gap-4 animate-fade-in-scale">
+    <div className="w-20 h-20 rounded-2xl bg-md-surface-container flex items-center justify-center text-md-on-surface-variant [&>svg]:w-9 [&>svg]:h-9">
+      {icon}
+    </div>
+    <p className="text-md-on-surface-variant font-medium text-center max-w-xs">{text}</p>
+  </div>
+);
+
+export default Dashboard;
