@@ -107,7 +107,7 @@ export default function Auth() {
           <h2 className="text-3xl font-bold text-white mb-3 text-balance font-headline">
             {t("auth.joinCommunity")}
           </h2>
-          <p className="text-blue-100/80 leading-relaxed max-w-xs">
+          <p className="text-teal-100/80 leading-relaxed max-w-xs">
             {t("auth.joinDesc")}
           </p>
           <div className="flex gap-6 mt-8">

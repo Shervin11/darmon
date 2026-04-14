@@ -59,7 +59,7 @@ const About = () => {
 
           <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
             {[
-              { icon: <Zap className="h-6 w-6" />, color: "bg-blue-100 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400", title: t("aboutPage.f1Title"), desc: t("aboutPage.f1Desc") },
+              { icon: <Zap className="h-6 w-6" />, color: "bg-teal-100 text-[#00A896] dark:bg-[#0A2342]/50 dark:text-teal-400", title: t("aboutPage.f1Title"), desc: t("aboutPage.f1Desc") },
               { icon: <Shield className="h-6 w-6" />, color: "bg-green-100 text-green-600 dark:bg-green-900/30 dark:text-green-400", title: t("aboutPage.f2Title"), desc: t("aboutPage.f2Desc") },
               { icon: <Users className="h-6 w-6" />, color: "bg-purple-100 text-purple-600 dark:bg-purple-900/30 dark:text-purple-400", title: t("aboutPage.f3Title"), desc: t("aboutPage.f3Desc") },
               { icon: <BarChart3 className="h-6 w-6" />, color: "bg-orange-100 text-orange-600 dark:bg-orange-900/30 dark:text-orange-400", title: t("aboutPage.f4Title"), desc: t("aboutPage.f4Desc") },
@@ -116,15 +116,21 @@ const About = () => {
       </section>
 
       {/* CTA */}
-      <section className="vitality-gradient py-20">
-        <div className="max-w-4xl mx-auto px-6 text-center space-y-8">
+      <section className="relative bg-[#00A191] py-20 overflow-hidden">
+        {/* Glow effects */}
+        <div className="absolute inset-0 opacity-20">
+          <div className="absolute -right-20 -top-20 w-96 h-96 bg-[#00C4B0] rounded-full blur-[120px]"></div>
+          <div className="absolute -left-20 -bottom-20 w-96 h-96 bg-[#007D70] rounded-full blur-[120px]"></div>
+        </div>
+        
+        <div className="max-w-4xl mx-auto px-6 text-center space-y-8 relative z-10">
           <h2 className="text-4xl md:text-5xl font-headline font-extrabold text-white">
             {t("aboutPage.ready")}
           </h2>
-          <p className="text-blue-100 text-lg opacity-90 max-w-2xl mx-auto">
+          <p className="text-[#A7F3EB] text-lg opacity-90 max-w-2xl mx-auto">
             {t("aboutPage.readyDesc")}
           </p>
-          <Link href="/doctors" className="bg-md-secondary-container text-md-on-secondary-container px-12 py-5 rounded-full font-headline font-black text-lg shadow-xl shadow-black/10 hover:scale-105 active:scale-95 transition-all inline-block">
+          <Link href="/doctors" className="bg-[#00BFA5] text-white hover:bg-white hover:text-[#00A191] px-12 py-5 rounded-full font-headline font-black text-lg shadow-xl shadow-black/10 hover:scale-105 active:scale-95 transition-all inline-block">
             {t("aboutPage.start")}
           </Link>
         </div>

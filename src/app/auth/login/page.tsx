@@ -162,7 +162,7 @@ export default function Login() {
           <h2 className="text-3xl font-bold text-white mb-3 text-balance font-headline">
             {t("auth.healthPriority")}
           </h2>
-          <p className="text-blue-100/80 leading-relaxed max-w-xs">
+          <p className="text-teal-100/80 leading-relaxed max-w-xs">
             {t("auth.connectBest")}
           </p>
           <div className="flex gap-6 mt-8">

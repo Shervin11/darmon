@@ -140,12 +140,17 @@ const Profile = () => {
     <div className="bg-md-surface-container-low min-h-screen pb-20 pt-20">
       {/* Hero Banner */}
       <section className="max-w-7xl mx-auto px-6 mb-12 mt-4">
-        <div className="signature-gradient rounded-xl p-10 md:p-16 relative overflow-hidden">
+        <div className="relative bg-[#00A191] rounded-xl pt-16 pb-20 px-10 md:px-16 overflow-hidden flex flex-col items-center justify-center text-center">
+          {/* Glow effects */}
+          <div className="absolute inset-0 opacity-20">
+            <div className="absolute -right-20 -top-20 w-96 h-96 bg-[#00C4B0] rounded-full blur-[120px]"></div>
+            <div className="absolute -left-20 -bottom-20 w-96 h-96 bg-[#007D70] rounded-full blur-[120px]"></div>
+          </div>
+          
           <div className="relative z-10">
-            <p className="text-md-secondary-container text-xs uppercase tracking-[4px] font-bold mb-3 font-headline">{t("profile.badge")}</p>
+            <p className="text-[#A7F3EB] text-xs uppercase tracking-[4px] font-bold mb-3 font-headline">{t("profile.badge")}</p>
             <h1 className="text-4xl md:text-5xl font-extrabold text-white tracking-tight font-headline">{t("profile.title")}</h1>
           </div>
-          <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full -mr-32 -mt-32 blur-3xl"></div>
         </div>
       </section>
 

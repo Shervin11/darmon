@@ -100,11 +100,12 @@ const Dashboard = () => {
     <div className="pt-20 pb-16 min-h-screen">
       {/* ── Hero Banner ── */}
       <section className="max-w-7xl mx-auto px-6 mb-10 mt-4">
-        <div className="relative overflow-hidden rounded-2xl signature-gradient text-white p-8 md:p-12">
-          {/* Decorative blobs */}
-          <div className="absolute -top-12 -right-12 w-56 h-56 bg-white/5 rounded-full blur-3xl" />
-          <div className="absolute bottom-0 left-1/3 w-64 h-64 bg-md-secondary/10 rounded-full blur-3xl" />
-          <div className="absolute top-0 right-1/4 w-32 h-32 bg-white/5 rounded-full blur-2xl" />
+        <div className="relative overflow-hidden rounded-2xl bg-[#00A191] text-white p-8 md:p-12">
+          {/* Glow effects for volume */}
+          <div className="absolute inset-0 opacity-20">
+            <div className="absolute -right-20 -top-20 w-96 h-96 bg-[#00C4B0] rounded-full blur-[120px]"></div>
+            <div className="absolute -left-20 -bottom-20 w-96 h-96 bg-[#007D70] rounded-full blur-[120px]"></div>
+          </div>
 
           <div className="relative z-10 flex flex-col md:flex-row justify-between items-start md:items-center gap-8">
             <div className="space-y-3">
@@ -112,14 +113,14 @@ const Dashboard = () => {
                 <span className="bg-white/15 backdrop-blur-md p-2.5 rounded-xl border border-white/20">
                   <Stethoscope className="w-5 h-5" />
                 </span>
-                <span className="text-blue-200 font-semibold tracking-widest text-xs uppercase">
+                <span className="text-[#A7F3EB] font-semibold tracking-widest text-xs uppercase">
                   {t("dashboard.badge")}
                 </span>
               </div>
-              <h1 className="font-headline font-black text-3xl md:text-4xl lg:text-5xl leading-tight">
+              <h1 className="font-headline font-black text-3xl md:text-4xl lg:text-5xl leading-tight text-white">
                 {t("dashboard.title")}
               </h1>
-              <p className="text-blue-100/80 text-base max-w-lg leading-relaxed">
+              <p className="text-[#A7F3EB]/80 text-base max-w-lg leading-relaxed font-light">
                 {t("dashboard.welcomeDoctor")},{" "}
                 <span className="font-bold text-white">
                   {userById?.fullName || t("auth.doctor")}
@@ -133,7 +134,7 @@ const Dashboard = () => {
               {[
                 {
                   icon: <Users className="w-5 h-5" />,
-                  val: doctorAppointments.filter(a => a.status === "approved").length,
+                  val: doctorAppointments.filter((a: any) => a.status === "approved").length,
                   label: "Принятых",
                 },
                 {
@@ -149,11 +150,11 @@ const Dashboard = () => {
               ].map((s, i) => (
                 <div
                   key={i}
-                  className="glass-card rounded-xl px-4 py-3 text-center min-w-[80px]"
+                  className="bg-white/10 backdrop-blur-md border border-white/20 rounded-xl px-4 py-3 text-center min-w-[80px]"
                 >
                   <div className="text-white/70 mb-1 flex justify-center">{s.icon}</div>
                   <div className="font-headline font-black text-xl text-white">{s.val}</div>
-                  <div className="text-blue-200 text-[10px] font-medium mt-0.5">{s.label}</div>
+                  <div className="text-[#A7F3EB] text-[10px] font-medium mt-0.5">{s.label}</div>
                 </div>
               ))}
             </div>
@@ -212,7 +213,7 @@ const Dashboard = () => {
                   </div>
 
                   <div className="premium-card rounded-2xl p-6 flex items-center gap-5">
-                    <div className="w-14 h-14 rounded-2xl bg-blue-50 dark:bg-blue-900/20 flex items-center justify-center">
+                    <div className="w-14 h-14 rounded-2xl bg-teal-50 dark:bg-[#0A2342]/40 flex items-center justify-center">
                       <MessageSquare className="w-7 h-7 text-md-primary" />
                     </div>
                     <div>

@@ -9,6 +9,10 @@ import {
   ShieldCheck,
   Mail,
   User,
+  Search,
+  Clock,
+  PlayCircle,
+  CalendarCheck
 } from "lucide-react";
 import { useTranslation } from "@/lib/i18n";
 
@@ -16,43 +20,123 @@ const Home = () => {
   const { t } = useTranslation();
 
   return (
-    <div className="min-h-screen overflow-hidden pt-20">
+    <div className="min-h-screen overflow-hidden">
       {/* ── HERO SECTION ── */}
-      <section className="bg-md-surface-container-low min-h-[700px] flex items-center overflow-hidden">
-        <div className="max-w-7xl mx-auto px-6 grid md:grid-cols-2 gap-12 items-center w-full">
-          <div className="space-y-8 py-12 animate-fade-in-up">
-            <span className="inline-block px-4 py-1.5 bg-md-secondary-container text-md-on-secondary-container font-bold text-xs rounded-full uppercase tracking-wider font-headline">
-              {t("hero.badge")}
-            </span>
-            <h1 className="font-headline text-5xl md:text-7xl font-extrabold leading-[1.1] tracking-tight text-md-on-surface">
-              <span className="text-md-primary block">{t("hero.title1")}</span>
-              {t("hero.title2")}
+      <section className="relative min-h-[700px] md:min-h-[800px] flex items-center overflow-hidden bg-gradient-to-br from-[#0A2342] via-[#1a365d] to-[#0f172a] pb-20 pt-[80px]">
+        {/* Background Gradients/Glows */}
+        <div className="absolute top-0 right-0 w-[60%] h-full bg-gradient-to-r from-transparent to-[#00A896]/10 pointer-events-none z-0"></div>
+        <div className="absolute bottom-0 left-0 w-full h-[40%] bg-gradient-to-t from-[#00A896]/5 to-transparent pointer-events-none z-0"></div>
+
+        {/* Decorative circles */}
+        <div className="absolute w-[450px] h-[450px] -top-[100px] -right-[100px] rounded-full bg-[#00A896]/10 pointer-events-none z-0 blur-[2px]"></div>
+        <div className="absolute w-[250px] h-[250px] bottom-[30px] left-[30px] rounded-full bg-[#00A896]/5 pointer-events-none z-0 blur-[1px]"></div>
+
+        <div className="relative z-10 max-w-7xl mx-auto px-6 grid lg:grid-cols-2 gap-12 items-center w-full mt-8">
+          {/* Left Content */}
+          <div className="space-y-8 animate-fade-in-up md:pl-4">
+            <h1 className="font-headline text-5xl md:text-[64px] font-extrabold text-white leading-[1.1] tracking-tight">
+              <span className="text-[#00A896]">Darmon</span> — {t("hero.title2") || "Тибби оянда"}
             </h1>
-            <div className="w-[50px] h-[3px] bg-md-primary"></div>
-            <p className="text-md-on-surface-variant text-lg max-w-md leading-relaxed">
-              {t("hero.desc")}
+
+            <p className="text-white/80 text-lg md:text-xl leading-relaxed max-w-lg font-light">
+              {t("hero.desc") || "Экосистемае, ки табибон ва беморонро муттаҳид мекунад. Ҷустуҷӯи дақиқ, шаффофият ва эътимод."}
             </p>
-            <div className="flex flex-wrap gap-4 pt-4">
-              <Link href="/doctors" className="bg-md-primary text-white px-8 py-4 rounded-full font-bold shadow-lg shadow-md-primary/20 hover:scale-105 active:scale-95 transition-all flex items-center gap-2 group font-headline">
-                {t("hero.more")}
-                <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
-              </Link>
-              <Link href="/about" className="bg-md-secondary-container text-md-on-secondary-container px-8 py-4 rounded-full font-bold hover:scale-105 active:scale-95 transition-all font-headline">
-                {t("hero.services")}
+
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-4 w-full">
+              <div className="bg-white/5 border border-white/10 rounded-2xl p-5 flex flex-col items-start gap-4 backdrop-blur-sm transition-transform hover:-translate-y-1">
+                <div className="w-12 h-12 rounded-xl bg-[#00A896]/20 flex items-center justify-center shrink-0">
+                  <Search className="w-6 h-6 text-[#00A896]" />
+                </div>
+                <div>
+                  <div className="font-headline font-semibold text-white text-[15px] mb-1">Ҷустуҷӯи дақиқ</div>
+                  <div className="text-[13px] text-white/60 leading-tight">Пайдо кардани мутахассис бо чанд клик</div>
+                </div>
+              </div>
+              <div className="bg-white/5 border border-white/10 rounded-2xl p-5 flex flex-col items-start gap-4 backdrop-blur-sm transition-transform hover:-translate-y-1">
+                <div className="w-12 h-12 rounded-xl bg-[#00A896]/20 flex items-center justify-center shrink-0">
+                  <ShieldCheck className="w-6 h-6 text-[#00A896]" />
+                </div>
+                <div>
+                  <div className="font-headline font-semibold text-white text-[15px] mb-1">Шаффофият</div>
+                  <div className="text-[13px] text-white/60 leading-tight">Рейтинг дар асоси таҷрибаи воқеӣ</div>
+                </div>
+              </div>
+              <div className="bg-white/5 border border-white/10 rounded-2xl p-5 flex flex-col items-start gap-4 backdrop-blur-sm transition-transform hover:-translate-y-1">
+                <div className="w-12 h-12 rounded-xl bg-[#00A896]/20 flex items-center justify-center shrink-0">
+                  <Clock className="w-6 h-6 text-[#00A896]" />
+                </div>
+                <div>
+                  <div className="font-headline font-semibold text-white text-[15px] mb-1">Сарфаи вақт</div>
+                  <div className="text-[13px] text-white/60 leading-tight">Фармоиши осон ва бехатар</div>
+                </div>
+              </div>
+            </div>
+
+            <div className="pt-6">
+              <Link href="/doctors" className="inline-flex items-center gap-3 bg-gradient-to-br from-[#00A896] to-[#00BFA5] text-white px-8 py-4 rounded-xl font-headline font-semibold text-lg shadow-[0_8px_32px_rgba(0,168,150,0.3)] hover:scale-105 active:scale-95 transition-all">
+                <PlayCircle className="w-6 h-6" />
+                <span>{t("hero.more") || "Оғози кор"}</span>
               </Link>
             </div>
           </div>
-          <div className="relative hidden md:flex justify-end self-end">
-            <div className="absolute -bottom-10 -right-10 w-96 h-96 bg-md-primary/5 rounded-full blur-3xl"></div>
-            <Image
-              src="/healthcare-smile-and-portrait-of-doctor-man-in-h-2023-11-27-05-17-56-FQW3ASA-819x1024.png"
-              alt="Professional doctor"
-              width={500}
-              height={600}
-              className="relative z-10 w-auto h-auto max-h-[580px] object-contain"
-              priority
-              style={{ maskImage: 'linear-gradient(to bottom, black 80%, transparent 100%)' }}
-            />
+
+          {/* Right Floating Elements */}
+          <div className="relative hidden lg:flex justify-center items-center h-[600px] w-full">
+            {/* Card 1: Doctor */}
+            <div className="absolute top-[15%] right-[5%] w-[300px] bg-white/10 border border-white/15 rounded-[20px] p-6 shadow-[0_12px_40px_rgba(0,0,0,0.3)] backdrop-blur-md z-20 animate-float" style={{ animationDelay: '0s' }}>
+              <div className="flex items-center gap-3 mb-4">
+                <div className="w-11 h-11 rounded-full bg-gradient-to-br from-[#00A896] to-[#00BFA5] flex items-center justify-center text-white shrink-0">
+                  <User className="w-5 h-5" />
+                </div>
+                <div>
+                  <div className="text-[15px] font-semibold text-white">Доктор Аҳмадов</div>
+                  <div className="text-[13px] text-white/70">Кардиолог</div>
+                </div>
+              </div>
+              <div className="flex items-center gap-2 text-[13px] text-white mb-4">
+                <div className="w-2 h-2 rounded-full bg-[#00D1B2] shadow-[0_0_8px_#00D1B2]"></div>
+                <span>Онлайн</span>
+              </div>
+              <div className="flex gap-5 border-t border-white/10 pt-4">
+                <div className="flex-1">
+                  <div className="text-xl font-bold text-white">4.9</div>
+                  <div className="text-[11px] uppercase tracking-wider text-white/50 mt-1">Рейтинг</div>
+                </div>
+                <div className="flex-1">
+                  <div className="text-xl font-bold text-white">150+</div>
+                  <div className="text-[11px] uppercase tracking-wider text-white/50 mt-1">Шарҳҳо</div>
+                </div>
+              </div>
+            </div>
+
+            {/* Card 2: Diagnosis */}
+            <div className="absolute top-[45%] right-[40%] w-[260px] bg-[#00A896]/15 border border-white/15 rounded-[20px] p-6 shadow-[0_12px_40px_rgba(0,0,0,0.3)] backdrop-blur-md z-30 animate-float" style={{ animationDelay: '1.5s' }}>
+              <div className="flex items-center gap-3 mb-3">
+                <div className="w-11 h-11 rounded-full bg-gradient-to-br from-[#00A896] to-[#00BFA5] flex items-center justify-center text-white shrink-0">
+                  <Stethoscope className="w-5 h-5" />
+                </div>
+                <div>
+                  <div className="text-[15px] font-semibold text-white">Ташхис</div>
+                  <div className="text-[13px] text-white/70">AI ёвар</div>
+                </div>
+              </div>
+              <div className="text-[13px] text-white/90 leading-relaxed">
+                Системаи ҳушманди ташхиси аввалия
+              </div>
+            </div>
+
+            {/* Card 3: Schedule */}
+            <div className="absolute bottom-[20%] right-[15%] w-[220px] bg-white/5 border border-white/15 rounded-[20px] p-6 shadow-[0_12px_40px_rgba(0,0,0,0.3)] backdrop-blur-md z-10 animate-float" style={{ animationDelay: '0.7s' }}>
+              <div className="flex items-center gap-3">
+                <div className="w-11 h-11 rounded-full bg-gradient-to-br from-[#00A896] to-[#00BFA5] flex items-center justify-center text-white shrink-0">
+                  <CalendarCheck className="w-5 h-5" />
+                </div>
+                <div>
+                  <div className="text-[15px] font-semibold text-white">Вақт</div>
+                  <div className="text-[13px] text-white/70">Дастрас</div>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </section>

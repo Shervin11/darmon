@@ -23,14 +23,18 @@ const Appointments = () => {
     <div className="pt-20 pb-12">
       {/* Hero Banner */}
       <section className="max-w-7xl mx-auto px-6 mb-12 mt-8">
-        <div className="signature-gradient rounded-xl p-10 md:p-16 relative overflow-hidden flex flex-col items-start justify-center min-h-[280px]">
-          <div className="relative z-10">
-            <span className="bg-md-secondary-container text-md-on-secondary-container px-4 py-1.5 rounded-full text-xs font-bold tracking-widest uppercase mb-4 inline-block font-headline">{t("appointments.badge")}</span>
-            <h1 className="text-white text-4xl md:text-6xl font-extrabold tracking-tight mb-2 font-headline">{t("appointments.title")}</h1>
-            <p className="text-blue-100 text-lg md:text-xl font-medium max-w-xl opacity-90">{t("appointments.subtitle")}</p>
+        <div className="relative bg-[#00A191] rounded-xl pt-16 pb-20 px-10 md:px-16 overflow-hidden flex flex-col items-center justify-center text-center">
+          {/* Glow effects */}
+          <div className="absolute inset-0 opacity-20">
+            <div className="absolute -right-20 -top-20 w-96 h-96 bg-[#00C4B0] rounded-full blur-[120px]"></div>
+            <div className="absolute -left-20 -bottom-20 w-96 h-96 bg-[#007D70] rounded-full blur-[120px]"></div>
           </div>
-          <div className="absolute right-[-5%] top-[-10%] w-64 h-64 bg-white/10 rounded-full blur-3xl"></div>
-          <div className="absolute right-[10%] bottom-[-20%] w-96 h-96 bg-md-secondary-container/20 rounded-full blur-[100px]"></div>
+          
+          <div className="relative z-10">
+            <span className="text-[#A7F3EB] px-4 py-1.5 rounded-full text-xs font-bold tracking-widest uppercase mb-4 inline-block font-headline">{t("appointments.badge")}</span>
+            <h1 className="text-white text-4xl md:text-6xl font-extrabold tracking-tight mb-2 font-headline">{t("appointments.title")}</h1>
+            <p className="text-[#A7F3EB]/90 text-lg md:text-xl font-medium max-w-xl mx-auto">{t("appointments.subtitle")}</p>
+          </div>
         </div>
       </section>
 

@@ -97,15 +97,16 @@ const DoctorById = ({ params }: { params: Promise<{ id: string }> }) => {
   return (
     <div className="bg-md-surface-container-low min-h-screen pt-20 pb-12">
       {/* Banner */}
-      <header className="signature-gradient rounded-none md:rounded-xl md:mx-auto md:max-w-7xl p-8 md:p-12 mb-8 text-white relative overflow-hidden mt-4">
-        <div className="relative z-10">
-          <span className="text-blue-100 font-headline font-semibold tracking-widest uppercase text-sm mb-2 block">{t("doctor.specialist")}</span>
-          <h1 className="text-4xl md:text-5xl font-headline font-extrabold tracking-tight">{t("doctor.profile")}</h1>
+      <header className="relative bg-[#00A191] pt-20 pb-28 px-6 overflow-hidden mb-8 mt-4 md:rounded-xl md:mx-auto md:max-w-7xl">
+        {/* Glow effects for volume */}
+        <div className="absolute inset-0 opacity-20">
+          <div className="absolute -right-20 -top-20 w-96 h-96 bg-[#00C4B0] rounded-full blur-[120px]"></div>
+          <div className="absolute -left-20 -bottom-20 w-96 h-96 bg-[#007D70] rounded-full blur-[120px]"></div>
         </div>
-        <div className="absolute right-0 top-0 h-full w-1/3 opacity-10 pointer-events-none">
-          <svg className="h-full w-full" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
-            <path d="M44.7,-76.4C58.1,-69.2,69.2,-58.1,77.3,-44.7C85.4,-31.3,90.5,-15.7,89.2,-0.7C87.9,14.2,80.3,28.4,70.9,40.4C61.5,52.4,50.3,62.1,37.6,69.5C24.9,76.9,10.7,82,-3.2,87.5C-17.1,93,-30.7,98.9,-43.3,94.5C-55.9,90.1,-67.5,75.4,-75.7,60.2C-83.9,45,-88.7,29.3,-90,13.2C-91.3,-2.8,-89.1,-19.2,-81.9,-33.5C-74.7,-47.8,-62.5,-60,-48.5,-67.1C-34.5,-74.2,-18.7,-76.2,-2.1,-72.6C14.5,-69,29,-59.8,44.7,-76.4Z" fill="#FFFFFF" transform="translate(100 100)"></path>
-          </svg>
+
+        <div className="max-w-7xl mx-auto relative z-10 text-center">
+          <span className="text-[#A7F3EB] font-headline font-semibold tracking-widest uppercase text-sm mb-2 block">{t("doctor.specialist")}</span>
+          <h1 className="text-white font-headline font-extrabold text-4xl md:text-5xl tracking-tight">{t("doctor.profile")}</h1>
         </div>
       </header>
 
@@ -166,7 +167,7 @@ const DoctorById = ({ params }: { params: Promise<{ id: string }> }) => {
                     <div key={c.id} className="space-y-3">
                       <div className="flex justify-between items-start">
                         <div className="flex gap-4 items-center">
-                          <div className="w-12 h-12 rounded-full bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center overflow-hidden">
+                          <div className="w-12 h-12 rounded-full bg-teal-100 dark:bg-[#0A2342]/50 flex items-center justify-center overflow-hidden">
                             <img src={c.user.image || DefaultPhoto} alt="" className="w-full h-full object-cover" />
                           </div>
                           <div>
@@ -177,7 +178,7 @@ const DoctorById = ({ params }: { params: Promise<{ id: string }> }) => {
                         <div className="flex items-center gap-3">
                           {userById?.fullName === c.user.fullName && editingCommentId !== c.id && (
                             <div className="flex gap-2">
-                              <button onClick={() => { setEditingCommentId(c.id); setEditText(c.comment); setEditRating(c.rating); }} className="text-[10px] font-bold text-blue-600 hover:underline cursor-pointer">{t("doctor.edit")}</button>
+                              <button onClick={() => { setEditingCommentId(c.id); setEditText(c.comment); setEditRating(c.rating); }} className="text-[10px] font-bold text-[#00A896] hover:underline cursor-pointer">{t("doctor.edit")}</button>
                               <button onClick={() => handleDeleteComment(c.id)} className="text-[10px] font-bold text-red-500 hover:underline cursor-pointer">{t("doctor.delete")}</button>
                             </div>
                           )}

@@ -63,16 +63,26 @@ const Doctors = () => {
   return (
     <div className="bg-md-surface-container-low min-h-screen pt-20">
       {/* Gradient Banner */}
-      <header className="relative signature-gradient pt-20 pb-28 px-6 overflow-hidden">
-        <div className="absolute inset-0 opacity-10">
-          <div className="absolute -right-20 -top-20 w-96 h-96 bg-md-secondary-container rounded-full blur-3xl"></div>
-          <div className="absolute -left-20 -bottom-20 w-96 h-96 bg-blue-200 rounded-full blur-3xl"></div>
-        </div>
-        <div className="max-w-7xl mx-auto relative z-10 text-center">
-          <p className="text-blue-100 font-headline font-semibold tracking-[0.2em] uppercase text-xs mb-4">{t("doctors.badge")}</p>
-          <h1 className="text-white font-headline font-extrabold text-4xl md:text-5xl lg:text-6xl tracking-tight">{t("doctors.title")}</h1>
-        </div>
-      </header>
+      <header className="relative bg-[#00A191] pt-20 pb-28 px-6 overflow-hidden">
+  {/* Эффекты свечения для объема */}
+  <div className="absolute inset-0 opacity-20">
+    {/* Светлое пятно в тон кнопки */}
+    <div className="absolute -right-20 -top-20 w-96 h-96 bg-[#00C4B0] rounded-full blur-[120px]"></div>
+    {/* Темный акцент для контраста */}
+    <div className="absolute -left-20 -bottom-20 w-96 h-96 bg-[#007D70] rounded-full blur-[120px]"></div>
+  </div>
+
+  <div className="max-w-7xl mx-auto relative z-10 text-center">
+    {/* Бейдж: светло-бирюзовый */}
+    <p className="text-[#A7F3EB] font-headline font-semibold tracking-[0.2em] uppercase text-xs mb-4">
+      {t("doctors.badge")}
+    </p>
+    
+    <h1 className="text-white font-headline font-extrabold text-4xl md:text-5xl lg:text-6xl tracking-tight">
+      {t("doctors.title")}
+    </h1>
+  </div>
+</header>
 
       {/* Search Bar */}
       <section className="max-w-5xl mx-auto px-6 -mt-12 relative z-20">

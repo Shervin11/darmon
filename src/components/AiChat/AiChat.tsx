@@ -66,7 +66,7 @@ const AiChat = () => {
         className={`fixed bottom-6 right-6 z-[60] w-14 h-14 rounded-full flex items-center justify-center shadow-2xl transition-all duration-300 cursor-pointer group ${
           isOpen
             ? "bg-red-500 hover:bg-red-600 rotate-0"
-            : "bg-gradient-to-br from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 animate-ai-pulse"
+            : "bg-gradient-to-br from-[#00A896] to-[#00BFA5] hover:from-[#00BFA5] hover:to-[#00A896] animate-ai-pulse"
         }`}
         aria-label="AI Chat"
         id="ai-chat-toggle"
@@ -87,13 +87,13 @@ const AiChat = () => {
         } bottom-24 right-6 w-[360px] max-w-[calc(100vw-3rem)] h-[520px] max-h-[calc(100vh-8rem)] rounded-2xl overflow-hidden shadow-[0_25px_60px_rgba(0,0,0,0.3)] flex flex-col bg-white dark:bg-[#1a1a2e] border border-gray-200 dark:border-gray-700`}
       >
         {/* Header */}
-        <div className="bg-gradient-to-r from-blue-600 to-indigo-600 p-4 flex items-center gap-3 shrink-0">
+        <div className="bg-gradient-to-r from-[#00A896] to-[#00BFA5] p-4 flex items-center gap-3 shrink-0">
           <div className="w-10 h-10 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center">
             <Sparkles className="w-5 h-5 text-white" />
           </div>
           <div className="flex-1">
             <h3 className="text-white font-bold text-sm font-headline">{t("ai.title")}</h3>
-            <p className="text-blue-100 text-[11px]">{t("ai.subtitle")}</p>
+            <p className="text-teal-100 text-[11px]">{t("ai.subtitle")}</p>
           </div>
         </div>
 
@@ -102,7 +102,7 @@ const AiChat = () => {
           {messages.length === 0 && (
             <div className="flex justify-start">
               <div className="flex gap-2 max-w-[85%]">
-                <div className="w-7 h-7 rounded-full bg-gradient-to-br from-blue-500 to-indigo-500 flex items-center justify-center shrink-0 mt-1">
+                <div className="w-7 h-7 rounded-full bg-gradient-to-br from-[#00BFA5] to-[#00A896] flex items-center justify-center shrink-0 mt-1">
                   <Bot className="w-4 h-4 text-white" />
                 </div>
                 <div className="bg-white dark:bg-[#252540] rounded-2xl rounded-tl-md p-3 shadow-sm text-sm text-gray-700 dark:text-gray-200 leading-relaxed">
@@ -116,7 +116,7 @@ const AiChat = () => {
             <div key={i} className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}>
               {msg.role === "assistant" ? (
                 <div className="flex gap-2 max-w-[85%]">
-                  <div className="w-7 h-7 rounded-full bg-gradient-to-br from-blue-500 to-indigo-500 flex items-center justify-center shrink-0 mt-1">
+                  <div className="w-7 h-7 rounded-full bg-gradient-to-br from-[#00BFA5] to-[#00A896] flex items-center justify-center shrink-0 mt-1">
                     <Bot className="w-4 h-4 text-white" />
                   </div>
                   <div className="bg-white dark:bg-[#252540] rounded-2xl rounded-tl-md p-3 shadow-sm text-sm text-gray-700 dark:text-gray-200 leading-relaxed whitespace-pre-wrap">
@@ -125,7 +125,7 @@ const AiChat = () => {
                 </div>
               ) : (
                 <div className="max-w-[85%]">
-                  <div className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-2xl rounded-tr-md p-3 shadow-sm text-sm leading-relaxed">
+                  <div className="bg-gradient-to-r from-[#00A896] to-[#00BFA5] text-white rounded-2xl rounded-tr-md p-3 shadow-sm text-sm leading-relaxed">
                     {msg.content}
                   </div>
                 </div>
@@ -136,14 +136,14 @@ const AiChat = () => {
           {loading && (
             <div className="flex justify-start">
               <div className="flex gap-2 max-w-[85%]">
-                <div className="w-7 h-7 rounded-full bg-gradient-to-br from-blue-500 to-indigo-500 flex items-center justify-center shrink-0 mt-1">
+                <div className="w-7 h-7 rounded-full bg-gradient-to-br from-[#00BFA5] to-[#00A896] flex items-center justify-center shrink-0 mt-1">
                   <Bot className="w-4 h-4 text-white" />
                 </div>
                 <div className="bg-white dark:bg-[#252540] rounded-2xl rounded-tl-md p-3 shadow-sm">
                   <div className="flex gap-1.5 items-center">
-                    <div className="w-2 h-2 bg-blue-400 rounded-full animate-bounce [animation-delay:0ms]" />
-                    <div className="w-2 h-2 bg-blue-400 rounded-full animate-bounce [animation-delay:150ms]" />
-                    <div className="w-2 h-2 bg-blue-400 rounded-full animate-bounce [animation-delay:300ms]" />
+                    <div className="w-2 h-2 bg-teal-400 rounded-full animate-bounce [animation-delay:0ms]" />
+                    <div className="w-2 h-2 bg-teal-400 rounded-full animate-bounce [animation-delay:150ms]" />
+                    <div className="w-2 h-2 bg-teal-400 rounded-full animate-bounce [animation-delay:300ms]" />
                     <span className="text-xs text-gray-400 ml-2">{t("ai.thinking")}</span>
                   </div>
                 </div>
@@ -163,13 +163,13 @@ const AiChat = () => {
               value={input}
               onChange={(e) => setInput(e.target.value)}
               placeholder={t("ai.placeholder")}
-              className="flex-1 bg-gray-100 dark:bg-[#252540] text-gray-800 dark:text-gray-200 rounded-xl px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-blue-500/50 placeholder:text-gray-400 dark:placeholder:text-gray-500 transition-all"
+              className="flex-1 bg-gray-100 dark:bg-[#252540] text-gray-800 dark:text-gray-200 rounded-xl px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-[#00A896]/50 placeholder:text-gray-400 dark:placeholder:text-gray-500 transition-all"
               disabled={loading}
             />
             <button
               type="submit"
               disabled={loading || !input.trim()}
-              className="w-10 h-10 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 text-white flex items-center justify-center hover:from-blue-500 hover:to-indigo-500 transition-all disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer active:scale-95"
+              className="w-10 h-10 rounded-xl bg-gradient-to-r from-[#00A896] to-[#00BFA5] text-white flex items-center justify-center hover:from-[#00BFA5] hover:to-[#00A896] transition-all disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer active:scale-95"
             >
               <Send className="w-4 h-4" />
             </button>
