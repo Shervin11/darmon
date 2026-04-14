@@ -1,7 +1,7 @@
 "use client";
 
 import React, { use, useEffect, useState } from "react";
-import { Phone, Stethoscope, MessageCircle, CalendarCheck, Star, Send } from "lucide-react";
+import { Phone, Stethoscope, MessageCircle, CalendarCheck, Star, Send, Clock } from "lucide-react";
 import useStore from "@/store/store";
 import FixedRating from "@/components/StarRating/page";
 import { Button } from "@/components/ui/button";
@@ -152,6 +152,27 @@ const DoctorById = ({ params }: { params: Promise<{ id: string }> }) => {
                       <h3 className="font-headline font-bold text-lg text-md-on-surface">{t("doctor.aboutSpecialist")}</h3>
                       <p className="text-md-on-surface-variant leading-relaxed">{doctorById.bio}</p>
                     </div>
+
+                    {doctorById.workingSchedule && doctorById.workingSchedule.length > 0 && (
+                      <div className="pt-6 border-t border-md-surface-variant/30 space-y-4">
+                        <div className="flex items-center gap-2 mb-2">
+                          <div className="w-8 h-8 rounded-full bg-teal-100 dark:bg-[#0A2342]/50 flex items-center justify-center">
+                            <Clock className="w-4 h-4 text-[#00A896]" />
+                          </div>
+                          <h3 className="font-headline font-bold text-lg text-md-on-surface">{t("profile.schedule")}</h3>
+                        </div>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                          {doctorById.workingSchedule.map((schedule: any, idx: number) => (
+                            <div key={idx} className="flex justify-between flex-row items-center bg-md-surface-container-low p-3 rounded-xl border gap-3 border-md-outline-variant/30 hover:border-[#00A896]/30 transition-colors">
+                              <span className="font-bold text-md-on-surface">{schedule.day}</span>
+                              <div className="bg-[#00A896]/10 px-2 py-1 rounded-lg">
+                                <span className="text-xs font-bold text-[#00A896]">{schedule.startTime} {schedule.endTime}</span>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
                   </div>
                 </div>
               </section>
@@ -302,23 +323,24 @@ const DoctorById = ({ params }: { params: Promise<{ id: string }> }) => {
                   <button
                     disabled={booking}
                     onClick={async () => {
+                      if (!doctorById?.id) return;
                       if (!userById?.id) { toast.error(t("doctor.loginToBook")); return; }
                       if (!bookingDate || !bookingTime) { toast.error(t("doctor.selectDateTime")); return; }
-                      
+
                       setBooking(true);
-                      
+
                       // Финальная проверка доступности слота перед отправкой
-                      const isAvailable = await checkSlotAvailability(doctorById.id, bookingDate, bookingTime);
-                      
+                      const isAvailable = await checkSlotAvailability(doctorById.id!, bookingDate, bookingTime);
+
                       if (!isAvailable) {
                         toast.error("Ин вақт аллақачон забронирован шудаест. Лутфан вақти дигарро интихоб кунед.");
                         setBooking(false);
                         return;
                       }
-                      
+
                       const res = await createAppointment({
-                        doctorId: doctorById.id,
-                        clientId: userById.id,
+                        doctorId: doctorById.id!,
+                        clientId: userById.id!,
                         doctorName: doctorById.fullName,
                         clientName: userById.fullName,
                         specialty: doctorById.specialty,
@@ -326,9 +348,9 @@ const DoctorById = ({ params }: { params: Promise<{ id: string }> }) => {
                         time: bookingTime,
                         symptoms: symptoms,
                       });
-                      
+
                       setBooking(false);
-                      
+
                       if (res.success) {
                         // Ждём немного перед редиректом, чтобы бэк успел обработать
                         setTimeout(() => {
