@@ -12,17 +12,6 @@ const Footer = () => {
   return (
     <footer className="bg-md-primary text-white w-full rounded-t-[3rem] mt-20 dark:bg-[#0A1628]">
       <div className="grid grid-cols-1 md:grid-cols-4 gap-12 px-8 py-16 max-w-7xl mx-auto text-sm leading-relaxed">
-        {/* Brand */}
-        <div className="space-y-4">
-          <div className="flex items-center gap-2">
-            <span className="text-2xl font-bold text-white mb-4 block">D A R M O N</span>
-          </div>
-          <p className="text-white/80">
-            {t("footer.desc")}
-          </p>
-        </div>
-
-        {/* Links */}
         <div>
           <h4 className="font-bold text-lg mb-6 text-white font-headline">{t("footer.links")}</h4>
           <ul className="space-y-3">
@@ -33,17 +22,6 @@ const Footer = () => {
           </ul>
         </div>
 
-        {/* Info */}
-        <div>
-          <h4 className="font-bold text-lg mb-6 text-white font-headline">{t("footer.info")}</h4>
-          <ul className="space-y-3">
-            <li><Link href="/about" className="text-white/80 hover:text-white transition-colors hover:translate-x-1 inline-block">{t("footer.contact")}</Link></li>
-            <li><Link href="#" className="text-white/80 hover:text-white transition-colors hover:translate-x-1 inline-block">{t("footer.privacy")}</Link></li>
-            <li><Link href="#" className="text-white/80 hover:text-white transition-colors hover:translate-x-1 inline-block">{t("footer.faq")}</Link></li>
-          </ul>
-        </div>
-
-        {/* Contact */}
         <div>
           <h4 className="font-bold text-lg mb-6 text-white font-headline">{t("footer.contact")}</h4>
           <div className="space-y-4">

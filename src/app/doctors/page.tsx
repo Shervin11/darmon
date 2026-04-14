@@ -62,29 +62,11 @@ const Doctors = () => {
 
   return (
     <div className="bg-md-surface-container-low min-h-screen pt-20">
-      {/* Gradient Banner */}
-      <header className="relative bg-[#00A191] pt-20 pb-28 px-6 overflow-hidden">
-  {/* Эффекты свечения для объема */}
   <div className="absolute inset-0 opacity-20">
-    {/* Светлое пятно в тон кнопки */}
-    <div className="absolute -right-20 -top-20 w-96 h-96 bg-[#00C4B0] rounded-full blur-[120px]"></div>
-    {/* Темный акцент для контраста */}
     <div className="absolute -left-20 -bottom-20 w-96 h-96 bg-[#007D70] rounded-full blur-[120px]"></div>
   </div>
 
   <div className="max-w-7xl mx-auto relative z-10 text-center">
-    {/* Бейдж: светло-бирюзовый */}
-    <p className="text-[#A7F3EB] font-headline font-semibold tracking-[0.2em] uppercase text-xs mb-4">
-      {t("doctors.badge")}
-    </p>
-    
-    <h1 className="text-white font-headline font-extrabold text-4xl md:text-5xl lg:text-6xl tracking-tight">
-      {t("doctors.title")}
-    </h1>
-  </div>
-</header>
-
-      {/* Search Bar */}
       <section className="max-w-5xl mx-auto px-6 -mt-12 relative z-20">
         <div className="bg-md-surface-container-lowest p-4 rounded-2xl shadow-[0_20px_50px_rgba(0,78,159,0.12)] flex flex-col md:flex-row gap-4 items-center">
           <div className="flex-1 w-full flex items-center bg-md-surface-container-low rounded-xl px-4 py-3 gap-3">
@@ -121,9 +103,6 @@ const Doctors = () => {
         </div>
       </section>
 
-      {/* Main Content */}
-      <section className="max-w-7xl mx-auto px-6 py-16 grid grid-cols-1 lg:grid-cols-12 gap-12">
-        {/* Doctor List */}
         <div className="lg:col-span-8 space-y-6">
           {isLoading ? (
             <div className="flex justify-center py-20">
@@ -172,67 +151,3 @@ const Doctors = () => {
           )}
         </div>
 
-        {/* Sidebar */}
-        <aside className="lg:col-span-4 space-y-8">
-          <div className="bg-md-surface-container-low p-8 rounded-[2rem] sticky top-28">
-            <h2 className="text-2xl font-headline font-extrabold text-md-on-surface mb-8 flex items-center gap-3">
-              <span className="w-2 h-8 bg-md-secondary rounded-full"></span>
-              {t("doctors.categories")}
-            </h2>
-            <ul className="space-y-4">
-              {displayedCategories.map((cat) => (
-                <li key={cat.id} className="group">
-                  <div
-                    onClick={() => setSelectedCategory(selectedCategory?.id === cat.id ? null : cat)}
-                    className={`flex items-center justify-between p-4 bg-md-surface-container-lowest rounded-2xl cursor-pointer group-hover:translate-x-1 transition-transform shadow-sm ${selectedCategory?.id === cat.id ? "ring-2 ring-md-primary" : ""}`}
-                  >
-                    <div className="flex items-center gap-4">
-                      <div className="w-10 h-10 bg-md-primary/5 text-md-primary rounded-xl flex items-center justify-center overflow-hidden">
-                        {cat.image ? (
-                          <img src={cat.image} alt={cat.name} className="w-full h-full object-contain" />
-                        ) : (
-                          <Activity className="w-5 h-5" />
-                        )}
-                      </div>
-                      <span className="font-headline font-bold text-sm text-md-on-surface">{cat.name}</span>
-                    </div>
-                    <ChevronRight className={`w-5 h-5 text-md-outline group-hover:text-md-primary transition-transform ${selectedCategory?.id === cat.id ? "rotate-90" : ""}`} />
-                  </div>
-
-                  {selectedCategory?.id === cat.id && (
-                    <div className="grid grid-cols-1 gap-1 ml-4 border-l-2 border-md-outline-variant/20 pl-4 py-2 mt-2">
-                      {cat.subcategories?.map((sub, idx) => (
-                        <button
-                          key={idx}
-                          onClick={() => searchDoctorByCategory(sub)}
-                          className="text-left text-xs py-2 px-3 rounded-lg hover:bg-md-primary/5 text-md-on-surface-variant hover:text-md-primary transition-colors cursor-pointer"
-                        >
-                          {sub}
-                        </button>
-                      ))}
-                    </div>
-                  )}
-                </li>
-              ))}
-            </ul>
-
-            {category.length > CATEGORY_LIMIT && (
-              <button
-                onClick={() => setShowAllCategories(!showAllCategories)}
-                className="w-full mt-8 py-4 border border-md-outline-variant/30 text-md-outline font-headline font-bold text-sm rounded-full hover:bg-white dark:hover:bg-[#252540] transition-colors cursor-pointer flex items-center justify-center gap-2"
-              >
-                {showAllCategories ? (
-                  <>{t("doctors.showLess")} <ChevronUp className="w-4 h-4" /></>
-                ) : (
-                  <>{t("doctors.showAll")} ({category.length}) <ChevronDown className="w-4 h-4" /></>
-                )}
-              </button>
-            )}
-          </div>
-        </aside>
-      </section>
-    </div>
-  );
-};
-
-export default Doctors;

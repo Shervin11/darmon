@@ -17,12 +17,12 @@ export default function LayoutContent({ children }: { children: React.ReactNode 
 
     const hideLayout = pathname === "/auth/login" || pathname === "/auth";
 
-    // Apply theme class on mount and on change
+    
     useEffect(() => {
         document.documentElement.classList.toggle("dark", theme === "dark");
     }, [theme]);
 
-    // Apply lang attribute
+    
     useEffect(() => {
         document.documentElement.lang = lang;
     }, [lang]);

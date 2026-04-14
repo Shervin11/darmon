@@ -19,7 +19,6 @@ export const useLanguageStore = create<LangState>((set) => ({
 
 const translations: Record<Lang, Record<string, string>> = {
   tj: {
-    // Nav
     "nav.home": "Асосӣ",
     "nav.doctors": "Духтурон",
     "nav.panel": "Панел",
@@ -29,12 +28,10 @@ const translations: Record<Lang, Record<string, string>> = {
     "nav.login": "Воридшавӣ",
     "nav.ai": "ИИ Ёрдамчӣ",
 
-    // Profile menu
     "profile.cabinet": "Ҳуҷраи шахсӣ",
     "profile.favorites": "Интихобшуда",
     "profile.logout": "Баромад",
 
-    // Hero
     "hero.badge": "Дармони шумо дар дасти мо",
     "hero.title1": "Духтури шумо,",
     "hero.title2": "муолиҷаи шумо",
@@ -42,18 +39,15 @@ const translations: Record<Lang, Record<string, string>> = {
     "hero.more": "Бештар фаҳмед",
     "hero.services": "Хизматрасонӣ",
 
-    // Stats
     "stats.years": "Солҳои Таҷриба",
     "stats.specialties": "Махсусиятҳои тиббӣ",
     "stats.doctors": "Духтурони касбӣ",
     "stats.patients": "Беморони қонеъшуда",
 
-    // Tech section
     "tech.badge": "Таҷҳизот ва технология",
     "tech.title": "Технологияи",
     "tech.titleHighlight": "пешрафта",
 
-    // Tech items
     "tech.uzi.tag": "Насли нав",
     "tech.uzi.title": "УЗИ Aplio 400",
     "tech.uzi.desc": "Системаи ташхисии фавқулодда дақиқ барои таҳқиқи узвҳои дохилӣ бо сифати тасвири HD.",
@@ -64,7 +58,6 @@ const translations: Record<Lang, Record<string, string>> = {
     "tech.xray.title": "ПроГраф 5000 X-ray",
     "tech.xray.desc": "Таҷҳизоти рентгении рақамӣ бо миқдори ками шуоъ ва натиҷаҳои фаврии баландсифат.",
 
-    // About section
     "about.title1": "Маркази тиббии",
     "about.titleHighlight": "боэътимод",
     "about.desc": "Поликлиникаи мо бо ҳадафи расонидани ёрии босифати тиббӣ таъсис ёфтааст. Мо боварӣ дорем, ки ҳар як бемор сазовори муоширати касбӣ ва табобати инфиродӣ мебошад.",
@@ -73,13 +66,11 @@ const translations: Record<Lang, Record<string, string>> = {
     "about.experts": "Мутахассисони бетакрор",
     "about.equipment": "Таҷҳизоти муосир",
 
-    // CTA
     "cta.title1": "Ба қабули духтур онлайн",
     "cta.title2": "номнавис шавед",
     "cta.desc": "Вақти худро сарфа кунед ва беҳтарин хизматрасониро дар соатҳои ба шумо мувофиқ дастрас намоед.",
     "cta.register": "Қайд шудан",
 
-    // Auth
     "auth.createAccount": "Аккаунт созед",
     "auth.createDesc": "Барои оғоз кардан маълумоти худро ворид кунед.",
     "auth.fullName": "Ному насаб",
@@ -105,14 +96,12 @@ const translations: Record<Lang, Record<string, string>> = {
     "auth.selectSpecialty": "Ихтисосро интихоб кунед",
     "auth.namePlaceholder": "Алӣ Рахимов",
 
-    // Auth errors
     "auth.error.fillData": "Маълумоти худро пур кунед",
     "auth.error.invalidEmail": "Email нодуруст аст",
     "auth.error.shortPassword": "Рамз бояд камаш 6 аломат бошад",
     "auth.error.wrongCredentials": "Email ё рамз нодуруст аст",
     "auth.success.welcome": "Хуш омадед!",
 
-    // Profile
     "profile.badge": "Кабинети шахсӣ",
     "profile.title": "Танзимоти профил",
     "profile.user": "Корбар",
@@ -139,7 +128,6 @@ const translations: Record<Lang, Record<string, string>> = {
     "profile.editSuccess": "Маълумот бомуваффақият иваз шуд!",
     "profile.editError": "Хатогӣ ҳангоми ивазкунӣ",
 
-    // Doctors
     "doctors.badge": "Мутахассисони мо",
     "doctors.title": "Ҷустуҷӯи табибон",
     "doctors.searchPlaceholder": "Табиб, Клиника...",
@@ -153,7 +141,6 @@ const translations: Record<Lang, Record<string, string>> = {
     "doctors.showAll": "Намоиши ҳама",
     "doctors.showLess": "Суръат бастан",
 
-    // Doctor detail
     "doctor.specialist": "Мутахассис",
     "doctor.profile": "Профили духтур",
     "doctor.experience": "Таҷриба",
@@ -192,7 +179,6 @@ const translations: Record<Lang, Record<string, string>> = {
     "doctor.star2": "2 ситора — Бад",
     "doctor.star1": "1 ситора — Хеле бад",
 
-    // Dashboard
     "dashboard.badge": "Панели идоракунӣ",
     "dashboard.title": "Панели духтур",
     "dashboard.welcomeDoctor": "Хуш омадед",
@@ -210,7 +196,6 @@ const translations: Record<Lang, Record<string, string>> = {
     "dashboard.cancel": "Бекор кардан",
     "dashboard.rejecting": "Дар ҳоли ирсол...",
 
-    // Appointments
     "appointments.badge": "Портали беморон",
     "appointments.title": "Навбатҳо",
     "appointments.subtitle": "Навбатҳои ман — идоракунии вақт ва саломатии Шумо дар як ҷой.",
@@ -222,7 +207,6 @@ const translations: Record<Lang, Record<string, string>> = {
     "appointments.doctor": "Духтур",
     "appointments.rejectReason": "Сабаб",
 
-    // Wishlist
     "wishlist.badge": "Тасдиқшуда ✓",
     "wishlist.title": "Духтурони интихобшуда",
     "wishlist.bookAppointment": "Қайд шудан ба қабул",
@@ -230,7 +214,6 @@ const translations: Record<Lang, Record<string, string>> = {
     "wishlist.emptyDesc": "Духтуронро ба интихобшудаҳо илова кунед, то онҳоро зуд пайдо кунед ва ба қабул навистед",
     "wishlist.findDoctors": "Пайдо кардани духтурон",
 
-    // About page
     "aboutPage.title1": "Духтури мо",
     "aboutPage.title2": "— ҳамроҳ ба саломатии беҳтар",
     "aboutPage.desc": "Шифокори боэътимод ва ботаҷриба барои нигоҳдории саломатии шумо. Духтури дилсӯз ва касбӣ барои беҳбудии ҳаёти шумо",
@@ -252,7 +235,6 @@ const translations: Record<Lang, Record<string, string>> = {
     "aboutPage.readyDesc": "Имрӯз бо Darmon ба саломатии худ ғамхорӣ кардан оғоз намоед.",
     "aboutPage.start": "Оғоз кунед",
 
-    // Footer
     "footer.desc": "Саломатии шумо - афзалияти мо. Мо бо технологияҳои муосир ва мутахассисони ботаҷриба дар хидмати шумоем.",
     "footer.links": "Пайвандҳо",
     "footer.info": "Маълумот",
@@ -262,13 +244,11 @@ const translations: Record<Lang, Record<string, string>> = {
     "footer.rights": "© 2025 DARMON — Ҳамаи ҳуқуқҳо маҳфузанд",
     "footer.schedule": "Душ — Ҷум: 8:00 — 19:00",
 
-    // Status
     "status.pending": "Дар интизорӣ",
     "status.approved": "Тасдиқшуда",
     "status.rejected": "Радшуда",
     "status.reason": "Сабаб",
 
-    // AI Chat
     "ai.title": "ИИ Ёрдамчӣ",
     "ai.subtitle": "Ман ба шумо дар бораи саломатӣ кӯмак мекунам",
     "ai.placeholder": "Саволатонро нависед...",
@@ -276,11 +256,9 @@ const translations: Record<Lang, Record<string, string>> = {
     "ai.error": "Хатогӣ рӯй дод. Лутфан дубора кӯшиш кунед.",
     "ai.greeting": "Салом! Ман ёрдамчии тиббии DARMON ҳастам. Чӣ тавр ба шумо кӯмак карда метавонам?",
 
-    // Theme
     "theme.light": "Равшан",
     "theme.dark": "Торик",
 
-    // Common
     "common.loading": "Боргирӣ...",
     "common.error": "Хатогӣ",
     "common.confirm": "Тасдиқ",
@@ -289,7 +267,6 @@ const translations: Record<Lang, Record<string, string>> = {
   },
 
   ru: {
-    // Nav
     "nav.home": "Главная",
     "nav.doctors": "Врачи",
     "nav.panel": "Панель",
@@ -299,12 +276,10 @@ const translations: Record<Lang, Record<string, string>> = {
     "nav.login": "Войти",
     "nav.ai": "ИИ Помощник",
 
-    // Profile menu
     "profile.cabinet": "Личный кабинет",
     "profile.favorites": "Избранное",
     "profile.logout": "Выйти",
 
-    // Hero
     "hero.badge": "Ваше здоровье в наших руках",
     "hero.title1": "Ваш врач,",
     "hero.title2": "ваше лечение",
@@ -312,13 +287,11 @@ const translations: Record<Lang, Record<string, string>> = {
     "hero.more": "Узнать больше",
     "hero.services": "Услуги",
 
-    // Stats
     "stats.years": "Лет опыта",
     "stats.specialties": "Медицинских специальностей",
     "stats.doctors": "Профессиональных врачей",
     "stats.patients": "Довольных пациентов",
 
-    // Tech section
     "tech.badge": "Оборудование и технологии",
     "tech.title": "Передовые",
     "tech.titleHighlight": "технологии",
@@ -333,7 +306,6 @@ const translations: Record<Lang, Record<string, string>> = {
     "tech.xray.title": "ПроГраф 5000 X-ray",
     "tech.xray.desc": "Цифровое рентгеновское оборудование с минимальной дозой облучения и моментальными результатами.",
 
-    // About section
     "about.title1": "Медицинский центр",
     "about.titleHighlight": "доверия",
     "about.desc": "Наша поликлиника создана для оказания качественной медицинской помощи. Мы верим, что каждый пациент заслуживает профессионального обращения и индивидуального лечения.",
@@ -342,13 +314,11 @@ const translations: Record<Lang, Record<string, string>> = {
     "about.experts": "Уникальные специалисты",
     "about.equipment": "Современное оборудование",
 
-    // CTA
     "cta.title1": "Запишитесь к врачу онлайн",
     "cta.title2": "прямо сейчас",
     "cta.desc": "Экономьте своё время и получайте лучшее обслуживание в удобное для вас время.",
     "cta.register": "Записаться",
 
-    // Auth
     "auth.createAccount": "Создать аккаунт",
     "auth.createDesc": "Введите свои данные для начала работы.",
     "auth.fullName": "ФИО",
@@ -380,7 +350,6 @@ const translations: Record<Lang, Record<string, string>> = {
     "auth.error.wrongCredentials": "Неверный Email или пароль",
     "auth.success.welcome": "Добро пожаловать!",
 
-    // Profile
     "profile.badge": "Личный кабинет",
     "profile.title": "Настройки профиля",
     "profile.user": "Пользователь",
@@ -407,7 +376,6 @@ const translations: Record<Lang, Record<string, string>> = {
     "profile.editSuccess": "Данные успешно обновлены!",
     "profile.editError": "Ошибка при обновлении",
 
-    // Doctors
     "doctors.badge": "Наши специалисты",
     "doctors.title": "Поиск врачей",
     "doctors.searchPlaceholder": "Врач, Клиника...",
@@ -421,7 +389,6 @@ const translations: Record<Lang, Record<string, string>> = {
     "doctors.showAll": "Показать все",
     "doctors.showLess": "Свернуть",
 
-    // Doctor detail
     "doctor.specialist": "Специалист",
     "doctor.profile": "Профиль врача",
     "doctor.experience": "Опыт",
@@ -460,7 +427,6 @@ const translations: Record<Lang, Record<string, string>> = {
     "doctor.star2": "2 звезды — Плохо",
     "doctor.star1": "1 звезда — Ужасно",
 
-    // Dashboard
     "dashboard.badge": "Панель управления",
     "dashboard.title": "Панель врача",
     "dashboard.welcomeDoctor": "Добро пожаловать",
@@ -478,7 +444,6 @@ const translations: Record<Lang, Record<string, string>> = {
     "dashboard.cancel": "Отмена",
     "dashboard.rejecting": "Отправка...",
 
-    // Appointments
     "appointments.badge": "Портал пациента",
     "appointments.title": "Записи",
     "appointments.subtitle": "Мои записи — управление здоровьем и временем в одном месте.",
@@ -490,7 +455,6 @@ const translations: Record<Lang, Record<string, string>> = {
     "appointments.doctor": "Врач",
     "appointments.rejectReason": "Причина",
 
-    // Wishlist
     "wishlist.badge": "Подтверждено ✓",
     "wishlist.title": "Избранные врачи",
     "wishlist.bookAppointment": "Записаться на приём",
@@ -498,7 +462,6 @@ const translations: Record<Lang, Record<string, string>> = {
     "wishlist.emptyDesc": "Добавляйте врачей в избранное, чтобы быстро их находить и записываться",
     "wishlist.findDoctors": "Найти врачей",
 
-    // About page
     "aboutPage.title1": "Наш врач",
     "aboutPage.title2": "— партнёр в здоровье",
     "aboutPage.desc": "Надёжный и опытный специалист для поддержания вашего здоровья. Заботливый и профессиональный врач для улучшения вашей жизни",
@@ -520,7 +483,6 @@ const translations: Record<Lang, Record<string, string>> = {
     "aboutPage.readyDesc": "Начните заботиться о своём здоровье с Darmon уже сегодня.",
     "aboutPage.start": "Начать",
 
-    // Footer
     "footer.desc": "Ваше здоровье — наш приоритет. Мы предоставляем современные технологии и опытных специалистов.",
     "footer.links": "Ссылки",
     "footer.info": "Информация",
@@ -530,13 +492,11 @@ const translations: Record<Lang, Record<string, string>> = {
     "footer.rights": "© 2025 DARMON — Все права защищены",
     "footer.schedule": "Пн — Пт: 8:00 — 19:00",
 
-    // Status
     "status.pending": "В ожидании",
     "status.approved": "Подтверждено",
     "status.rejected": "Отклонено",
     "status.reason": "Причина",
 
-    // AI Chat
     "ai.title": "ИИ Помощник",
     "ai.subtitle": "Я помогу вам с вопросами о здоровье",
     "ai.placeholder": "Напишите свой вопрос...",
@@ -544,11 +504,9 @@ const translations: Record<Lang, Record<string, string>> = {
     "ai.error": "Произошла ошибка. Попробуйте снова.",
     "ai.greeting": "Здравствуйте! Я медицинский помощник DARMON. Чем могу вам помочь?",
 
-    // Theme
     "theme.light": "Светлая",
     "theme.dark": "Тёмная",
 
-    // Common
     "common.loading": "Загрузка...",
     "common.error": "Ошибка",
     "common.confirm": "Подтвердить",
@@ -557,7 +515,6 @@ const translations: Record<Lang, Record<string, string>> = {
   },
 
   en: {
-    // Nav
     "nav.home": "Home",
     "nav.doctors": "Doctors",
     "nav.panel": "Panel",
@@ -567,12 +524,10 @@ const translations: Record<Lang, Record<string, string>> = {
     "nav.login": "Sign in",
     "nav.ai": "AI Assistant",
 
-    // Profile menu
     "profile.cabinet": "My Account",
     "profile.favorites": "Favorites",
     "profile.logout": "Log out",
 
-    // Hero
     "hero.badge": "Your health is in our hands",
     "hero.title1": "Your doctor,",
     "hero.title2": "your treatment",
@@ -580,13 +535,11 @@ const translations: Record<Lang, Record<string, string>> = {
     "hero.more": "Learn more",
     "hero.services": "Services",
 
-    // Stats
     "stats.years": "Years of Experience",
     "stats.specialties": "Medical Specialties",
     "stats.doctors": "Professional Doctors",
     "stats.patients": "Satisfied Patients",
 
-    // Tech section
     "tech.badge": "Equipment & Technology",
     "tech.title": "Advanced",
     "tech.titleHighlight": "technology",
@@ -601,7 +554,6 @@ const translations: Record<Lang, Record<string, string>> = {
     "tech.xray.title": "ProGraph 5000 X-ray",
     "tech.xray.desc": "Digital x-ray equipment with minimal radiation dose and instant high-quality results.",
 
-    // About section
     "about.title1": "Trusted",
     "about.titleHighlight": "medical center",
     "about.desc": "Our clinic was founded to provide quality medical care. We believe every patient deserves professional treatment and individualized care.",
@@ -610,13 +562,11 @@ const translations: Record<Lang, Record<string, string>> = {
     "about.experts": "Unique Specialists",
     "about.equipment": "Modern Equipment",
 
-    // CTA
     "cta.title1": "Book a doctor online",
     "cta.title2": "right now",
     "cta.desc": "Save your time and get the best service at hours convenient for you.",
     "cta.register": "Book now",
 
-    // Auth
     "auth.createAccount": "Create account",
     "auth.createDesc": "Enter your details to get started.",
     "auth.fullName": "Full name",
@@ -648,7 +598,6 @@ const translations: Record<Lang, Record<string, string>> = {
     "auth.error.wrongCredentials": "Invalid Email or password",
     "auth.success.welcome": "Welcome!",
 
-    // Profile
     "profile.badge": "Personal account",
     "profile.title": "Profile settings",
     "profile.user": "User",
@@ -675,7 +624,6 @@ const translations: Record<Lang, Record<string, string>> = {
     "profile.editSuccess": "Data successfully updated!",
     "profile.editError": "Error during update",
 
-    // Doctors
     "doctors.badge": "Our specialists",
     "doctors.title": "Find a doctor",
     "doctors.searchPlaceholder": "Doctor, Clinic...",
@@ -689,7 +637,6 @@ const translations: Record<Lang, Record<string, string>> = {
     "doctors.showAll": "Show all",
     "doctors.showLess": "Show less",
 
-    // Doctor detail
     "doctor.specialist": "Specialist",
     "doctor.profile": "Doctor profile",
     "doctor.experience": "Experience",
@@ -728,7 +675,6 @@ const translations: Record<Lang, Record<string, string>> = {
     "doctor.star2": "2 stars — Poor",
     "doctor.star1": "1 star — Terrible",
 
-    // Dashboard
     "dashboard.badge": "Management Panel",
     "dashboard.title": "Doctor Panel",
     "dashboard.welcomeDoctor": "Welcome",
@@ -746,7 +692,6 @@ const translations: Record<Lang, Record<string, string>> = {
     "dashboard.cancel": "Cancel",
     "dashboard.rejecting": "Sending...",
 
-    // Appointments
     "appointments.badge": "Patient Portal",
     "appointments.title": "Appointments",
     "appointments.subtitle": "My appointments — managing your health and time in one place.",
@@ -758,7 +703,6 @@ const translations: Record<Lang, Record<string, string>> = {
     "appointments.doctor": "Doctor",
     "appointments.rejectReason": "Reason",
 
-    // Wishlist
     "wishlist.badge": "Confirmed ✓",
     "wishlist.title": "Favorite Doctors",
     "wishlist.bookAppointment": "Book appointment",
@@ -766,7 +710,6 @@ const translations: Record<Lang, Record<string, string>> = {
     "wishlist.emptyDesc": "Add doctors to favorites to find them quickly and book appointments",
     "wishlist.findDoctors": "Find doctors",
 
-    // About page
     "aboutPage.title1": "Our doctor",
     "aboutPage.title2": "— your health partner",
     "aboutPage.desc": "A reliable and experienced specialist for maintaining your health. A caring and professional doctor for improving your life",
@@ -788,7 +731,6 @@ const translations: Record<Lang, Record<string, string>> = {
     "aboutPage.readyDesc": "Start taking care of your health with Darmon today.",
     "aboutPage.start": "Get started",
 
-    // Footer
     "footer.desc": "Your health is our priority. We provide modern technologies and experienced specialists.",
     "footer.links": "Links",
     "footer.info": "Information",
@@ -798,13 +740,11 @@ const translations: Record<Lang, Record<string, string>> = {
     "footer.rights": "© 2025 DARMON — All rights reserved",
     "footer.schedule": "Mon — Fri: 8:00 — 19:00",
 
-    // Status
     "status.pending": "Pending",
     "status.approved": "Approved",
     "status.rejected": "Rejected",
     "status.reason": "Reason",
 
-    // AI Chat
     "ai.title": "AI Assistant",
     "ai.subtitle": "I can help you with health questions",
     "ai.placeholder": "Type your question...",
@@ -812,11 +752,9 @@ const translations: Record<Lang, Record<string, string>> = {
     "ai.error": "An error occurred. Please try again.",
     "ai.greeting": "Hello! I'm the DARMON medical assistant. How can I help you?",
 
-    // Theme
     "theme.light": "Light",
     "theme.dark": "Dark",
 
-    // Common
     "common.loading": "Loading...",
     "common.error": "Error",
     "common.confirm": "Confirm",

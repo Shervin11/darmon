@@ -30,10 +30,6 @@ const Wishlist = () => {
 
   return (
     <div className="pt-20 pb-12">
-      {/* Hero Banner */}
-      <section className="max-w-7xl mx-auto px-6 mb-12 mt-4">
-        <div className="relative bg-[#00A191] rounded-xl pt-16 pb-20 px-10 md:px-16 overflow-hidden flex flex-col items-center justify-center text-center">
-          {/* Glow effects */}
           <div className="absolute inset-0 opacity-20">
             <div className="absolute -right-20 -top-20 w-96 h-96 bg-[#00C4B0] rounded-full blur-[120px]"></div>
             <div className="absolute -left-20 -bottom-20 w-96 h-96 bg-[#007D70] rounded-full blur-[120px]"></div>
