@@ -28,9 +28,10 @@ import {
 } from "lucide-react";
 import { DefaultPhoto } from "@/config/config";
 import { WorkingSchedule } from "@/store/store";
+import { useTranslation } from "@/lib/i18n";
 
 const Profile = () => {
-  const { loginMe, userById, edit, uploadImage } = useStore((state) => state);
+  const { loginMe, userById, edit, uploadImage, getSubcategories, subcategories } = useStore((state) => state);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [city, setCity] = useState("");
   const [name, setName] = useState("");
@@ -39,6 +40,7 @@ const Profile = () => {
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [isPhotoRemoved, setIsPhotoRemoved] = useState(false);
+  const { t } = useTranslation();
 
   // Doctor-specific states
   const [specialty, setSpecialty] = useState("");
@@ -129,7 +131,10 @@ const Profile = () => {
     }
   }, [userById]);
 
-  useEffect(() => { loginMe(); }, []);
+  useEffect(() => {
+    loginMe();
+    getSubcategories();
+  }, []);
 
   return (
     <div className="bg-md-surface-container-low min-h-screen pb-20 pt-20">
@@ -137,8 +142,8 @@ const Profile = () => {
       <section className="max-w-7xl mx-auto px-6 mb-12 mt-4">
         <div className="signature-gradient rounded-xl p-10 md:p-16 relative overflow-hidden">
           <div className="relative z-10">
-            <p className="text-md-secondary-container text-xs uppercase tracking-[4px] font-bold mb-3 font-headline">Кабинети шахсӣ</p>
-            <h1 className="text-4xl md:text-5xl font-extrabold text-white tracking-tight font-headline">Танзимоти профил</h1>
+            <p className="text-md-secondary-container text-xs uppercase tracking-[4px] font-bold mb-3 font-headline">{t("profile.badge")}</p>
+            <h1 className="text-4xl md:text-5xl font-extrabold text-white tracking-tight font-headline">{t("profile.title")}</h1>
           </div>
           <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full -mr-32 -mt-32 blur-3xl"></div>
         </div>
@@ -147,11 +152,11 @@ const Profile = () => {
       <div className="max-w-[1000px] mx-auto px-4">
         <form onSubmit={editUser} className="space-y-6">
           <Card className="border-none clinical-shadow overflow-hidden bg-md-surface-container-lowest rounded-xl">
-            <CardHeader className="bg-white border-b border-md-surface-variant/20 py-8">
+            <CardHeader className="bg-md-surface-container-lowest border-b border-md-surface-variant/20 py-8">
               <div className="flex flex-col md:flex-row items-center gap-8">
                 {/* Avatar */}
                 <div className="relative group">
-                  <div className="w-32 h-32 rounded-3xl overflow-hidden ring-4 ring-white shadow-2xl transition-transform group-hover:scale-[1.02]">
+                  <div className="w-32 h-32 rounded-3xl overflow-hidden ring-4 ring-white dark:ring-[#1F1F28] shadow-2xl transition-transform group-hover:scale-[1.02]">
                     <img
                       src={isPhotoRemoved ? DefaultPhoto : (previewUrl || userById.image || DefaultPhoto)}
                       alt="avatar"
@@ -165,10 +170,10 @@ const Profile = () => {
                 </div>
 
                 <div className="text-center md:text-left space-y-2">
-                  <CardTitle className="text-2xl font-bold text-md-on-surface font-headline">{name || "Корбар"}</CardTitle>
+                  <CardTitle className="text-2xl font-bold text-md-on-surface font-headline">{name || t("profile.user")}</CardTitle>
                   <CardDescription className="flex items-center justify-center md:justify-start gap-2">
                     <span className="bg-md-primary/10 text-md-primary px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider font-headline">
-                      {userById.role === "doctor" ? "Табиб" : "Бемор"}
+                      {userById.role === "doctor" ? t("profile.doctorRole") : t("profile.patientRole")}
                     </span>
                     <span className="text-md-outline">•</span>
                     <span className="text-md-on-surface-variant text-sm">{email}</span>
@@ -179,7 +184,7 @@ const Profile = () => {
                     onClick={handleRemovePhoto}
                     className="text-md-error hover:text-md-error hover:bg-md-error-container h-8 px-2 text-xs cursor-pointer"
                   >
-                    <Trash2 className="w-3.5 h-3.5 mr-1" /> Нест кардани акс
+                    <Trash2 className="w-3.5 h-3.5 mr-1" /> {t("profile.removePhoto")}
                   </Button>
                 </div>
               </div>
@@ -190,44 +195,44 @@ const Profile = () => {
               <div className="space-y-6">
                 <div className="flex items-center gap-2 text-md-on-surface font-bold border-l-4 border-md-primary pl-4 font-headline">
                   <User className="w-5 h-5 text-md-primary" />
-                  <h3>Маълумоти умумӣ</h3>
+                  <h3>{t("profile.generalInfo")}</h3>
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div className="space-y-2">
-                    <Label className="text-xs font-bold text-md-on-surface-variant uppercase tracking-wider">Ному насаб</Label>
+                    <Label className="text-xs font-bold text-md-on-surface-variant uppercase tracking-wider">{t("profile.fullName")}</Label>
                     <div className="relative">
                       <User className="absolute left-3 top-3 w-4 h-4 text-md-outline" />
-                      <Input value={name} onChange={(e) => setName(e.target.value)} className="pl-10 h-11 bg-md-surface-container-low border-md-outline-variant/30 focus:bg-white" />
+                      <Input value={name} onChange={(e) => setName(e.target.value)} className="pl-10 h-11 bg-md-surface-container-low border-md-outline-variant/30 focus:bg-white dark:focus:bg-[#252540]" />
                     </div>
                   </div>
 
                   <div className="space-y-2">
-                    <Label className="text-xs font-bold text-md-on-surface-variant uppercase tracking-wider">Телефон</Label>
+                    <Label className="text-xs font-bold text-md-on-surface-variant uppercase tracking-wider">{t("profile.phone")}</Label>
                     <div className="relative">
                       <Phone className="absolute left-3 top-3 w-4 h-4 text-md-outline" />
-                      <Input value={phone} onChange={(e) => setPhone(e.target.value)} className="pl-10 h-11 bg-md-surface-container-low border-md-outline-variant/30 focus:bg-white" />
+                      <Input value={phone} onChange={(e) => setPhone(e.target.value)} className="pl-10 h-11 bg-md-surface-container-low border-md-outline-variant/30 focus:bg-white dark:focus:bg-[#252540]" />
                     </div>
                   </div>
 
                   <div className="space-y-2">
-                    <Label className="text-xs font-bold text-md-on-surface-variant uppercase tracking-wider">Email</Label>
+                    <Label className="text-xs font-bold text-md-on-surface-variant uppercase tracking-wider">{t("profile.email")}</Label>
                     <div className="relative">
                       <Mail className="absolute left-3 top-3 w-4 h-4 text-md-outline" />
-                      <Input type="email" value={email} onChange={(e) => setEmail(e.target.value)} className="pl-10 h-11 bg-md-surface-container-low border-md-outline-variant/30 focus:bg-white" />
+                      <Input type="email" value={email} onChange={(e) => setEmail(e.target.value)} className="pl-10 h-11 bg-md-surface-container-low border-md-outline-variant/30 focus:bg-white dark:focus:bg-[#252540]" />
                     </div>
                   </div>
 
                   <div className="space-y-2">
-                    <Label className="text-xs font-bold text-md-on-surface-variant uppercase tracking-wider">Шаҳр</Label>
+                    <Label className="text-xs font-bold text-md-on-surface-variant uppercase tracking-wider">{t("profile.city")}</Label>
                     <div className="relative">
                       <MapPin className="absolute left-3 top-3 w-4 h-4 text-md-outline" />
                       <select
                         value={city}
                         onChange={(e) => setCity(e.target.value)}
-                        className="w-full pl-10 h-11 bg-md-surface-container-low border border-md-outline-variant/30 rounded-lg text-sm appearance-none focus:outline-none focus:ring-2 ring-md-primary/20"
+                        className="w-full pl-10 h-11 bg-md-surface-container-low border border-md-outline-variant/30 rounded-lg text-sm appearance-none focus:outline-none focus:ring-2 ring-md-primary/20 text-md-on-surface"
                       >
-                        <option value="all">Интихоб кунед</option>
+                        <option value="all">{t("profile.selectCity")}</option>
                         <option value="Душанбе">Душанбе</option>
                         <option value="Бохтар">Бохтар</option>
                         <option value="Хуҷанд">Хуҷанд</option>
@@ -244,20 +249,29 @@ const Profile = () => {
                 <div className="space-y-8 pt-6 border-t border-md-surface-variant/20">
                   <div className="flex items-center gap-2 text-md-on-surface font-bold border-l-4 border-md-secondary-container pl-4 font-headline">
                     <Stethoscope className="w-5 h-5 text-md-secondary-container" />
-                    <h3>Маълумоти касбӣ</h3>
+                    <h3>{t("profile.professionalInfo")}</h3>
                   </div>
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div className="space-y-2">
-                      <Label className="text-xs font-bold text-md-on-surface-variant uppercase tracking-wider">Ихтисос</Label>
+                      <Label className="text-xs font-bold text-md-on-surface-variant uppercase tracking-wider">{t("profile.specialty")}</Label>
                       <div className="relative">
                         <Briefcase className="absolute left-3 top-3 w-4 h-4 text-md-outline" />
-                        <Input value={specialty} onChange={(e) => setSpecialty(e.target.value)} placeholder="Масалан: Терапевт" className="pl-10 h-11" />
+                        <select
+                          value={specialty}
+                          onChange={(e) => setSpecialty(e.target.value)}
+                          className="w-full pl-10 h-11 bg-md-surface-container-low border border-md-outline-variant/30 rounded-lg text-sm appearance-none focus:outline-none focus:ring-2 ring-md-primary/20 text-md-on-surface"
+                        >
+                          <option value="">{t("profile.selectSpecialty")}</option>
+                          {subcategories.map((sub, idx) => (
+                            <option key={idx} value={sub}>{sub}</option>
+                          ))}
+                        </select>
                       </div>
                     </div>
 
                     <div className="space-y-2">
-                      <Label className="text-xs font-bold text-md-on-surface-variant uppercase tracking-wider">Таҷриба (сол)</Label>
+                      <Label className="text-xs font-bold text-md-on-surface-variant uppercase tracking-wider">{t("profile.experience")}</Label>
                       <div className="relative">
                         <Clock className="absolute left-3 top-3 w-4 h-4 text-md-outline" />
                         <Input type="number" value={experience} onChange={(e) => setExperience(e.target.value === "" ? "" : Number(e.target.value))} className="pl-10 h-11" />
@@ -265,7 +279,7 @@ const Profile = () => {
                     </div>
 
                     <div className="space-y-2">
-                      <Label className="text-xs font-bold text-md-on-surface-variant uppercase tracking-wider">Клиника</Label>
+                      <Label className="text-xs font-bold text-md-on-surface-variant uppercase tracking-wider">{t("profile.clinic")}</Label>
                       <div className="relative">
                         <Building2 className="absolute left-3 top-3 w-4 h-4 text-md-outline" />
                         <Input value={clinic} onChange={(e) => setClinic(e.target.value)} className="pl-10 h-11" />
@@ -273,13 +287,13 @@ const Profile = () => {
                     </div>
 
                     <div className="space-y-2">
-                      <Label className="text-xs font-bold text-md-on-surface-variant uppercase tracking-wider">Нархи қабул</Label>
+                      <Label className="text-xs font-bold text-md-on-surface-variant uppercase tracking-wider">{t("profile.price")}</Label>
                       <div className="flex gap-2">
                         <div className="relative flex-1">
                           <Wallet className="absolute left-3 top-3 w-4 h-4 text-md-outline" />
                           <Input value={priceCurrent} onChange={(e) => setPriceCurrent(e.target.value)} className="pl-10 h-11" />
                         </div>
-                        <select value={priceCurrency} onChange={(e) => setPriceCurrency(e.target.value)} className="w-24 h-11 bg-md-surface-container-low border border-md-outline-variant/30 rounded-lg text-sm">
+                        <select value={priceCurrency} onChange={(e) => setPriceCurrency(e.target.value)} className="w-24 h-11 bg-md-surface-container-low border border-md-outline-variant/30 rounded-lg text-sm text-md-on-surface">
                           <option value="сом.">сом.</option>
                           <option value="$">$</option>
                         </select>
@@ -288,12 +302,12 @@ const Profile = () => {
                   </div>
 
                   <div className="space-y-2">
-                    <Label className="text-xs font-bold text-md-on-surface-variant uppercase tracking-wider">Дар бораи худ</Label>
+                    <Label className="text-xs font-bold text-md-on-surface-variant uppercase tracking-wider">{t("profile.aboutMe")}</Label>
                     <textarea
                       value={bio}
                       onChange={(e) => setBio(e.target.value)}
-                      className="w-full border border-md-outline-variant/30 rounded-xl p-4 min-h-[120px] focus:ring-2 ring-md-primary/20 outline-none transition-all"
-                      placeholder="Маълумоти мухтасар дар бораи таҷриба ва фаъолият..."
+                      className="w-full border border-md-outline-variant/30 rounded-xl p-4 min-h-[120px] focus:ring-2 ring-md-primary/20 outline-none transition-all bg-md-surface-container-low text-md-on-surface"
+                      placeholder={t("profile.aboutPlaceholder")}
                     />
                   </div>
 
@@ -301,16 +315,16 @@ const Profile = () => {
                   <div className="space-y-4 bg-md-primary/5 p-6 rounded-3xl border border-md-primary/10">
                     <div className="flex items-center justify-between">
                       <h4 className="font-bold text-md-primary flex items-center gap-2 font-headline">
-                        <Clock className="w-4 h-4" /> Реҷаи корӣ
+                        <Clock className="w-4 h-4" /> {t("profile.schedule")}
                       </h4>
-                      <Button type="button" size="sm" onClick={handleAddSchedule} className="bg-white text-md-primary border border-md-primary/20 hover:bg-md-primary/10 shadow-sm cursor-pointer">
-                        <Plus className="w-4 h-4 mr-1" /> Илова
+                      <Button type="button" size="sm" onClick={handleAddSchedule} className="bg-white dark:bg-[#252540] text-md-primary border border-md-primary/20 hover:bg-md-primary/10 shadow-sm cursor-pointer">
+                        <Plus className="w-4 h-4 mr-1" /> {t("profile.addSchedule")}
                       </Button>
                     </div>
 
                     <div className="space-y-3">
                       {schedule.map((slot, index) => (
-                        <div key={index} className="flex flex-col sm:flex-row items-center gap-4 bg-white p-3 rounded-2xl shadow-sm group">
+                        <div key={index} className="flex flex-col sm:flex-row items-center gap-4 bg-white dark:bg-[#1F1F28] p-3 rounded-2xl shadow-sm group">
                           <Input
                             value={slot.day}
                             onChange={(e) => handleScheduleChange(index, "day", e.target.value)}
@@ -342,7 +356,7 @@ const Profile = () => {
                   type="submit"
                   className="bg-md-secondary-container hover:bg-md-secondary text-md-on-secondary-container hover:text-white px-12 h-12 rounded-xl font-bold uppercase tracking-widest shadow-lg transition-all active:scale-95 cursor-pointer font-headline"
                 >
-                  Маҳфуз доштан
+                  {t("profile.save")}
                 </Button>
               </div>
             </CardContent>

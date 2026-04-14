@@ -10,7 +10,7 @@ import toast from "react-hot-toast";
 import { useRouter } from "next/navigation";
 import { DefaultPhoto } from "@/config/config";
 import { Comment } from "@/store/store";
-import Link from "next/link";
+import { useTranslation } from "@/lib/i18n";
 
 const DoctorById = ({ params }: { params: Promise<{ id: string }> }) => {
   const { id } = use(params);
@@ -23,9 +23,11 @@ const DoctorById = ({ params }: { params: Promise<{ id: string }> }) => {
     userById,
     loginMe,
     createAppointment,
+    checkSlotAvailability,
   } = useStore((state) => state);
 
   const router = useRouter();
+  const { t } = useTranslation();
 
   const [showFullNumber, setShowFullNumber] = useState(false);
   const [bookingDate, setBookingDate] = useState("");
@@ -50,7 +52,7 @@ const DoctorById = ({ params }: { params: Promise<{ id: string }> }) => {
   };
 
   const handleDeleteComment = async (commentId: number) => {
-    if (confirm("Оё шумо мехоҳед ин шарҳро нест кунед?")) {
+    if (confirm(t("common.deleteConfirm"))) {
       await deleteComment(doctorById.id!, commentId);
     }
   };
@@ -58,7 +60,7 @@ const DoctorById = ({ params }: { params: Promise<{ id: string }> }) => {
   const handleSubmitComment = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!userById?.id) {
-      toast.error("Барои иловаи шарҳ шумо бояд ворид шавед");
+      toast.error(t("doctor.loginToReview"));
       return;
     }
     if (!commentText.trim()) return;
@@ -97,8 +99,8 @@ const DoctorById = ({ params }: { params: Promise<{ id: string }> }) => {
       {/* Banner */}
       <header className="signature-gradient rounded-none md:rounded-xl md:mx-auto md:max-w-7xl p-8 md:p-12 mb-8 text-white relative overflow-hidden mt-4">
         <div className="relative z-10">
-          <span className="text-blue-100 font-headline font-semibold tracking-widest uppercase text-sm mb-2 block">Мутахассис</span>
-          <h1 className="text-4xl md:text-5xl font-headline font-extrabold tracking-tight">Профили духтур</h1>
+          <span className="text-blue-100 font-headline font-semibold tracking-widest uppercase text-sm mb-2 block">{t("doctor.specialist")}</span>
+          <h1 className="text-4xl md:text-5xl font-headline font-extrabold tracking-tight">{t("doctor.profile")}</h1>
         </div>
         <div className="absolute right-0 top-0 h-full w-1/3 opacity-10 pointer-events-none">
           <svg className="h-full w-full" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
@@ -120,7 +122,7 @@ const DoctorById = ({ params }: { params: Promise<{ id: string }> }) => {
                     <div className="absolute -bottom-4 left-1/2 -translate-x-1/2 bg-md-secondary-container px-4 py-1 rounded-full flex items-center gap-1 shadow-sm">
                       <Star className="w-4 h-4 fill-md-secondary text-md-on-secondary-container" />
                       <span className="text-md-on-secondary-container font-bold">{doctorById.rating}</span>
-                      <span className="text-md-on-secondary-container/70 text-xs font-medium ml-1">({doctorById.comments?.length || 0} шарҳ)</span>
+                      <span className="text-md-on-secondary-container/70 text-xs font-medium ml-1">({doctorById.comments?.length || 0} {t("doctors.reviews")})</span>
                     </div>
                   </div>
                   <div className="flex-1 space-y-6">
@@ -133,20 +135,20 @@ const DoctorById = ({ params }: { params: Promise<{ id: string }> }) => {
                     </div>
                     <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 border-y border-md-surface-variant/30 py-6">
                       <div className="space-y-1">
-                        <p className="text-md-on-surface-variant text-xs uppercase tracking-wider font-bold">Таҷриба</p>
-                        <p className="text-md-on-surface font-semibold text-lg">{doctorById.experience} сол</p>
+                        <p className="text-md-on-surface-variant text-xs uppercase tracking-wider font-bold">{t("doctor.experience")}</p>
+                        <p className="text-md-on-surface font-semibold text-lg">{doctorById.experience} {t("doctor.years")}</p>
                       </div>
                       <div className="space-y-1">
-                        <p className="text-md-on-surface-variant text-xs uppercase tracking-wider font-bold">Тавсия</p>
+                        <p className="text-md-on-surface-variant text-xs uppercase tracking-wider font-bold">{t("doctor.recommendation")}</p>
                         <p className="text-md-secondary font-bold text-lg">{doctorById.recommendation}%</p>
                       </div>
                       <div className="space-y-1 col-span-2 sm:col-span-1">
-                        <p className="text-md-on-surface-variant text-xs uppercase tracking-wider font-bold">Клиника</p>
+                        <p className="text-md-on-surface-variant text-xs uppercase tracking-wider font-bold">{t("doctor.clinic")}</p>
                         <p className="text-md-primary-container font-semibold">{doctorById.clinic}</p>
                       </div>
                     </div>
                     <div className="space-y-3">
-                      <h3 className="font-headline font-bold text-lg text-md-on-surface">Дар бораи мутахассис</h3>
+                      <h3 className="font-headline font-bold text-lg text-md-on-surface">{t("doctor.aboutSpecialist")}</h3>
                       <p className="text-md-on-surface-variant leading-relaxed">{doctorById.bio}</p>
                     </div>
                   </div>
@@ -157,14 +159,14 @@ const DoctorById = ({ params }: { params: Promise<{ id: string }> }) => {
               <section className="bg-md-surface-container-lowest rounded-xl p-6 md:p-8 clinical-shadow">
                 <div className="flex items-center gap-3 mb-8">
                   <MessageCircle className="w-8 h-8 text-md-primary" />
-                  <h2 className="text-2xl font-headline font-bold text-md-on-surface">Шарҳҳои беморон</h2>
+                  <h2 className="text-2xl font-headline font-bold text-md-on-surface">{t("doctor.patientReviews")}</h2>
                 </div>
                 <div className="space-y-8 mb-12">
                   {doctorById.comments?.map((c: Comment) => (
                     <div key={c.id} className="space-y-3">
                       <div className="flex justify-between items-start">
                         <div className="flex gap-4 items-center">
-                          <div className="w-12 h-12 rounded-full bg-blue-100 flex items-center justify-center overflow-hidden">
+                          <div className="w-12 h-12 rounded-full bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center overflow-hidden">
                             <img src={c.user.image || DefaultPhoto} alt="" className="w-full h-full object-cover" />
                           </div>
                           <div>
@@ -175,8 +177,8 @@ const DoctorById = ({ params }: { params: Promise<{ id: string }> }) => {
                         <div className="flex items-center gap-3">
                           {userById?.fullName === c.user.fullName && editingCommentId !== c.id && (
                             <div className="flex gap-2">
-                              <button onClick={() => { setEditingCommentId(c.id); setEditText(c.comment); setEditRating(c.rating); }} className="text-[10px] font-bold text-blue-600 hover:underline cursor-pointer">ИВАЗ</button>
-                              <button onClick={() => handleDeleteComment(c.id)} className="text-[10px] font-bold text-red-500 hover:underline cursor-pointer">НЕСТ</button>
+                              <button onClick={() => { setEditingCommentId(c.id); setEditText(c.comment); setEditRating(c.rating); }} className="text-[10px] font-bold text-blue-600 hover:underline cursor-pointer">{t("doctor.edit")}</button>
+                              <button onClick={() => handleDeleteComment(c.id)} className="text-[10px] font-bold text-red-500 hover:underline cursor-pointer">{t("doctor.delete")}</button>
                             </div>
                           )}
                           {editingCommentId !== c.id && (
@@ -188,13 +190,13 @@ const DoctorById = ({ params }: { params: Promise<{ id: string }> }) => {
                       </div>
                       {editingCommentId === c.id ? (
                         <div className="space-y-3">
-                          <select value={editRating} onChange={(e) => setEditRating(Number(e.target.value))} className="text-xs border rounded p-1">
-                            {[5, 4, 3, 2, 1].map(n => <option key={n} value={n}>{n} Ситора</option>)}
+                          <select value={editRating} onChange={(e) => setEditRating(Number(e.target.value))} className="text-xs border rounded p-1 bg-md-surface-container-low text-md-on-surface">
+                            {[5, 4, 3, 2, 1].map(n => <option key={n} value={n}>{n} {t("doctor.stars")}</option>)}
                           </select>
-                          <textarea value={editText} onChange={(e) => setEditText(e.target.value)} className="w-full p-3 border rounded-xl text-sm focus:ring-2 ring-md-primary outline-none" />
+                          <textarea value={editText} onChange={(e) => setEditText(e.target.value)} className="w-full p-3 border rounded-xl text-sm focus:ring-2 ring-md-primary outline-none bg-md-surface-container-low text-md-on-surface" />
                           <div className="flex gap-2 justify-end">
-                            <Button onClick={() => setEditingCommentId(null)} variant="ghost" className="h-8 text-xs cursor-pointer">Бекор</Button>
-                            <Button onClick={() => handleUpdateComment(c.id)} className="bg-md-secondary-container text-md-on-secondary-container h-8 text-xs cursor-pointer">Захира</Button>
+                            <Button onClick={() => setEditingCommentId(null)} variant="ghost" className="h-8 text-xs cursor-pointer">{t("doctor.cancel")}</Button>
+                            <Button onClick={() => handleUpdateComment(c.id)} className="bg-md-secondary-container text-md-on-secondary-container h-8 text-xs cursor-pointer">{t("doctor.save")}</Button>
                           </div>
                         </div>
                       ) : (
@@ -209,31 +211,31 @@ const DoctorById = ({ params }: { params: Promise<{ id: string }> }) => {
                 {/* Write Review */}
                 {userById?.id && !editingCommentId && (
                   <div className="bg-md-surface-container-low rounded-xl p-6">
-                    <h3 className="font-headline font-bold text-lg mb-4 text-md-on-surface">Назари худро нависед</h3>
+                    <h3 className="font-headline font-bold text-lg mb-4 text-md-on-surface">{t("doctor.writeReview")}</h3>
                     <form onSubmit={handleSubmitComment} className="space-y-4">
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div>
-                          <label className="block text-xs font-bold text-md-on-surface-variant uppercase tracking-wider mb-1 ml-2">Баҳодиҳӣ</label>
+                          <label className="block text-xs font-bold text-md-on-surface-variant uppercase tracking-wider mb-1 ml-2">{t("doctor.rating")}</label>
                           <select
                             value={rating}
                             onChange={(e) => setRating(Number(e.target.value))}
-                            className="w-full bg-white border-none rounded-lg p-3 text-sm focus:ring-2 focus:ring-md-primary"
+                            className="w-full bg-md-surface-container-lowest border-none rounded-lg p-3 text-sm focus:ring-2 focus:ring-md-primary text-md-on-surface"
                           >
-                            <option value={5}>5 ситора — Хеле хуб</option>
-                            <option value={4}>4 ситора — Хуб</option>
-                            <option value={3}>3 ситора — Миёна</option>
-                            <option value={2}>2 ситора — Бад</option>
-                            <option value={1}>1 ситора — Хеле бад</option>
+                            <option value={5}>{t("doctor.star5")}</option>
+                            <option value={4}>{t("doctor.star4")}</option>
+                            <option value={3}>{t("doctor.star3")}</option>
+                            <option value={2}>{t("doctor.star2")}</option>
+                            <option value={1}>{t("doctor.star1")}</option>
                           </select>
                         </div>
                       </div>
                       <div>
-                        <label className="block text-xs font-bold text-md-on-surface-variant uppercase tracking-wider mb-1 ml-2">Шарҳи шумо</label>
+                        <label className="block text-xs font-bold text-md-on-surface-variant uppercase tracking-wider mb-1 ml-2">{t("doctor.yourComment")}</label>
                         <textarea
                           value={commentText}
                           onChange={(e) => setCommentText(e.target.value)}
-                          className="w-full bg-white border-none rounded-lg p-3 text-sm focus:ring-2 focus:ring-md-primary"
-                          placeholder="Таассуроти худро нависед..."
+                          className="w-full bg-md-surface-container-lowest border-none rounded-lg p-3 text-sm focus:ring-2 focus:ring-md-primary text-md-on-surface"
+                          placeholder={t("doctor.commentPlaceholder")}
                           rows={3}
                           required
                         />
@@ -243,7 +245,7 @@ const DoctorById = ({ params }: { params: Promise<{ id: string }> }) => {
                         disabled={submitting}
                         className="bg-md-secondary-container text-md-on-secondary-container px-8 py-3 rounded-full font-bold uppercase tracking-widest text-sm hover:translate-x-1 transition-transform inline-flex items-center gap-2 cursor-pointer disabled:opacity-50"
                       >
-                        {submitting ? "ИРСОЛ..." : "ИРСОЛ"}
+                        {submitting ? t("doctor.sending") : t("doctor.send")}
                         <Send className="w-4 h-4" />
                       </button>
                     </form>
@@ -260,11 +262,11 @@ const DoctorById = ({ params }: { params: Promise<{ id: string }> }) => {
             <section className="bg-md-surface-container-lowest rounded-xl shadow-[0_20px_60px_rgba(0,78,159,0.12)] sticky top-28 overflow-hidden border-2 border-md-primary/5">
               <div className="bg-md-primary/5 p-6 flex items-center gap-3 border-b border-md-surface-variant/20">
                 <CalendarCheck className="w-6 h-6 text-md-primary" />
-                <h2 className="text-xl font-headline font-bold text-md-primary">Қайд шудан ба қабул</h2>
+                <h2 className="text-xl font-headline font-bold text-md-primary">{t("doctor.bookAppointment")}</h2>
               </div>
               <div className="p-6 space-y-6">
                 <div className="flex justify-between items-end">
-                  <p className="text-md-on-surface-variant text-sm font-medium">Арзиши қабул</p>
+                  <p className="text-md-on-surface-variant text-sm font-medium">{t("doctor.consultCost")}</p>
                   <p className="text-2xl font-black text-md-on-surface">{doctorById.price?.current} <span className="text-sm font-bold opacity-70">{doctorById.price?.currency}</span></p>
                 </div>
                 <button
@@ -272,33 +274,47 @@ const DoctorById = ({ params }: { params: Promise<{ id: string }> }) => {
                   className="w-full py-3 px-4 rounded-xl border-2 border-md-primary/20 text-md-primary font-bold flex items-center justify-center gap-3 hover:bg-md-primary/5 transition-colors cursor-pointer"
                 >
                   <Phone className="w-5 h-5" />
-                  {showFullNumber ? doctorById.phone : "Нишон додани рақам"}
+                  {showFullNumber ? doctorById.phone : t("doctor.showNumber")}
                 </button>
                 <div className="space-y-4">
                   <div>
-                    <label className="block text-xs font-bold text-md-on-surface-variant uppercase tracking-wider mb-2 ml-1">Интихоби рӯз</label>
+                    <label className="block text-xs font-bold text-md-on-surface-variant uppercase tracking-wider mb-2 ml-1">{t("doctor.selectDay")}</label>
                     <Input type="date" value={bookingDate} min={new Date().toISOString().split("T")[0]} onChange={(e) => setBookingDate(e.target.value)} className="rounded-xl h-12" />
                   </div>
                   <div>
-                    <label className="block text-xs font-bold text-md-on-surface-variant uppercase tracking-wider mb-2 ml-1">Интихоби вақт</label>
-                    <Input type="time" value={bookingTime} onChange={(e) => setBookingTime(e.target.value)} className="rounded-xl h-12" />
+                    <label className="block text-xs font-bold text-md-on-surface-variant uppercase tracking-wider mb-2 ml-1">{t("doctor.selectTime")}</label>
+                    <div className="space-y-2">
+                      <Input type="time" value={bookingTime} onChange={(e) => setBookingTime(e.target.value)} className="rounded-xl h-12" />
+                      <p className="text-[10px] text-md-on-surface-variant/60">⏱️ Один сеанс длится 1 час</p>
+                    </div>
                   </div>
                   <div>
-                    <label className="block text-xs font-bold text-md-on-surface-variant uppercase tracking-wider mb-2 ml-1">Нишонаҳои беморӣ</label>
+                    <label className="block text-xs font-bold text-md-on-surface-variant uppercase tracking-wider mb-2 ml-1">{t("doctor.symptoms")}</label>
                     <textarea
                       value={symptoms}
                       onChange={(e) => setSymptoms(e.target.value)}
-                      className="w-full bg-md-surface-container-low border-none rounded-lg p-3 text-sm focus:ring-2 focus:ring-md-primary outline-none"
-                      placeholder="Кӯтоҳ шарҳ диҳед..."
+                      className="w-full bg-md-surface-container-low border-none rounded-lg p-3 text-sm focus:ring-2 focus:ring-md-primary outline-none text-md-on-surface"
+                      placeholder={t("doctor.symptomsPlaceholder")}
                       rows={2}
                     />
                   </div>
                   <button
                     disabled={booking}
                     onClick={async () => {
-                      if (!userById?.id) { toast.error("Ворид шавед"); return; }
-                      if (!bookingDate || !bookingTime) { toast.error("Сана ва вақтро интихоб кунед"); return; }
+                      if (!userById?.id) { toast.error(t("doctor.loginToBook")); return; }
+                      if (!bookingDate || !bookingTime) { toast.error(t("doctor.selectDateTime")); return; }
+                      
                       setBooking(true);
+                      
+                      // Финальная проверка доступности слота перед отправкой
+                      const isAvailable = await checkSlotAvailability(doctorById.id, bookingDate, bookingTime);
+                      
+                      if (!isAvailable) {
+                        toast.error("Ин вақт аллақачон забронирован шудаест. Лутфан вақти дигарро интихоб кунед.");
+                        setBooking(false);
+                        return;
+                      }
+                      
                       const res = await createAppointment({
                         doctorId: doctorById.id,
                         clientId: userById.id,
@@ -309,18 +325,25 @@ const DoctorById = ({ params }: { params: Promise<{ id: string }> }) => {
                         time: bookingTime,
                         symptoms: symptoms,
                       });
+                      
                       setBooking(false);
-                      if (res.success) router.push("/appointments");
+                      
+                      if (res.success) {
+                        // Ждём немного перед редиректом, чтобы бэк успел обработать
+                        setTimeout(() => {
+                          router.push("/appointments");
+                        }, 500);
+                      }
                     }}
                     className="w-full signature-gradient text-white py-4 rounded-full font-headline font-extrabold tracking-wide shadow-lg shadow-md-primary/20 hover:scale-[1.02] transition-transform active:scale-95 uppercase text-sm cursor-pointer disabled:opacity-50"
                   >
-                    {booking ? "ИРСОЛ..." : "ТАСДИҚ ВА ҚАЙД ШУДАН"}
+                    {booking ? t("doctor.booking") : t("doctor.confirmBook")}
                   </button>
                 </div>
               </div>
               <div className="bg-md-surface-container-low p-4 text-center">
                 <p className="text-[10px] text-md-on-surface-variant/60 leading-tight">
-                  Бо пахш кардани тугма шумо ба коркарди маълумоти шахсии худ розӣ мешавед.
+                  {t("doctor.consent")}
                 </p>
               </div>
             </section>

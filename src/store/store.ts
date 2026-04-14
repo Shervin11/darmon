@@ -114,6 +114,7 @@ export interface StoreState {
   appointments: Appointment[];
   doctorAppointments: Appointment[];
   appointmentsLoading: boolean;
+  subcategories: string[];
 
   // Actions
   registerUser: (newUser: User) => Promise<{ success: boolean; status?: number }>;
@@ -129,12 +130,14 @@ export interface StoreState {
   deleteWishlist: (userId: string | number, doctorId: string | number) => Promise<void>;
   getAppointments: (clientId: string | number) => Promise<void>;
   getDoctorAppointments: (doctorId: string | number, status?: string) => Promise<void>;
+  checkSlotAvailability: (doctorId: string | number, date: string, time: string) => Promise<boolean>;
   createAppointment: (appointmentData: Partial<Appointment>) => Promise<{ success: boolean }>;
   approveAppointment: (id: string | number) => Promise<{ success: boolean }>;
   rejectAppointment: (id: string | number, rejectReason: string) => Promise<{ success: boolean }>;
   updateComment: (doctorId: string | number, commentId: number, updatedText: string, updatedRating: number) => Promise<{ success: boolean }>;
   deleteComment: (doctorId: string | number, commentId: number) => Promise<{ success: boolean }>;
   uploadImage: (file: File) => Promise<string | null>;
+  getSubcategories: () => Promise<void>;
 }
 
 const useStore = create<StoreState>((set, get) => ({
@@ -147,6 +150,7 @@ const useStore = create<StoreState>((set, get) => ({
   appointments: [],
   doctorAppointments: [],
   appointmentsLoading: false,
+  subcategories: [],
 
   // ── Auth ──────────────────────────────────────────
   async registerUser(newUser) {
@@ -299,7 +303,7 @@ const useStore = create<StoreState>((set, get) => ({
       const formData = new FormData();
       formData.append("file", file);
 
-      const { data } = await axios.post("https://77141ad3e96ded85.mokky.dev/uploads", formData, {
+      const { data } = await axios.post(API + "/uploads", formData, {
         headers: { "Content-Type": "multipart/form-data" },
       });
 
@@ -471,29 +475,136 @@ const useStore = create<StoreState>((set, get) => ({
     }
   },
 
+  async checkSlotAvailability(doctorId, date, time) {
+    try {
+      const { data } = await axios.get(`${API}/appointments?doctorId=${doctorId}&date=${date}`);
+      
+      // Извлекаем час из времени (HH:MM -> HH)
+      const requestedHour = parseInt(time.split(':')[0]);
+      
+      // Проверяем как approved так и pending назначения
+      // Один сеанс занимает 1 час, поэтому если занято 10:00, то весь час 10:00-10:59 занят
+      const conflictingAppointments = data.filter((apt: Appointment) => {
+        if (apt.date !== date) return false;
+        
+        // Проверяем оба статуса: approved И pending (чтобы предотвратить двойную запись)
+        if (!['approved', 'pending'].includes(apt.status)) return false;
+        
+        const aptHour = parseInt(apt.time.split(':')[0]);
+        
+        // Конфликт если часы совпадают
+        return aptHour === requestedHour;
+      });
+      
+      return conflictingAppointments.length === 0; // true если слот свободен
+    } catch (error) {
+      console.error(error);
+      return true;
+    }
+  },
+
   async createAppointment(appointmentData) {
     try {
-      await axios.post(`${API}/appointments`, {
+      if (!appointmentData.doctorId || !appointmentData.date || !appointmentData.time || !appointmentData.clientId) {
+        toast.error("Маълумоти нопурра!");
+        return { success: false };
+      }
+      
+      const isAvailable = await get().checkSlotAvailability(
+        appointmentData.doctorId,
+        appointmentData.date,
+        appointmentData.time
+      );
+      
+      if (!isAvailable) {
+        toast.error("Ин вақт аллақачон забронирован шудаест. Лутфан саҳифаро нав кунед ва вақти дигарро интихоб кунед.");
+        return { success: false };
+      }
+
+      const response = await axios.post(`${API}/appointments`, {
         ...appointmentData,
         status: "pending",
       });
+
+      // Обновляем локальный список appointments
+      const newAppointment: Appointment = {
+        ...(appointmentData as Appointment),
+        id: response.data.id,
+        status: "pending",
+      };
+      
+      set((state) => ({
+        appointments: [...state.appointments, newAppointment],
+      }));
+
       toast.success("Дархости шумо бомуваффақият ирсол шуд!");
       return { success: true };
-    } catch (error) {
+    } catch (error: any) {
       console.error(error);
-      toast.error("Хатогӣ ҳангоми ирсоли дархост");
+      
+      // Проверяем, если это ошибка конфликта времени
+      if (error?.response?.status === 409 || error?.response?.data?.message?.includes("time")) {
+        toast.error("Ин вақт аллақачон забронирован шудаест. Лутфан вақти дигарро интихоб кунед.");
+      } else {
+        toast.error("Хатогӣ ҳангоми ирсоли дархост");
+      }
       return { success: false };
     }
   },
 
   async approveAppointment(id) {
     try {
+      const { data: appointmentToApprove } = await axios.get(`${API}/appointments/${id}`);
+      
+      // Перед одобрением, проверяем что нет других approved на это время
+      const { data: allAppointments } = await axios.get(`${API}/appointments?doctorId=${appointmentToApprove.doctorId}&date=${appointmentToApprove.date}`);
+      
+      const appointmentHour = parseInt(appointmentToApprove.time.split(':')[0]);
+      const conflictingApproved = allAppointments.filter((apt: Appointment) => 
+        apt.status === "approved" && 
+        apt.id !== id &&
+        parseInt(apt.time.split(':')[0]) === appointmentHour
+      );
+      
+      if (conflictingApproved.length > 0) {
+        toast.error("Вақти интихобшуда аллақачон забронирован шудаест!");
+        return { success: false };
+      }
+
+      // Одобряем текущее назначение
       await axios.patch(`${API}/appointments/${id}`, { status: "approved" });
+
+      // Автоматически отклоняем все остальные pending запросы на то же время
+      const conflictingPending = allAppointments.filter((apt: Appointment) => 
+        apt.status === "pending" && 
+        apt.id !== id &&
+        parseInt(apt.time.split(':')[0]) === appointmentHour
+      );
+      
+      for (const conflictingApt of conflictingPending) {
+        await axios.patch(`${API}/appointments/${conflictingApt.id}`, { 
+          status: "rejected",
+          rejectReason: "Ин вақт аллақачон забронирован шудаест."
+        });
+      }
+
+      // Обновляем локальное состояние
+      const state = get();
+      const updatedAppointments = state.doctorAppointments.map((apt: Appointment) => {
+        if (apt.id === id) return { ...apt, status: "approved" as const };
+        if (conflictingPending.some((p: Appointment) => p.id === apt.id)) {
+          return { ...apt, status: "rejected" as const, rejectReason: "Ин вақт аллақачон забронирован шудаест." };
+        }
+        return apt;
+      });
+      
+      set({ doctorAppointments: updatedAppointments });
+
       toast.success("Навбат тасдиқ шуд!");
       return { success: true };
-    } catch (error) {
+    } catch (error: any) {
       console.error(error);
-      toast.error("Хатогӣ");
+      toast.error(error?.response?.data?.message || "Хатогӣ");
       return { success: false };
     }
   },
@@ -507,6 +618,24 @@ const useStore = create<StoreState>((set, get) => ({
       console.error(error);
       toast.error("Хатогӣ");
       return { success: false };
+    }
+  },
+
+  // ── Subcategories ──────────────────────────────────
+  async getSubcategories() {
+    try {
+      const { data } = await axios.get(API + "/category");
+      const allSubs: string[] = [];
+      data.forEach((cat: Category) => {
+        if (cat.subcategories) {
+          cat.subcategories.forEach((sub) => {
+            if (!allSubs.includes(sub)) allSubs.push(sub);
+          });
+        }
+      });
+      set({ subcategories: allSubs });
+    } catch (error) {
+      console.error(error);
     }
   },
 }));

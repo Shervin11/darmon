@@ -9,6 +9,7 @@ import { Stethoscope, Heart, Shield, LogIn } from "lucide-react";
 import useStore from "@/store/store";
 import { useRouter } from "next/navigation";
 import toast from "react-hot-toast";
+import { useTranslation } from "@/lib/i18n";
 
 export default function Login() {
   const [emailLogin, setEmailLogin] = useState("");
@@ -16,6 +17,7 @@ export default function Login() {
   const [docLog, setDocLog] = useState(false);
   const [loading, setLoading] = useState(false);
   const router = useRouter();
+  const { t } = useTranslation();
 
   const { loginUser } = useStore((state) => state);
 
@@ -26,11 +28,11 @@ export default function Login() {
       password: passLogin.trim(),
     };
     if (!emailLogin || !passLogin) {
-      toast.error("Маълумоти худро пур кунед");
+      toast.error(t("auth.error.fillData"));
       return;
     }
     if (!emailLogin.includes("@") || !emailLogin.includes(".")) {
-      toast.error("Email нодуруст аст");
+      toast.error(t("auth.error.invalidEmail"));
       return;
     }
 
@@ -43,14 +45,14 @@ export default function Login() {
       setPassLogin("");
       setEmailLogin("");
     } else {
-      toast.error("Email ё рамз нодуруст аст");
+      toast.error(t("auth.error.wrongCredentials"));
     }
   }
 
   return (
     <div className="min-h-screen w-full flex">
       {/* Left - Form */}
-      <div className="flex flex-col justify-center w-full lg:w-1/2 px-8 sm:px-16 xl:px-24 py-12 bg-white">
+      <div className="flex flex-col justify-center w-full lg:w-1/2 px-8 sm:px-16 xl:px-24 py-12 bg-white dark:bg-[#121218]">
         <div className="flex items-center gap-2 mb-10">
           <div className="w-9 h-9 rounded-lg bg-md-primary flex items-center justify-center">
             <Stethoscope className="w-5 h-5 text-white" />
@@ -59,14 +61,14 @@ export default function Login() {
         </div>
 
         <div className="max-w-sm w-full">
-          <h1 className="text-3xl font-bold text-md-on-surface mb-2 text-balance font-headline">Хуш омадед</h1>
+          <h1 className="text-3xl font-bold text-md-on-surface mb-2 text-balance font-headline">{t("auth.welcome")}</h1>
           <p className="text-md-on-surface-variant mb-8 leading-relaxed">
-            Барои идома додан ба аккаунти худ ворид шавед.
+            {t("auth.loginDesc")}
           </p>
 
           <form onSubmit={login} className="flex flex-col gap-4">
             <div className="flex flex-col gap-1.5">
-              <label htmlFor="email-login" className="text-sm font-medium text-md-on-surface-variant">Email</label>
+              <label htmlFor="email-login" className="text-sm font-medium text-md-on-surface-variant">{t("auth.email")}</label>
               <input
                 id="email-login"
                 type="email"
@@ -78,7 +80,7 @@ export default function Login() {
             </div>
 
             <div className="flex flex-col gap-1.5">
-              <label htmlFor="pass-login" className="text-sm font-medium text-md-on-surface-variant">Рамз</label>
+              <label htmlFor="pass-login" className="text-sm font-medium text-md-on-surface-variant">{t("auth.password")}</label>
               <input
                 id="pass-login"
                 type="password"
@@ -90,7 +92,7 @@ export default function Login() {
             </div>
 
             <div className="border border-md-outline-variant/30 rounded-xl p-4 bg-md-surface-container-low">
-              <p className="text-sm font-medium text-md-on-surface-variant mb-3">Ман</p>
+              <p className="text-sm font-medium text-md-on-surface-variant mb-3">{t("auth.iAm")}</p>
               <RadioGroup
                 value={docLog ? "doctor" : "patient"}
                 onValueChange={(value) => setDocLog(value === "doctor")}
@@ -100,14 +102,14 @@ export default function Login() {
                   <RadioGroupItem value="doctor" id="login-doctor" />
                   <Label htmlFor="login-doctor" className="cursor-pointer flex items-center gap-1.5 text-md-on-surface-variant">
                     <Stethoscope className="w-4 h-4 text-md-primary" />
-                    Табиб
+                    {t("auth.doctor")}
                   </Label>
                 </div>
                 <div className="flex items-center gap-2 cursor-pointer">
                   <RadioGroupItem value="patient" id="login-patient" />
                   <Label htmlFor="login-patient" className="cursor-pointer flex items-center gap-1.5 text-md-on-surface-variant">
                     <Heart className="w-4 h-4 text-md-primary" />
-                    Бемор
+                    {t("auth.patient")}
                   </Label>
                 </div>
               </RadioGroup>
@@ -123,19 +125,19 @@ export default function Login() {
               ) : (
                 <>
                   <LogIn className="w-4 h-4" />
-                  Вуруд
+                  {t("auth.login")}
                 </>
               )}
             </button>
           </form>
 
           <p className="mt-6 text-center text-sm text-md-on-surface-variant">
-            Аккаунт надоред?{" "}
+            {t("auth.noAccount")}{" "}
             <button
               onClick={() => router.push("/auth")}
               className="text-md-primary cursor-pointer font-semibold hover:underline"
             >
-              Бақайдгирӣ
+              {t("auth.register")}
             </button>
           </p>
         </div>
@@ -158,16 +160,16 @@ export default function Login() {
             />
           </div>
           <h2 className="text-3xl font-bold text-white mb-3 text-balance font-headline">
-            Саломатии шумо — авлавияти мост
+            {t("auth.healthPriority")}
           </h2>
           <p className="text-blue-100/80 leading-relaxed max-w-xs">
-            Ба духтурони беҳтарин пайваст шавед ва саломатии худро идора кунед.
+            {t("auth.connectBest")}
           </p>
           <div className="flex gap-6 mt-8">
             {[
-              { icon: <Shield className="w-4 h-4" />, label: "Амниятнок" },
-              { icon: <Heart className="w-4 h-4" />, label: "Боэтимод" },
-              { icon: <Stethoscope className="w-4 h-4" />, label: "Касбӣ" },
+              { icon: <Shield className="w-4 h-4" />, label: t("auth.secure") },
+              { icon: <Heart className="w-4 h-4" />, label: t("auth.trustworthy") },
+              { icon: <Stethoscope className="w-4 h-4" />, label: t("auth.professional") },
             ].map((item, i) => (
               <div key={i} className="flex items-center gap-2 text-white/70 text-sm bg-white/10 px-4 py-2 rounded-full backdrop-blur-sm">
                 {item.icon}

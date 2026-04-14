@@ -11,12 +11,14 @@ import { useAuth } from "../hooks/useAuth/page";
 import { useRouter } from "next/navigation";
 import useStore from "@/store/store";
 import { User, Heart, LogOut, Settings } from "lucide-react";
+import { useTranslation } from "@/lib/i18n";
 
 const BtnProfile = () => {
   const isAuth = useAuth();
   const [localIsAuth, setLocalIsAuth] = useState(isAuth);
   const router = useRouter();
   const { userById } = useStore((state) => state);
+  const { t } = useTranslation();
 
   useEffect(() => {
     setLocalIsAuth(isAuth);
@@ -27,7 +29,7 @@ const BtnProfile = () => {
       {!localIsAuth ? (
         <Link href={"/auth"}>
           <button className="bg-md-primary text-white px-6 py-2.5 rounded-full font-headline font-bold text-sm tracking-wide hover:scale-105 active:scale-95 transition-all duration-200 cursor-pointer">
-            Воридшавӣ
+            {t("nav.login")}
           </button>
         </Link>
       ) : (
@@ -37,18 +39,18 @@ const BtnProfile = () => {
               <User className="w-5 h-5" />
             </Button>
           </PopoverTrigger>
-          <PopoverContent className="w-48 p-2 rounded-xl shadow-[0_20px_60px_rgba(0,78,159,0.12)] border-md-outline-variant/20">
+          <PopoverContent className="w-48 p-2 rounded-xl shadow-[0_20px_60px_rgba(0,78,159,0.12)] border-md-outline-variant/20 bg-white dark:bg-[#1F1F28]">
             <Link href={"/profile"}>
               <div className="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-md-surface-container-low cursor-pointer transition-colors text-md-on-surface text-sm font-medium">
                 <Settings className="w-4 h-4 text-md-primary" />
-                <span>Ҳуҷраи шахсӣ</span>
+                <span>{t("profile.cabinet")}</span>
               </div>
             </Link>
             {userById?.role !== "doctor" && (
               <Link href={"/wishlist"}>
                 <div className="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-md-surface-container-low cursor-pointer transition-colors text-md-on-surface text-sm font-medium">
                   <Heart className="w-4 h-4 text-md-primary" />
-                  <span>Интихобшуда</span>
+                  <span>{t("profile.favorites")}</span>
                 </div>
               </Link>
             )}
@@ -61,7 +63,7 @@ const BtnProfile = () => {
               }}
             >
               <LogOut className="w-4 h-4" />
-              <span>Баромад</span>
+              <span>{t("profile.logout")}</span>
             </div>
           </PopoverContent>
         </Popover>

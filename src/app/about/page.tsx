@@ -1,10 +1,13 @@
-import { Button } from "@/components/ui/button";
+"use client";
 import React from "react";
 import { Star, Zap, Shield, Users, BarChart3, ArrowRight, Quote } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
+import { useTranslation } from "@/lib/i18n";
 
 const About = () => {
+  const { t } = useTranslation();
+
   return (
     <div className="pt-20 overflow-hidden">
       {/* Hero */}
@@ -14,16 +17,16 @@ const About = () => {
         <div className="max-w-7xl mx-auto px-6">
           <div className="flex flex-col items-center text-center space-y-8">
             <h1 className="text-4xl md:text-6xl lg:text-7xl font-extrabold tracking-tight max-w-4xl font-headline text-md-on-surface">
-              <span className="text-md-secondary">Духтури мо</span> — ҳамроҳ ба саломатии беҳтар
+              <span className="text-md-primary">{t("aboutPage.title1")}</span> {t("aboutPage.title2")}
             </h1>
 
             <p className="text-xl text-md-on-surface-variant max-w-2xl">
-              Шифокори боэътимод ва ботаҷриба барои нигоҳдории саломатии шумо. Духтури дилсӯз ва касбӣ барои беҳбудии ҳаёти шумо
+              {t("aboutPage.desc")}
             </p>
 
             <Link href={"/doctors"}>
               <button className="bg-md-primary text-white px-10 py-4 rounded-full font-headline font-bold shadow-lg shadow-md-primary/20 hover:scale-105 active:scale-95 transition-all flex items-center gap-2 group cursor-pointer">
-                Қайд шудан
+                {t("aboutPage.register")}
                 <ArrowRight className="h-4 w-4 group-hover:translate-x-1 transition-transform" />
               </button>
             </Link>
@@ -34,7 +37,7 @@ const About = () => {
                 alt="Darmon Medical"
                 width={800}
                 height={400}
-                className="rounded-xl shadow-2xl border-8 border-white"
+                className="rounded-xl shadow-2xl border-8 border-white dark:border-[#1F1F28]"
               />
             </div>
           </div>
@@ -45,21 +48,21 @@ const About = () => {
       <section className="py-20 bg-md-surface-container-low">
         <div className="max-w-7xl mx-auto px-6">
           <div className="text-center space-y-4 mb-16">
-            <span className="text-md-secondary font-headline font-bold text-sm uppercase tracking-widest">Имконият</span>
+            <span className="text-md-primary font-headline font-bold text-sm uppercase tracking-widest">{t("aboutPage.featuresLabel")}</span>
             <h2 className="text-3xl md:text-4xl font-bold font-headline text-md-on-surface">
-              Ҳамаи имкониятҳо барои табиби касбӣ
+              {t("aboutPage.featuresTitle")}
             </h2>
             <p className="text-xl text-md-on-surface-variant max-w-2xl mx-auto">
-              Имкониятҳои пуриқтидор барои беҳтар сохтани ҳамкории гурӯҳи тиббӣ
+              {t("aboutPage.featuresDesc")}
             </p>
           </div>
 
           <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
             {[
-              { icon: <Zap className="h-6 w-6" />, color: "bg-blue-100 text-blue-600", title: "Автоматикунонии зирак", desc: "Системае, ки одатҳои шуморо меомӯзад ва корҳои якхеларо худкор анҷом медиҳад." },
-              { icon: <Shield className="h-6 w-6" />, color: "bg-green-100 text-green-600", title: "Амнияти сатҳи корхона", desc: "Сатҳи олитарини амният барои ташкилотҳо — бо стандартҳои ҷаҳонӣ." },
-              { icon: <Users className="h-6 w-6" />, color: "bg-purple-100 text-purple-600", title: "Ҳамкории даставӣ", desc: "Воситаҳои ҳамкории онлайнӣ дар вақти воқеӣ, ки дастаи шуморо ҳамоҳанг нигоҳ медоранд." },
-              { icon: <BarChart3 className="h-6 w-6" />, color: "bg-orange-100 text-orange-600", title: "Таҳлили пешрафта", desc: "Иттилооти муфассал ва ҳисоботҳо барои беҳсозии ҷараёни кор ва назорати самаранокӣ." },
+              { icon: <Zap className="h-6 w-6" />, color: "bg-blue-100 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400", title: t("aboutPage.f1Title"), desc: t("aboutPage.f1Desc") },
+              { icon: <Shield className="h-6 w-6" />, color: "bg-green-100 text-green-600 dark:bg-green-900/30 dark:text-green-400", title: t("aboutPage.f2Title"), desc: t("aboutPage.f2Desc") },
+              { icon: <Users className="h-6 w-6" />, color: "bg-purple-100 text-purple-600 dark:bg-purple-900/30 dark:text-purple-400", title: t("aboutPage.f3Title"), desc: t("aboutPage.f3Desc") },
+              { icon: <BarChart3 className="h-6 w-6" />, color: "bg-orange-100 text-orange-600 dark:bg-orange-900/30 dark:text-orange-400", title: t("aboutPage.f4Title"), desc: t("aboutPage.f4Desc") },
             ].map((item, i) => (
               <div key={i} className="bg-md-surface-container-lowest p-8 rounded-xl clinical-shadow hover:translate-y-[-4px] transition-transform duration-300 group">
                 <div className={`h-12 w-12 rounded-xl ${item.color} flex items-center justify-center mb-6 group-hover:scale-110 transition-transform`}>
@@ -77,9 +80,9 @@ const About = () => {
       <section className="py-20">
         <div className="max-w-7xl mx-auto px-6">
           <div className="text-center space-y-4 mb-16">
-            <span className="text-md-secondary font-headline font-bold text-sm uppercase tracking-widest">Шарҳҳо</span>
+            <span className="text-md-primary font-headline font-bold text-sm uppercase tracking-widest">{t("aboutPage.reviewsLabel")}</span>
             <h2 className="text-3xl md:text-4xl font-bold font-headline text-md-on-surface">
-              Муштариёни мо чӣ мегӯянд
+              {t("aboutPage.reviewsTitle")}
             </h2>
           </div>
 
@@ -116,13 +119,13 @@ const About = () => {
       <section className="vitality-gradient py-20">
         <div className="max-w-4xl mx-auto px-6 text-center space-y-8">
           <h2 className="text-4xl md:text-5xl font-headline font-extrabold text-white">
-            Омода ба оғоз?
+            {t("aboutPage.ready")}
           </h2>
           <p className="text-blue-100 text-lg opacity-90 max-w-2xl mx-auto">
-            Имрӯз бо Darmon ба саломатии худ ғамхорӣ кардан оғоз намоед.
+            {t("aboutPage.readyDesc")}
           </p>
           <Link href="/doctors" className="bg-md-secondary-container text-md-on-secondary-container px-12 py-5 rounded-full font-headline font-black text-lg shadow-xl shadow-black/10 hover:scale-105 active:scale-95 transition-all inline-block">
-            Оғоз кунед
+            {t("aboutPage.start")}
           </Link>
         </div>
       </section>

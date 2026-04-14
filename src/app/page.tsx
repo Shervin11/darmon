@@ -1,10 +1,8 @@
+"use client";
 import Image from "next/image";
 import Link from "next/link";
 import {
   Stethoscope,
-  HeartPulse,
-  Shield,
-  Users,
   ArrowRight,
   Activity,
   Microscope,
@@ -12,8 +10,11 @@ import {
   Mail,
   User,
 } from "lucide-react";
+import { useTranslation } from "@/lib/i18n";
 
 const Home = () => {
+  const { t } = useTranslation();
+
   return (
     <div className="min-h-screen overflow-hidden pt-20">
       {/* ── HERO SECTION ── */}
@@ -21,23 +22,23 @@ const Home = () => {
         <div className="max-w-7xl mx-auto px-6 grid md:grid-cols-2 gap-12 items-center w-full">
           <div className="space-y-8 py-12 animate-fade-in-up">
             <span className="inline-block px-4 py-1.5 bg-md-secondary-container text-md-on-secondary-container font-bold text-xs rounded-full uppercase tracking-wider font-headline">
-              Дармони шумо дар дасти мо
+              {t("hero.badge")}
             </span>
             <h1 className="font-headline text-5xl md:text-7xl font-extrabold leading-[1.1] tracking-tight text-md-on-surface">
-              <span className="text-md-primary block">Духтури шумо,</span>
-              муолиҷаи шумо
+              <span className="text-md-primary block">{t("hero.title1")}</span>
+              {t("hero.title2")}
             </h1>
             <div className="w-[50px] h-[3px] bg-md-primary"></div>
             <p className="text-md-on-surface-variant text-lg max-w-md leading-relaxed">
-              Мо технологияҳои навтаринро бо касбияти баланд муттаҳид кардем, то ба саломатии шумо ғамхории комил зоҳир намоем.
+              {t("hero.desc")}
             </p>
             <div className="flex flex-wrap gap-4 pt-4">
               <Link href="/doctors" className="bg-md-primary text-white px-8 py-4 rounded-full font-bold shadow-lg shadow-md-primary/20 hover:scale-105 active:scale-95 transition-all flex items-center gap-2 group font-headline">
-                Бештар фаҳмед
+                {t("hero.more")}
                 <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
               </Link>
               <Link href="/about" className="bg-md-secondary-container text-md-on-secondary-container px-8 py-4 rounded-full font-bold hover:scale-105 active:scale-95 transition-all font-headline">
-                Хизматрасонӣ
+                {t("hero.services")}
               </Link>
             </div>
           </div>
@@ -61,10 +62,10 @@ const Home = () => {
         <div className="max-w-7xl mx-auto px-6">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-8 md:gap-12">
             {[
-              { num: "15+", label: "Солҳои Таҷриба" },
-              { num: "35+", label: "Махсусиятҳои тиббӣ" },
-              { num: "20+", label: "Духтурони касбӣ" },
-              { num: "1000+", label: "Беморони қонеъшуда" },
+              { num: "15+", label: t("stats.years") },
+              { num: "35+", label: t("stats.specialties") },
+              { num: "20+", label: t("stats.doctors") },
+              { num: "1000+", label: t("stats.patients") },
             ].map((stat, i) => (
               <div key={i} className="text-center md:text-left">
                 <div className="text-4xl md:text-5xl font-black text-md-secondary-container mb-2 tracking-tighter font-headline">
@@ -80,35 +81,35 @@ const Home = () => {
       </section>
 
       {/* ── TECHNOLOGY SECTION ── */}
-      <section className="bg-white py-24">
+      <section className="bg-md-surface-container-lowest py-24">
         <div className="max-w-7xl mx-auto px-6">
           <div className="text-center mb-16 space-y-4">
-            <span className="text-md-secondary font-bold text-sm uppercase tracking-[0.2em] font-headline">Таҷҳизот ва технология</span>
+            <span className="text-md-secondary font-bold text-sm uppercase tracking-[0.2em] font-headline">{t("tech.badge")}</span>
             <h2 className="font-headline text-4xl md:text-5xl font-extrabold text-md-on-surface">
-              Технологияи <span className="relative inline-block">пешрафта<span className="absolute bottom-1 left-0 w-full h-3 bg-md-secondary-container/30 -z-10"></span></span>
+              {t("tech.title")} <span className="relative inline-block">{t("tech.titleHighlight")}<span className="absolute bottom-1 left-0 w-full h-3 bg-md-secondary-container/30 -z-10"></span></span>
             </h2>
           </div>
           <div className="grid md:grid-cols-3 gap-8">
             {[
               {
                 img: "/uzi.png",
-                tag: "Насли нав",
-                title: "УЗИ Aplio 400",
-                desc: "Системаи ташхисии фавқулодда дақиқ барои таҳқиқи узвҳои дохилӣ бо сифати тасвири HD.",
+                tag: t("tech.uzi.tag"),
+                title: t("tech.uzi.title"),
+                desc: t("tech.uzi.desc"),
                 icon: <Stethoscope className="w-6 h-6" />,
               },
               {
                 img: "/sim.png",
-                tag: "Ҷопон",
-                title: "Olympus CF-Q150L",
-                desc: "Колоноскопи муосир барои муайян кардани бемориҳо дар марҳилаҳои аввал бо бароҳатии бештар.",
+                tag: t("tech.olympus.tag"),
+                title: t("tech.olympus.title"),
+                desc: t("tech.olympus.desc"),
                 icon: <Activity className="w-6 h-6" />,
               },
               {
                 img: "/rengen.png",
-                tag: "Дақиқии баланд",
-                title: "ПроГраф 5000 X-ray",
-                desc: "Таҷҳизоти рентгении рақамӣ бо миқдори ками шуоъ ва натиҷаҳои фаврии баландсифат.",
+                tag: t("tech.xray.tag"),
+                title: t("tech.xray.title"),
+                desc: t("tech.xray.desc"),
                 icon: <Microscope className="w-6 h-6" />,
               },
             ].map((item, i) => (
@@ -145,18 +146,18 @@ const Home = () => {
           <div className="space-y-10">
             <div className="space-y-4">
               <h2 className="font-headline text-4xl md:text-5xl font-extrabold text-md-on-surface leading-tight">
-                Маркази тиббии <span className="text-md-primary underline decoration-md-secondary-container decoration-4 underline-offset-8">боэътимод</span>
+                {t("about.title1")} <span className="text-md-primary underline decoration-md-secondary-container decoration-4 underline-offset-8">{t("about.titleHighlight")}</span>
               </h2>
               <p className="text-md-on-surface-variant leading-relaxed text-lg">
-                Поликлиникаи мо бо ҳадафи расонидани ёрии босифати тиббӣ таъсис ёфтааст. Мо боварӣ дорем, ки ҳар як бемор сазовори муоширати касбӣ ва табобати инфиродӣ мебошад.
+                {t("about.desc")}
               </p>
             </div>
             <div className="grid grid-cols-2 gap-6">
               {[
-                { label: "Ғамхории 24/7", icon: <Mail className="w-6 h-6" /> },
-                { label: "Бехатарии пурра", icon: <ShieldCheck className="w-6 h-6" /> },
-                { label: "Мутахассисони бетакрор", icon: <User className="w-6 h-6" /> },
-                { label: "Таҷҳизоти муосир", icon: <Activity className="w-6 h-6" /> },
+                { label: t("about.care247"), icon: <Mail className="w-6 h-6" /> },
+                { label: t("about.safety"), icon: <ShieldCheck className="w-6 h-6" /> },
+                { label: t("about.experts"), icon: <User className="w-6 h-6" /> },
+                { label: t("about.equipment"), icon: <Activity className="w-6 h-6" /> },
               ].map((item, i) => (
                 <div key={i} className="flex items-center gap-4 group">
                   <div className="flex-shrink-0 w-12 h-12 bg-md-primary/10 rounded-full flex items-center justify-center text-md-primary group-hover:bg-md-primary group-hover:text-white transition-colors duration-300">
@@ -172,10 +173,10 @@ const Home = () => {
             <div className="absolute -bottom-6 -right-6 w-32 h-32 bg-md-primary rounded-full -z-10 opacity-10"></div>
             <Image
               src="/hero2.png"
-              alt="Маркази тиббӣ"
+              alt="Medical center"
               width={500}
               height={400}
-              className="rounded-xl shadow-2xl w-full aspect-[4/3] object-cover border-8 border-white"
+              className="rounded-xl shadow-2xl w-full aspect-[4/3] object-cover border-8 border-white dark:border-[#1F1F28]"
             />
           </div>
         </div>
@@ -187,13 +188,13 @@ const Home = () => {
         <div className="absolute bottom-0 left-0 w-96 h-96 bg-md-secondary-container/5 rounded-full translate-y-1/2 -translate-x-1/2 blur-3xl"></div>
         <div className="max-w-4xl mx-auto px-6 text-center relative z-10 space-y-8">
           <h2 className="font-headline text-4xl md:text-5xl font-black text-white leading-tight">
-            Ба қабули духтур онлайн <span className="text-md-secondary-container italic">номнавис шавед</span>
+            {t("cta.title1")} <span className="text-md-secondary-container italic">{t("cta.title2")}</span>
           </h2>
           <p className="text-blue-100 text-lg opacity-90 max-w-2xl mx-auto">
-            Вақти худро сарфа кунед ва беҳтарин хизматрасониро дар соатҳои ба шумо мувофиқ дастрас намоед.
+            {t("cta.desc")}
           </p>
           <Link href="/doctors" className="bg-md-secondary-container text-md-on-secondary-container px-12 py-5 rounded-full font-black text-lg shadow-xl shadow-black/10 hover:scale-105 active:scale-95 transition-all inline-block font-headline">
-            Қайд шудан
+            {t("cta.register")}
           </Link>
         </div>
       </section>
