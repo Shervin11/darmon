@@ -42,7 +42,7 @@ const Profile = () => {
   const [isPhotoRemoved, setIsPhotoRemoved] = useState(false);
   const { t } = useTranslation();
 
-  
+  // Doctor-specific states
   const [specialty, setSpecialty] = useState("");
   const [experience, setExperience] = useState<number | "">("");
   const [clinic, setClinic] = useState("");
@@ -138,6 +138,10 @@ const Profile = () => {
 
   return (
     <div className="bg-md-surface-container-low min-h-screen pb-20 pt-20">
+      {/* Hero Banner */}
+      <section className="max-w-7xl mx-auto px-6 mb-12 mt-4">
+        <div className="relative bg-[#00A191] rounded-xl pt-16 pb-20 px-10 md:px-16 overflow-hidden flex flex-col items-center justify-center text-center">
+          {/* Glow effects */}
           <div className="absolute inset-0 opacity-20">
             <div className="absolute -right-20 -top-20 w-96 h-96 bg-[#00C4B0] rounded-full blur-[120px]"></div>
             <div className="absolute -left-20 -bottom-20 w-96 h-96 bg-[#007D70] rounded-full blur-[120px]"></div>
@@ -155,6 +159,44 @@ const Profile = () => {
           <Card className="border-none clinical-shadow overflow-hidden bg-md-surface-container-lowest rounded-xl">
             <CardHeader className="bg-md-surface-container-lowest border-b border-md-surface-variant/20 py-8">
               <div className="flex flex-col md:flex-row items-center gap-8">
+                {/* Avatar */}
+                <div className="relative group">
+                  <div className="w-32 h-32 rounded-3xl overflow-hidden ring-4 ring-white dark:ring-[#1F1F28] shadow-2xl transition-transform group-hover:scale-[1.02]">
+                    <img
+                      src={isPhotoRemoved ? DefaultPhoto : (previewUrl || userById.image || DefaultPhoto)}
+                      alt="avatar"
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
+                  <label htmlFor="avatar-upload" className="absolute -bottom-2 -right-2 bg-md-primary hover:bg-md-primary-container text-white p-2 rounded-xl shadow-lg cursor-pointer transition-all active:scale-90">
+                    <Camera className="w-5 h-5" />
+                    <input id="avatar-upload" type="file" accept="image/*" className="hidden" onChange={handleFileChange} ref={fileInputRef} />
+                  </label>
+                </div>
+
+                <div className="text-center md:text-left space-y-2">
+                  <CardTitle className="text-2xl font-bold text-md-on-surface font-headline">{name || t("profile.user")}</CardTitle>
+                  <CardDescription className="flex items-center justify-center md:justify-start gap-2">
+                    <span className="bg-md-primary/10 text-md-primary px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider font-headline">
+                      {userById.role === "doctor" ? t("profile.doctorRole") : t("profile.patientRole")}
+                    </span>
+                    <span className="text-md-outline">•</span>
+                    <span className="text-md-on-surface-variant text-sm">{email}</span>
+                  </CardDescription>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    onClick={handleRemovePhoto}
+                    className="text-md-error hover:text-md-error hover:bg-md-error-container h-8 px-2 text-xs cursor-pointer"
+                  >
+                    <Trash2 className="w-3.5 h-3.5 mr-1" /> {t("profile.removePhoto")}
+                  </Button>
+                </div>
+              </div>
+            </CardHeader>
+
+            <CardContent className="p-8 space-y-10">
+              {/* General Info */}
               <div className="space-y-6">
                 <div className="flex items-center gap-2 text-md-on-surface font-bold border-l-4 border-md-primary pl-4 font-headline">
                   <User className="w-5 h-5 text-md-primary" />
@@ -207,6 +249,74 @@ const Profile = () => {
                 </div>
               </div>
 
+              {/* Doctor Info */}
+              {userById.role === "doctor" && (
+                <div className="space-y-8 pt-6 border-t border-md-surface-variant/20">
+                  <div className="flex items-center gap-2 text-md-on-surface font-bold border-l-4 border-md-secondary-container pl-4 font-headline">
+                    <Stethoscope className="w-5 h-5 text-md-secondary-container" />
+                    <h3>{t("profile.professionalInfo")}</h3>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div className="space-y-2">
+                      <Label className="text-xs font-bold text-md-on-surface-variant uppercase tracking-wider">{t("profile.specialty")}</Label>
+                      <div className="relative">
+                        <Briefcase className="absolute left-3 top-3 w-4 h-4 text-md-outline" />
+                        <select
+                          value={specialty}
+                          onChange={(e) => setSpecialty(e.target.value)}
+                          className="w-full pl-10 h-11 bg-md-surface-container-low border border-md-outline-variant/30 rounded-lg text-sm appearance-none focus:outline-none focus:ring-2 ring-md-primary/20 text-md-on-surface"
+                        >
+                          <option value="">{t("profile.selectSpecialty")}</option>
+                          {subcategories.map((sub, idx) => (
+                            <option key={idx} value={sub}>{sub}</option>
+                          ))}
+                        </select>
+                      </div>
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label className="text-xs font-bold text-md-on-surface-variant uppercase tracking-wider">{t("profile.experience")}</Label>
+                      <div className="relative">
+                        <Clock className="absolute left-3 top-3 w-4 h-4 text-md-outline" />
+                        <Input type="number" value={experience} onChange={(e) => setExperience(e.target.value === "" ? "" : Number(e.target.value))} className="pl-10 h-11" />
+                      </div>
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label className="text-xs font-bold text-md-on-surface-variant uppercase tracking-wider">{t("profile.clinic")}</Label>
+                      <div className="relative">
+                        <Building2 className="absolute left-3 top-3 w-4 h-4 text-md-outline" />
+                        <Input value={clinic} onChange={(e) => setClinic(e.target.value)} className="pl-10 h-11" />
+                      </div>
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label className="text-xs font-bold text-md-on-surface-variant uppercase tracking-wider">{t("profile.price")}</Label>
+                      <div className="flex gap-2">
+                        <div className="relative flex-1">
+                          <Wallet className="absolute left-3 top-3 w-4 h-4 text-md-outline" />
+                          <Input value={priceCurrent} onChange={(e) => setPriceCurrent(e.target.value)} className="pl-10 h-11" />
+                        </div>
+                        <select value={priceCurrency} onChange={(e) => setPriceCurrency(e.target.value)} className="w-24 h-11 bg-md-surface-container-low border border-md-outline-variant/30 rounded-lg text-sm text-md-on-surface">
+                          <option value="сом.">сом.</option>
+                          <option value="$">$</option>
+                        </select>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label className="text-xs font-bold text-md-on-surface-variant uppercase tracking-wider">{t("profile.aboutMe")}</Label>
+                    <textarea
+                      value={bio}
+                      onChange={(e) => setBio(e.target.value)}
+                      className="w-full border border-md-outline-variant/30 rounded-xl p-4 min-h-[120px] focus:ring-2 ring-md-primary/20 outline-none transition-all bg-md-surface-container-low text-md-on-surface"
+                      placeholder={t("profile.aboutPlaceholder")}
+                    />
+                  </div>
+
+                  {/* Schedule */}
                   <div className="space-y-4 bg-md-primary/5 p-6 rounded-3xl border border-md-primary/10">
                     <div className="flex items-center justify-between">
                       <h4 className="font-bold text-md-primary flex items-center gap-2 font-headline">
@@ -245,3 +355,21 @@ const Profile = () => {
                 </div>
               )}
 
+              {/* Save Button */}
+              <div className="flex justify-end pt-6">
+                <Button
+                  type="submit"
+                  className="bg-md-secondary-container hover:bg-md-secondary text-md-on-secondary-container hover:text-white px-12 h-12 rounded-xl font-bold uppercase tracking-widest shadow-lg transition-all active:scale-95 cursor-pointer font-headline"
+                >
+                  {t("profile.save")}
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        </form>
+      </div>
+    </div>
+  );
+};
+
+export default Profile;

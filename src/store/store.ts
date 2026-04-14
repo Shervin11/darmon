@@ -4,8 +4,9 @@ import { create } from "zustand";
 
 const API = process.env.NEXT_PUBLIC_BASE_URL;
 
-export interface Appointment {
-  id?: number;
+// --- Interfaces ---
+
+export interface Category {
   id: number;
   title?: string;
   name?: string;
@@ -115,7 +116,8 @@ export interface StoreState {
   appointmentsLoading: boolean;
   subcategories: string[];
 
-: (newUser: User) => Promise<{ success: boolean; status?: number }>;
+  // Actions
+  registerUser: (newUser: User) => Promise<{ success: boolean; status?: number }>;
   loginUser: (user: Partial<User>) => Promise<{ success: boolean; role?: string; status?: number }>;
   loginMe: () => Promise<User | null>;
   getCategory: () => Promise<void>;
@@ -150,7 +152,8 @@ const useStore = create<StoreState>((set, get) => ({
   appointmentsLoading: false,
   subcategories: [],
 
-  (newUser) {
+  // ── Auth ──────────────────────────────────────────
+  async registerUser(newUser) {
     try {
       const { data } = await axios.post(API + "/register", newUser);
       localStorage.setItem("accessToken", data.token);
@@ -169,7 +172,7 @@ const useStore = create<StoreState>((set, get) => ({
     try {
       const { data } = await axios.post(API + "/auth", user);
       localStorage.setItem("accessToken", data.token);
-      
+      // Fetch user profile right after login to get role
       const meRes = await axios.get(API + "/auth_me", {
         headers: { Authorization: `Bearer ${data.token}` },
       });
@@ -195,7 +198,8 @@ const useStore = create<StoreState>((set, get) => ({
     }
   },
 
-  () {
+  // ── Categories & Doctors ──────────────────────────
+  async getCategory() {
     try {
       set({ isLoading: true });
       const { data } = await axios.get(API + "/category");
@@ -227,15 +231,27 @@ const useStore = create<StoreState>((set, get) => ({
     }
   },
 
-  (user: User) {
+  // ── Profile Edit ──────────────────────────────────
+  async edit(user: User) {
     try {
       const oldUser = get().userById;
 
+      // 1. НОРМАЛИЗАЦИЯ ДАННЫХ
       const dataToUpdate: any = { ...user };
+
+      // ИСПОЛЬЗУЕМ 'in', чтобы проверить наличие поля, даже если оно равно "" (пустая строка)
+      if ('photo' in dataToUpdate) {
+        dataToUpdate.image = dataToUpdate.photo; // Теперь если photo "", то и image станет ""
+        delete dataToUpdate.photo;
+      }
+
+      // Отправляем правильный объект в БД
       await axios.patch(API + "/users/" + user.id, dataToUpdate, {
         headers: { Authorization: `Bearer ${localStorage.getItem("accessToken")}` },
       });
 
+      // 2. CASCADE UPDATE (Обновление фото/имени в комментариях)
+      // Сравниваем старое и новое (используем "" как запасной вариант для сравнения)
       const isNameChanged = oldUser.fullName !== dataToUpdate.fullName;
       const isImageChanged = (oldUser.image || "") !== (dataToUpdate.image || "");
 
@@ -249,6 +265,12 @@ const useStore = create<StoreState>((set, get) => ({
               if (c.user.fullName === oldUser.fullName) {
                 hasChanges = true;
                 return {
+                  ...c,
+                  user: {
+                    ...c.user,
+                    fullName: dataToUpdate.fullName || c.user.fullName,
+                    // Если image в dataToUpdate существует (даже ""), берем его, иначе старое
+                    image: 'image' in dataToUpdate ? dataToUpdate.image : c.user.image,
                   },
                 };
               }
@@ -262,6 +284,8 @@ const useStore = create<StoreState>((set, get) => ({
         }
       }
 
+      // 3. ОБНОВЛЕНИЕ ЛОКАЛЬНОГО СТЕЙТА
+      // Объединяем старые данные с новыми, чтобы UI обновился мгновенно
       set({ userById: { ...oldUser, ...dataToUpdate } });
 
       toast.success("Маълумот бомуваффақият иваз шуд!");
@@ -272,6 +296,7 @@ const useStore = create<StoreState>((set, get) => ({
       return { success: false };
     }
   },
+  // Внутри useStore (create<StoreState>):
 
   async uploadImage(file: File) {
     try {
@@ -290,7 +315,8 @@ const useStore = create<StoreState>((set, get) => ({
     }
   },
 
-  (doctorId, newComment, currentComments) {
+  // ── Comments ──────────────────────────────────────
+  async addComment(doctorId, newComment, currentComments) {
     try {
       const updatedComments = currentComments ? [...currentComments, newComment] : [newComment];
       await axios.patch(API + "/users/" + doctorId, { comments: updatedComments }, {
@@ -356,8 +382,10 @@ const useStore = create<StoreState>((set, get) => ({
     }
   },
 
-  (id) {
+  // ── Wishlist (ОПТИМИЗИРОВАНО) ──────────────────────
+  async wishlistUser(id) {
     try {
+      // Запрашиваем только список нужного юзера!
       const { data } = await axios.get(`${API}/wishlist?userId=${id}`);
       set({ wishlist: data[0] || { favorites: [] } });
     } catch (error) {
@@ -367,6 +395,7 @@ const useStore = create<StoreState>((set, get) => ({
 
   async toggleWishlist(userId, doctor) {
     try {
+      // Запрашиваем только список нужного юзера!
       const { data: wishlists } = await axios.get(`${API}/wishlist?userId=${userId}`);
       const userList = wishlists[0];
 
@@ -404,6 +433,7 @@ const useStore = create<StoreState>((set, get) => ({
 
   async deleteWishlist(userId, doctorId) {
     try {
+      // Запрашиваем только список нужного юзера!
       const { data: wishlists } = await axios.get(`${API}/wishlist?userId=${userId}`);
       const userList = wishlists[0];
 
@@ -420,7 +450,8 @@ const useStore = create<StoreState>((set, get) => ({
     }
   },
 
-  (clientId) {
+  // ── Appointments ──────────────────────────────────
+  async getAppointments(clientId) {
     try {
       set({ appointmentsLoading: true });
       const { data } = await axios.get(`${API}/appointments?clientId=${clientId}`);
@@ -448,20 +479,24 @@ const useStore = create<StoreState>((set, get) => ({
     try {
       const { data } = await axios.get(`${API}/appointments?doctorId=${doctorId}&date=${date}`);
       
-      
+      // Извлекаем час из времени (HH:MM -> HH)
       const requestedHour = parseInt(time.split(':')[0]);
       
+      // Проверяем как approved так и pending назначения
+      // Один сеанс занимает 1 час, поэтому если занято 10:00, то весь час 10:00-10:59 занят
       const conflictingAppointments = data.filter((apt: Appointment) => {
         if (apt.date !== date) return false;
         
+        // Проверяем оба статуса: approved И pending (чтобы предотвратить двойную запись)
         if (!['approved', 'pending'].includes(apt.status)) return false;
         
         const aptHour = parseInt(apt.time.split(':')[0]);
         
+        // Конфликт если часы совпадают
         return aptHour === requestedHour;
       });
       
-      return conflictingAppointments.length === 0;
+      return conflictingAppointments.length === 0; // true если слот свободен
     } catch (error) {
       console.error(error);
       return true;
@@ -491,6 +526,7 @@ const useStore = create<StoreState>((set, get) => ({
         status: "pending",
       });
 
+      // Обновляем локальный список appointments
       const newAppointment: Appointment = {
         ...(appointmentData as Appointment),
         id: response.data.id,
@@ -506,6 +542,7 @@ const useStore = create<StoreState>((set, get) => ({
     } catch (error: any) {
       console.error(error);
       
+      // Проверяем, если это ошибка конфликта времени
       if (error?.response?.status === 409 || error?.response?.data?.message?.includes("time")) {
         toast.error("Ин вақт аллақачон забронирован шудаест. Лутфан вақти дигарро интихоб кунед.");
       } else {
@@ -519,6 +556,7 @@ const useStore = create<StoreState>((set, get) => ({
     try {
       const { data: appointmentToApprove } = await axios.get(`${API}/appointments/${id}`);
       
+      // Перед одобрением, проверяем что нет других approved на это время
       const { data: allAppointments } = await axios.get(`${API}/appointments?doctorId=${appointmentToApprove.doctorId}&date=${appointmentToApprove.date}`);
       
       const appointmentHour = parseInt(appointmentToApprove.time.split(':')[0]);
@@ -533,9 +571,10 @@ const useStore = create<StoreState>((set, get) => ({
         return { success: false };
       }
 
-      
+      // Одобряем текущее назначение
       await axios.patch(`${API}/appointments/${id}`, { status: "approved" });
 
+      // Автоматически отклоняем все остальные pending запросы на то же время
       const conflictingPending = allAppointments.filter((apt: Appointment) => 
         apt.status === "pending" && 
         apt.id !== id &&
@@ -549,6 +588,7 @@ const useStore = create<StoreState>((set, get) => ({
         });
       }
 
+      // Обновляем локальное состояние
       const state = get();
       const updatedAppointments = state.doctorAppointments.map((apt: Appointment) => {
         if (apt.id === id) return { ...apt, status: "approved" as const };
@@ -581,7 +621,8 @@ const useStore = create<StoreState>((set, get) => ({
     }
   },
 
-  () {
+  // ── Subcategories ──────────────────────────────────
+  async getSubcategories() {
     try {
       const { data } = await axios.get(API + "/category");
       const allSubs: string[] = [];

@@ -14,20 +14,20 @@ export default function AuthGuard({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     const token = localStorage.getItem("accessToken");
 
-    
+    // Public routes or doctor detail pages
     if (publicRoutes.includes(pathname) || pathname.startsWith("/doctors/")) {
       setReady(true);
       if (token && !userById?.id) loginMe();
       return;
     }
 
-    
+    // No token → redirect to login
     if (!token) {
       router.replace("/auth/login");
       return;
     }
 
-    
+    // Fetch user for role check
     loginMe().then((user: { role?: string } | null) => {
       if (!user) {
         router.replace("/auth/login");

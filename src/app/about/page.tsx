@@ -10,6 +10,7 @@ const About = () => {
 
   return (
     <div className="pt-20 overflow-hidden">
+      {/* Hero */}
       <section className="py-20 md:py-32 relative">
         <div className="absolute -right-32 -top-32 w-96 h-96 bg-md-primary/5 rounded-full blur-3xl"></div>
         <div className="absolute left-0 bottom-0 w-64 h-64 bg-md-secondary-container/10 rounded-full blur-3xl"></div>
@@ -43,6 +44,7 @@ const About = () => {
         </div>
       </section>
 
+      {/* Features */}
       <section className="py-20 bg-md-surface-container-low">
         <div className="max-w-7xl mx-auto px-6">
           <div className="text-center space-y-4 mb-16">
@@ -74,6 +76,7 @@ const About = () => {
         </div>
       </section>
 
+      {/* Testimonials */}
       <section className="py-20">
         <div className="max-w-7xl mx-auto px-6">
           <div className="text-center space-y-4 mb-16">
@@ -112,7 +115,9 @@ const About = () => {
         </div>
       </section>
 
+      {/* CTA */}
       <section className="relative bg-[#00A191] py-20 overflow-hidden">
+        {/* Glow effects */}
         <div className="absolute inset-0 opacity-20">
           <div className="absolute -right-20 -top-20 w-96 h-96 bg-[#00C4B0] rounded-full blur-[120px]"></div>
           <div className="absolute -left-20 -bottom-20 w-96 h-96 bg-[#007D70] rounded-full blur-[120px]"></div>
