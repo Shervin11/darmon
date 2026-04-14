@@ -41,12 +41,6 @@ const Header = () => {
     <>
       <header className="fixed top-0 w-full z-50 glass-nav shadow-[0_12px_40px_rgba(0,78,159,0.06)]">
         <nav className="flex justify-between items-center w-full px-6 py-4 max-w-7xl mx-auto">
-          {/* Logo */}
-          <Link href="/" className="flex items-center gap-2 text-xl font-black text-md-primary uppercase tracking-tighter font-headline">
-            <Image src={logo} alt="logo" width={160} height={160} className="dark:invert-50" />
-          </Link>
-
-          {/* Desktop Nav */}
           <div className="hidden md:flex items-center gap-1 font-headline font-medium text-sm tracking-wide">
             {navLinks.map((link) => (
               <Link
@@ -63,9 +57,6 @@ const Header = () => {
             ))}
           </div>
 
-          {/* Right Actions */}
-          <div className="flex items-center gap-2">
-            {/* AI Button - Desktop */}
             <button
               onClick={() => {
                 const btn = document.getElementById("ai-chat-toggle");
@@ -78,37 +69,6 @@ const Header = () => {
               <span className="hidden lg:inline">AI</span>
             </button>
 
-            {/* Language Switcher */}
-            <div className="relative">
-              <button
-                onClick={() => setShowLangDropdown(!showLangDropdown)}
-                className="flex items-center gap-1 px-2 py-2 rounded-lg text-md-on-surface-variant hover:text-md-primary hover:bg-md-primary/5 transition-colors cursor-pointer"
-                title="Language"
-              >
-                <Globe className="w-4 h-4" />
-                <span className="text-xs font-bold uppercase hidden sm:inline">{lang}</span>
-              </button>
-              {showLangDropdown && (
-                <>
-                  <div className="fixed inset-0 z-40" onClick={() => setShowLangDropdown(false)} />
-                  <div className="absolute right-0 top-full mt-2 bg-white dark:bg-[#1F1F28] border border-md-outline-variant/20 rounded-xl shadow-xl z-50 overflow-hidden min-w-[140px]">
-                    {(["tj", "ru", "en"] as Lang[]).map((l) => (
-                      <button
-                        key={l}
-                        onClick={() => { setLang(l); setShowLangDropdown(false); }}
-                        className={`w-full text-left px-4 py-2.5 text-sm font-medium transition-colors cursor-pointer hover:bg-md-primary/5 ${
-                          lang === l ? "text-md-primary bg-md-primary/5 font-bold" : "text-md-on-surface"
-                        }`}
-                      >
-                        {langNames[l]}
-                      </button>
-                    ))}
-                  </div>
-                </>
-              )}
-            </div>
-
-            {/* Theme Toggle */}
             <button
               onClick={toggleTheme}
               className="p-2 rounded-lg text-md-on-surface-variant hover:text-md-primary hover:bg-md-primary/5 transition-all cursor-pointer"
@@ -133,17 +93,6 @@ const Header = () => {
         </nav>
       </header>
 
-      {/* Mobile Overlay */}
-      <div
-        className={`fixed inset-0 bg-black/40 z-40 transition-opacity duration-300 md:hidden ${
-          isMobileMenuOpen
-            ? "opacity-100 pointer-events-auto"
-            : "opacity-0 pointer-events-none"
-        }`}
-        onClick={() => setIsMobileMenuOpen(false)}
-      />
-
-      {/* Mobile Drawer */}
       <div
         className={`fixed top-0 right-0 bottom-0 w-72 bg-white dark:bg-[#1B1B22] z-50 shadow-2xl transform transition-transform duration-300 ease-in-out md:hidden ${
           isMobileMenuOpen ? "translate-x-0" : "translate-x-full"
@@ -177,34 +126,3 @@ const Header = () => {
                 </Link>
               </li>
             ))}
-            {/* Mobile AI Button */}
-            <li>
-              <button
-                onClick={() => {
-                  setIsMobileMenuOpen(false);
-                  setTimeout(() => {
-                    const btn = document.getElementById("ai-chat-toggle");
-                    if (btn) btn.click();
-                  }, 300);
-                }}
-                className="w-full text-left px-4 py-3 rounded-lg font-semibold text-sm uppercase tracking-wider transition-all duration-200 font-headline text-md-primary hover:bg-md-primary/5 cursor-pointer flex items-center gap-2"
-              >
-                <Bot className="w-4 h-4" />
-                {t("nav.ai")}
-              </button>
-            </li>
-          </ul>
-
-          <div className="mt-auto p-5 border-t border-md-outline-variant/20 bg-md-surface-container-low">
-            <div className="text-xs text-md-on-surface-variant space-y-2">
-              <p>{t("footer.schedule")}</p>
-              <p>+992 44 600 60 60</p>
-            </div>
-          </div>
-        </div>
-      </div>
-    </>
-  );
-};
-
-export default Header;

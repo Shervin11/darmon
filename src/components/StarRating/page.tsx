@@ -1,7 +1,7 @@
 'use client';
 
 type FixedRatingProps = {
-  rating: number; // Например: 4.3
+  rating: number; 
 };
 
 const FixedRating = ({ rating }: FixedRatingProps) => {
