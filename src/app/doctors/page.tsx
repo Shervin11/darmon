@@ -24,8 +24,13 @@ const Doctors = () => {
   const getDoctor = useStore.getState().getDoctor;
   const { t } = useTranslation();
 
+  const verifiedDoctors = React.useMemo(() => {
+    if (userById?.role === "doctor") return doctor;
+    return doctor.filter(d => d.diplomaVerified === true);
+  }, [doctor, userById?.role]);
+
   function searchDoctor() {
-    let filtered = doctor;
+    let filtered = verifiedDoctors;
     if (doc) {
       filtered = filtered.filter(e =>
         e.fullName.toLowerCase().includes(doc.toLowerCase()) ||
@@ -39,7 +44,7 @@ const Doctors = () => {
   }
 
   function searchDoctorByCategory(categoryName: string) {
-    setFilterData(doctor.filter((e) => e.specialty === categoryName));
+    setFilterData(verifiedDoctors.filter((e) => e.specialty === categoryName));
   }
 
   useEffect(() => {
@@ -53,8 +58,8 @@ const Doctors = () => {
   }, [userById]);
 
   useEffect(() => {
-    setFilterData(doctor);
-  }, [doctor]);
+    setFilterData(verifiedDoctors);
+  }, [verifiedDoctors]);
 
   const displayedCategories = showAllCategories
     ? category

@@ -3,14 +3,12 @@ import React from "react";
 import Link from "next/link";
 import { MapPin, Phone, Mail } from "lucide-react";
 import { useTranslation } from "@/lib/i18n";
-import Image from "next/image";
-import logo from './../../../public/logo1.png';
 
 const Footer = () => {
   const { t } = useTranslation();
 
   return (
-    <footer className="bg-md-primary text-white w-full rounded-t-[3rem] mt-20 dark:bg-[#0A1628]">
+    <footer className="bg-gradient-to-br from-[#00A896] to-[#0A2342] text-white w-full rounded-t-[3rem] mt-20 dark:from-[#0B1120] dark:to-[#0F172A] dark:border-t dark:border-[#1E293B]">
       <div className="grid grid-cols-1 md:grid-cols-4 gap-12 px-8 py-16 max-w-7xl mx-auto text-sm leading-relaxed">
         {/* Brand */}
         <div className="space-y-4">

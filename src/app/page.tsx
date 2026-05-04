@@ -3,7 +3,6 @@ import Image from "next/image";
 import Link from "next/link";
 import {
   Stethoscope,
-  ArrowRight,
   Activity,
   Microscope,
   ShieldCheck,

@@ -1,1 +1,1 @@
-export const DefaultPhoto = process.env.NEXT_PUBLIC_BASE_PHOTO;
+export const DefaultPhoto = process.env.NEXT_PUBLIC_BASE_PHOTO || "/images.jpg";

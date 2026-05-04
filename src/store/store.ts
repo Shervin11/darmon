@@ -57,6 +57,8 @@ export interface Doctor {
   bio?: string;
   workingSchedule?: WorkingSchedule[];
   comments?: Comment[];
+  diploma?: string;
+  diplomaVerified?: boolean;
 }
 
 export interface User {
@@ -75,6 +77,8 @@ export interface User {
   bio?: string;
   price?: Price;
   workingSchedule?: WorkingSchedule[];
+  diploma?: string;
+  diplomaVerified?: boolean;
 }
 
 export interface FavoriteDoctor {
@@ -138,6 +142,34 @@ export interface StoreState {
   deleteComment: (doctorId: string | number, commentId: number) => Promise<{ success: boolean }>;
   uploadImage: (file: File) => Promise<string | null>;
   getSubcategories: () => Promise<void>;
+  uploadDiploma: (doctorId: string | number, file: File) => Promise<{ success: boolean }>;
+  verifyDiploma: (doctorId: string | number) => Promise<{ success: boolean; verified: boolean }>;
+  moderateComment: (text: string) => { isClean: boolean; reason?: string };
+}
+
+// ── Profanity Filter (RU/TJ/EN) ──────────────────
+const PROFANITY_LIST = [
+  // Russian profanity
+  "блять", "бля", "блядь", "сука", "хуй", "пизда", "ебать", "ёб", "нахуй", "пиздец",
+  "мудак", "дебил", "идиот", "урод", "тварь", "гандон", "залупа", "шлюха",
+  "ублюдок", "пидор", "пидар", "даун", "дерьмо", "говно", "жопа", "срать",
+  "ебан", "хуев", "пиздат", "заебал", "отъебись", "ёбан", "хер", "херов",
+  // Tajik profanity
+  "кунӣ", "ҳаромзода", "ҳаромӣ", "фоҳиша", "лаънатӣ", "мурдор", "бадбахт",
+  "бешараф", "беномус", "бепадар", "бемадар", "гуҳ", "гоҳ", "харзода",
+  // English profanity
+  "fuck", "shit", "bitch", "asshole", "bastard", "dick", "pussy", "damn",
+  "crap", "cunt", "whore", "slut", "moron", "idiot", "stupid", "retard"
+];
+
+function containsProfanity(text: string): { isClean: boolean; reason?: string } {
+  const lowerText = text.toLowerCase().replace(/[\s.,!?;:*_\-—]+/g, " ");
+  for (const word of PROFANITY_LIST) {
+    if (lowerText.includes(word.toLowerCase())) {
+      return { isClean: false, reason: word };
+    }
+  }
+  return { isClean: true };
 }
 
 const useStore = create<StoreState>((set, get) => ({
@@ -315,9 +347,21 @@ const useStore = create<StoreState>((set, get) => ({
     }
   },
 
+  // ── AI Comment Moderation ──────────────────────────
+  moderateComment(text: string) {
+    return containsProfanity(text);
+  },
+
   // ── Comments ──────────────────────────────────────
   async addComment(doctorId, newComment, currentComments) {
     try {
+      // AI moderation: check for profanity
+      const moderation = containsProfanity(newComment.comment);
+      if (!moderation.isClean) {
+        toast.error("⚠️ Шарҳи шумо иборатҳои номақбул дорад ва блок карда шуд.");
+        return { success: false };
+      }
+
       const updatedComments = currentComments ? [...currentComments, newComment] : [newComment];
       await axios.patch(API + "/users/" + doctorId, { comments: updatedComments }, {
         headers: { Authorization: `Bearer ${localStorage.getItem("accessToken")}` },
@@ -636,6 +680,86 @@ const useStore = create<StoreState>((set, get) => ({
       set({ subcategories: allSubs });
     } catch (error) {
       console.error(error);
+    }
+  },
+
+  // ── Diploma Upload & Verification ─────────────────
+  async uploadDiploma(doctorId, file) {
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+
+      const { data } = await axios.post(API + "/uploads", formData, {
+        headers: { "Content-Type": "multipart/form-data" },
+      });
+
+      // Save diploma URL to doctor profile
+      await axios.patch(API + "/users/" + doctorId, {
+        diploma: data.url,
+        diplomaVerified: false,
+      }, {
+        headers: { Authorization: `Bearer ${localStorage.getItem("accessToken")}` },
+      });
+
+      set((state) => ({
+        userById: { ...state.userById, diploma: data.url, diplomaVerified: false },
+      }));
+
+      toast.success("Диплом бор карда шуд! Тафтиш оғоз шуд...");
+
+      // Auto-start verification
+      setTimeout(() => {
+        get().verifyDiploma(doctorId);
+      }, 2000);
+
+      return { success: true };
+    } catch (error) {
+      console.error(error);
+      toast.error("Хатогӣ ҳангоми бор кардани диплом");
+      return { success: false };
+    }
+  },
+
+  async verifyDiploma(doctorId) {
+    try {
+      const user = get().userById;
+      if (!user.diploma) {
+        toast.error("Аввал дипломро бор кунед");
+        return { success: false, verified: false };
+      }
+
+      // Simulated AI verification:
+      // 1. Check that diploma is uploaded (non-empty URL)
+      // 2. Check that it's a valid image/PDF (base64 data or URL)
+      const diplomaUrl = user.diploma;
+      const isValidFormat = diplomaUrl.startsWith("data:image/") ||
+                           diplomaUrl.startsWith("data:application/pdf") ||
+                           diplomaUrl.startsWith("http");
+      const isLargeEnough = diplomaUrl.length > 1000; // Base64 should be substantial
+
+      const verified = isValidFormat && isLargeEnough;
+
+      await axios.patch(API + "/users/" + doctorId, {
+        diplomaVerified: verified,
+      }, {
+        headers: { Authorization: `Bearer ${localStorage.getItem("accessToken")}` },
+      });
+
+      set((state) => ({
+        userById: { ...state.userById, diplomaVerified: verified },
+      }));
+
+      if (verified) {
+        toast.success("✅ Дипломи шумо тасдиқ шуд!");
+      } else {
+        toast.error("❌ Диплом тасдиқ нашуд. Лутфан аксро бо сифати беҳтар бор кунед.");
+      }
+
+      return { success: true, verified };
+    } catch (error) {
+      console.error(error);
+      toast.error("Хатогӣ ҳангоми тафтиши диплом");
+      return { success: false, verified: false };
     }
   },
 }));

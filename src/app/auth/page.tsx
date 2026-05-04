@@ -78,7 +78,12 @@ export default function Auth() {
     setLoading(false);
 
     if (result.success) {
-      router.push("/");
+      // Redirect based on role
+      if (docReg) {
+        router.push("/dashboard");
+      } else {
+        router.push("/doctors");
+      }
       setNameReg("");
       setPassReg("");
       setEmailReg("");

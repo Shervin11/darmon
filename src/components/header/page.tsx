@@ -13,6 +13,7 @@ import Image from "next/image";
 const Header = () => {
   const userById = useStore((s) => s.userById);
   const role = userById?.role;
+  const isAuth = !!userById?.id;
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [showLangDropdown, setShowLangDropdown] = useState(false);
   const pathname = usePathname();
@@ -25,7 +26,8 @@ const Header = () => {
   }, [pathname]);
 
   const navLinks = [
-    { name: t("nav.home"), href: "/" },
+    // Show Home and About only when NOT authenticated
+    ...(!isAuth ? [{ name: t("nav.home"), href: "/" }] : []),
     ...(role === "doctor"
       ? [{ name: t("nav.panel"), href: "/dashboard" }]
       : [
@@ -34,7 +36,7 @@ const Header = () => {
             ? [{ name: t("nav.appointments"), href: "/appointments" }]
             : []),
         ]),
-    { name: t("nav.about"), href: "/about" },
+    ...(!isAuth ? [{ name: t("nav.about"), href: "/about" }] : []),
   ];
 
   return (

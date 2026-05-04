@@ -41,7 +41,7 @@ export default function Login() {
     setLoading(false);
 
     if (result.success) {
-      router.push(result.role === "doctor" ? "/dashboard" : "/");
+      router.push(result.role === "doctor" ? "/dashboard" : "/doctors");
       setPassLogin("");
       setEmailLogin("");
     } else {

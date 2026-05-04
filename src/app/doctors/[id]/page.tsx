@@ -1,9 +1,8 @@
 "use client";
 
 import React, { use, useEffect, useState } from "react";
-import { Phone, Stethoscope, MessageCircle, CalendarCheck, Star, Send, Clock } from "lucide-react";
+import { Phone, Stethoscope, MessageCircle, CalendarCheck, Star, Send, Clock, ShieldCheck, X } from "lucide-react";
 import useStore from "@/store/store";
-import FixedRating from "@/components/StarRating/page";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import toast from "react-hot-toast";
@@ -42,6 +41,7 @@ const DoctorById = ({ params }: { params: Promise<{ id: string }> }) => {
   const [editingCommentId, setEditingCommentId] = useState<number | null>(null);
   const [editText, setEditText] = useState("");
   const [editRating, setEditRating] = useState(5);
+  const [showDiplomaModal, setShowDiplomaModal] = useState(false);
 
   const handleUpdateComment = async (commentId: number) => {
     if (!editText.trim()) return;
@@ -133,6 +133,16 @@ const DoctorById = ({ params }: { params: Promise<{ id: string }> }) => {
                         <Stethoscope className="w-5 h-5" />
                         {doctorById.specialty}
                       </p>
+                      {/* Diploma Badge */}
+                      {doctorById.diplomaVerified && (
+                        <button
+                          onClick={() => setShowDiplomaModal(true)}
+                          className="verified-badge cursor-pointer hover:scale-105 transition-transform mt-1"
+                        >
+                          <ShieldCheck className="w-3.5 h-3.5" />
+                          {t("doctor.verifiedDiploma")}
+                        </button>
+                      )}
                     </div>
                     <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 border-y border-md-surface-variant/30 py-6">
                       <div className="space-y-1">
@@ -373,6 +383,23 @@ const DoctorById = ({ params }: { params: Promise<{ id: string }> }) => {
           </aside>
         )}
       </div>
+      {/* Diploma Modal */}
+      {showDiplomaModal && doctorById.diploma && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm" onClick={() => setShowDiplomaModal(false)}>
+          <div className="relative bg-white dark:bg-[#1E293B] rounded-2xl p-6 max-w-lg w-full mx-4 shadow-2xl animate-fade-in-scale" onClick={(e) => e.stopPropagation()}>
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center gap-2">
+                <ShieldCheck className="w-5 h-5 text-emerald-500" />
+                <h3 className="font-headline font-bold text-md-on-surface">{t("doctor.verifiedDiploma")}</h3>
+              </div>
+              <button onClick={() => setShowDiplomaModal(false)} className="p-2 rounded-lg hover:bg-md-surface-container transition-colors cursor-pointer">
+                <X className="w-5 h-5 text-md-on-surface-variant" />
+              </button>
+            </div>
+            <img src={doctorById.diploma} alt="Diploma" className="w-full rounded-xl object-contain max-h-[60vh]" />
+          </div>
+        </div>
+      )}
     </div>
   );
 };

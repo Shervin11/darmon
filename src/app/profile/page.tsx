@@ -24,22 +24,29 @@ import {
   Building2,
   Wallet,
   Clock,
-  ChevronRight
+  ChevronRight,
+  GraduationCap,
+  Upload,
+  ShieldCheck,
+  AlertCircle,
+  Loader2,
 } from "lucide-react";
 import { DefaultPhoto } from "@/config/config";
 import { WorkingSchedule } from "@/store/store";
 import { useTranslation } from "@/lib/i18n";
 
 const Profile = () => {
-  const { loginMe, userById, edit, uploadImage, getSubcategories, subcategories } = useStore((state) => state);
+  const { loginMe, userById, edit, uploadImage, uploadDiploma, getSubcategories, subcategories } = useStore((state) => state);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [city, setCity] = useState("");
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
   const fileInputRef = useRef<HTMLInputElement | null>(null);
+  const diplomaInputRef = useRef<HTMLInputElement | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [isPhotoRemoved, setIsPhotoRemoved] = useState(false);
+  const [diplomaUploading, setDiplomaUploading] = useState(false);
   const { t } = useTranslation();
 
   // Doctor-specific states
@@ -79,6 +86,17 @@ const Profile = () => {
     setIsPhotoRemoved(true);
     setSelectedFile(null);
     if (fileInputRef.current) fileInputRef.current.value = "";
+  };
+
+  const handleDiplomaUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file || !userById?.id) return;
+
+    setDiplomaUploading(true);
+    await uploadDiploma(userById.id, file);
+    setDiplomaUploading(false);
+
+    if (diplomaInputRef.current) diplomaInputRef.current.value = "";
   };
 
   async function editUser(e: React.FormEvent<HTMLFormElement>) {
@@ -140,7 +158,7 @@ const Profile = () => {
     <div className="bg-md-surface-container-low min-h-screen pb-20 pt-20">
       {/* Hero Banner */}
       <section className="max-w-7xl mx-auto px-6 mb-12 mt-4">
-        <div className="relative bg-[#00A191] rounded-xl pt-16 pb-20 px-10 md:px-16 overflow-hidden flex flex-col items-center justify-center text-center">
+        <div className="relative bg-gradient-to-br from-[#00A896] via-[#00BFA5] to-[#0D9488] rounded-2xl pt-16 pb-20 px-10 md:px-16 overflow-hidden flex flex-col items-center justify-center text-center animate-gradient-shift">
           {/* Glow effects */}
           <div className="absolute inset-0 opacity-20">
             <div className="absolute -right-20 -top-20 w-96 h-96 bg-[#00C4B0] rounded-full blur-[120px]"></div>
@@ -156,12 +174,12 @@ const Profile = () => {
 
       <div className="max-w-[1000px] mx-auto px-4">
         <form onSubmit={editUser} className="space-y-6">
-          <Card className="border-none clinical-shadow overflow-hidden bg-md-surface-container-lowest rounded-xl">
+          <Card className="border-none clinical-shadow overflow-hidden bg-md-surface-container-lowest rounded-2xl">
             <CardHeader className="bg-md-surface-container-lowest border-b border-md-surface-variant/20 py-8">
               <div className="flex flex-col md:flex-row items-center gap-8">
                 {/* Avatar */}
                 <div className="relative group">
-                  <div className="w-32 h-32 rounded-3xl overflow-hidden ring-4 ring-white dark:ring-[#1F1F28] shadow-2xl transition-transform group-hover:scale-[1.02]">
+                  <div className="w-32 h-32 rounded-3xl overflow-hidden ring-4 ring-white dark:ring-[#1E293B] shadow-2xl transition-transform group-hover:scale-[1.02]">
                     <img
                       src={isPhotoRemoved ? DefaultPhoto : (previewUrl || userById.image || DefaultPhoto)}
                       alt="avatar"
@@ -208,7 +226,7 @@ const Profile = () => {
                     <Label className="text-xs font-bold text-md-on-surface-variant uppercase tracking-wider">{t("profile.fullName")}</Label>
                     <div className="relative">
                       <User className="absolute left-3 top-3 w-4 h-4 text-md-outline" />
-                      <Input value={name} onChange={(e) => setName(e.target.value)} className="pl-10 h-11 bg-md-surface-container-low border-md-outline-variant/30 focus:bg-white dark:focus:bg-[#252540]" />
+                      <Input value={name} onChange={(e) => setName(e.target.value)} className="pl-10 h-11 bg-md-surface-container-low border-md-outline-variant/30 focus:bg-white dark:focus:bg-[#1E293B]" />
                     </div>
                   </div>
 
@@ -216,7 +234,7 @@ const Profile = () => {
                     <Label className="text-xs font-bold text-md-on-surface-variant uppercase tracking-wider">{t("profile.phone")}</Label>
                     <div className="relative">
                       <Phone className="absolute left-3 top-3 w-4 h-4 text-md-outline" />
-                      <Input value={phone} onChange={(e) => setPhone(e.target.value)} className="pl-10 h-11 bg-md-surface-container-low border-md-outline-variant/30 focus:bg-white dark:focus:bg-[#252540]" />
+                      <Input value={phone} onChange={(e) => setPhone(e.target.value)} className="pl-10 h-11 bg-md-surface-container-low border-md-outline-variant/30 focus:bg-white dark:focus:bg-[#1E293B]" />
                     </div>
                   </div>
 
@@ -224,7 +242,7 @@ const Profile = () => {
                     <Label className="text-xs font-bold text-md-on-surface-variant uppercase tracking-wider">{t("profile.email")}</Label>
                     <div className="relative">
                       <Mail className="absolute left-3 top-3 w-4 h-4 text-md-outline" />
-                      <Input type="email" value={email} onChange={(e) => setEmail(e.target.value)} className="pl-10 h-11 bg-md-surface-container-low border-md-outline-variant/30 focus:bg-white dark:focus:bg-[#252540]" />
+                      <Input type="email" value={email} onChange={(e) => setEmail(e.target.value)} className="pl-10 h-11 bg-md-surface-container-low border-md-outline-variant/30 focus:bg-white dark:focus:bg-[#1E293B]" />
                     </div>
                   </div>
 
@@ -316,20 +334,85 @@ const Profile = () => {
                     />
                   </div>
 
+                  {/* ── Diploma Section ── */}
+                  <div className="space-y-4 bg-gradient-to-br from-md-primary/5 to-transparent p-6 rounded-2xl border border-md-primary/10">
+                    <div className="flex items-center justify-between">
+                      <h4 className="font-bold text-md-on-surface flex items-center gap-2 font-headline">
+                        <GraduationCap className="w-5 h-5 text-md-primary" /> {t("profile.diploma")}
+                      </h4>
+                      {/* Verification Status */}
+                      {userById.diploma && (
+                        <span className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold ${
+                          userById.diplomaVerified
+                            ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400"
+                            : "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400"
+                        }`}>
+                          {userById.diplomaVerified ? (
+                            <><ShieldCheck className="w-3.5 h-3.5" /> {t("profile.diplomaVerified")}</>
+                          ) : (
+                            <><AlertCircle className="w-3.5 h-3.5" /> {t("profile.diplomaNotVerified")}</>
+                          )}
+                        </span>
+                      )}
+                    </div>
+
+                    {/* Diploma Preview */}
+                    {userById.diploma ? (
+                      <div className="diploma-preview flex flex-col items-center gap-4">
+                        <img
+                          src={userById.diploma}
+                          alt="Diploma"
+                          className="max-h-48 rounded-xl object-contain shadow-md"
+                        />
+                        <p className="text-xs text-md-on-surface-variant">{t("profile.diplomaHint")}</p>
+                      </div>
+                    ) : (
+                      <div className="diploma-preview flex flex-col items-center gap-3 py-8">
+                        <div className="w-16 h-16 rounded-2xl bg-md-primary/10 flex items-center justify-center">
+                          <Upload className="w-8 h-8 text-md-primary/60" />
+                        </div>
+                        <p className="text-sm text-md-on-surface-variant text-center">{t("profile.diplomaHint")}</p>
+                      </div>
+                    )}
+
+                    {/* Upload Button */}
+                    <div className="flex justify-center">
+                      <label className={`inline-flex items-center gap-2 px-6 py-3 rounded-xl font-bold text-sm cursor-pointer transition-all ${
+                        diplomaUploading
+                          ? "bg-md-outline/20 text-md-outline cursor-wait"
+                          : "bg-md-primary/10 text-md-primary hover:bg-md-primary/20 active:scale-95"
+                      }`}>
+                        {diplomaUploading ? (
+                          <><Loader2 className="w-4 h-4 animate-spin" /> {t("profile.diplomaPending")}</>
+                        ) : (
+                          <><Upload className="w-4 h-4" /> {t("profile.uploadDiploma")}</>
+                        )}
+                        <input
+                          type="file"
+                          accept="image/*,.pdf"
+                          className="hidden"
+                          onChange={handleDiplomaUpload}
+                          disabled={diplomaUploading}
+                          ref={diplomaInputRef}
+                        />
+                      </label>
+                    </div>
+                  </div>
+
                   {/* Schedule */}
                   <div className="space-y-4 bg-md-primary/5 p-6 rounded-3xl border border-md-primary/10">
                     <div className="flex items-center justify-between">
                       <h4 className="font-bold text-md-primary flex items-center gap-2 font-headline">
                         <Clock className="w-4 h-4" /> {t("profile.schedule")}
                       </h4>
-                      <Button type="button" size="sm" onClick={handleAddSchedule} className="bg-white dark:bg-[#252540] text-md-primary border border-md-primary/20 hover:bg-md-primary/10 shadow-sm cursor-pointer">
+                      <Button type="button" size="sm" onClick={handleAddSchedule} className="bg-white dark:bg-[#1E293B] text-md-primary border border-md-primary/20 hover:bg-md-primary/10 shadow-sm cursor-pointer">
                         <Plus className="w-4 h-4 mr-1" /> {t("profile.addSchedule")}
                       </Button>
                     </div>
 
                     <div className="space-y-3">
                       {schedule.map((slot, index) => (
-                        <div key={index} className="flex flex-col sm:flex-row items-center gap-4 bg-white dark:bg-[#1F1F28] p-3 rounded-2xl shadow-sm group">
+                        <div key={index} className="flex flex-col sm:flex-row items-center gap-4 bg-white dark:bg-[#0F172A] p-3 rounded-2xl shadow-sm group">
                           <Input
                             value={slot.day}
                             onChange={(e) => handleScheduleChange(index, "day", e.target.value)}
@@ -359,7 +442,7 @@ const Profile = () => {
               <div className="flex justify-end pt-6">
                 <Button
                   type="submit"
-                  className="bg-md-secondary-container hover:bg-md-secondary text-md-on-secondary-container hover:text-white px-12 h-12 rounded-xl font-bold uppercase tracking-widest shadow-lg transition-all active:scale-95 cursor-pointer font-headline"
+                  className="bg-gradient-to-r from-md-primary to-md-primary-container hover:from-md-primary-container hover:to-md-primary text-white px-12 h-12 rounded-xl font-bold uppercase tracking-widest shadow-lg transition-all active:scale-95 cursor-pointer font-headline"
                 >
                   {t("profile.save")}
                 </Button>

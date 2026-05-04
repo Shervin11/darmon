@@ -286,6 +286,17 @@ const translations: Record<Lang, Record<string, string>> = {
     "common.confirm": "Тасдиқ",
     "common.delete": "Нест кардан",
     "common.deleteConfirm": "Оё шумо мехоҳед ин шарҳро нест кунед?",
+
+    // Diploma
+    "profile.diploma": "Дипломи духтурӣ",
+    "profile.uploadDiploma": "Бор кардани диплом",
+    "profile.diplomaVerified": "✅ Диплом тасдиқ шудааст",
+    "profile.diplomaPending": "⏳ Дар ҳоли тафтиш...",
+    "profile.diplomaNotVerified": "❌ Диплом тасдиқ нашудааст",
+    "profile.diplomaHint": "Аксро бо сифати баланд бор кунед (JPG, PNG, PDF)",
+    "doctor.verifiedDiploma": "Диплом тасдиқшуда",
+    "doctor.viewDiploma": "Дидани диплом",
+    "comment.blocked": "Шарҳи шумо иборатҳои номақбул дорад ва блок карда шуд.",
   },
 
   ru: {
@@ -554,6 +565,17 @@ const translations: Record<Lang, Record<string, string>> = {
     "common.confirm": "Подтвердить",
     "common.delete": "Удалить",
     "common.deleteConfirm": "Вы действительно хотите удалить этот отзыв?",
+
+    // Diploma
+    "profile.diploma": "Диплом врача",
+    "profile.uploadDiploma": "Загрузить диплом",
+    "profile.diplomaVerified": "✅ Диплом подтверждён",
+    "profile.diplomaPending": "⏳ Проверяется...",
+    "profile.diplomaNotVerified": "❌ Диплом не подтверждён",
+    "profile.diplomaHint": "Загрузите фото в хорошем качестве (JPG, PNG, PDF)",
+    "doctor.verifiedDiploma": "Диплом подтверждён",
+    "doctor.viewDiploma": "Посмотреть диплом",
+    "comment.blocked": "Ваш отзыв содержит недопустимые выражения и заблокирован.",
   },
 
   en: {
@@ -822,6 +844,17 @@ const translations: Record<Lang, Record<string, string>> = {
     "common.confirm": "Confirm",
     "common.delete": "Delete",
     "common.deleteConfirm": "Are you sure you want to delete this review?",
+
+    // Diploma
+    "profile.diploma": "Medical diploma",
+    "profile.uploadDiploma": "Upload diploma",
+    "profile.diplomaVerified": "✅ Diploma verified",
+    "profile.diplomaPending": "⏳ Verifying...",
+    "profile.diplomaNotVerified": "❌ Diploma not verified",
+    "profile.diplomaHint": "Upload a high quality image (JPG, PNG, PDF)",
+    "doctor.verifiedDiploma": "Verified diploma",
+    "doctor.viewDiploma": "View diploma",
+    "comment.blocked": "Your review contains inappropriate language and was blocked.",
   },
 };
 

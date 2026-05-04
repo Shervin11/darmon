@@ -14,7 +14,6 @@ import {
   TrendingUp,
   Users,
   Activity,
-  ChevronDown,
   Stethoscope,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
