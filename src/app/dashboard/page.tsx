@@ -15,11 +15,13 @@ import {
   Users,
   Activity,
   Stethoscope,
+  Loader2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useTranslation } from "@/lib/i18n";
+import Link from "next/link";
 
-type Tab = "pending" | "approved" | "reviews";
+type Tab = "pending" | "approved" | "reviews" | "records";
 
 const Dashboard = () => {
   const {
@@ -32,6 +34,9 @@ const Dashboard = () => {
     rejectAppointment,
   } = useStore((s) => s);
 
+  const [medicalRecords, setMedicalRecords] = useState<any[]>([]);
+  const [loadingRecords, setLoadingRecords] = useState(false);
+
   const { t } = useTranslation();
   const [tab, setTab] = useState<Tab>("pending");
   const [rejectModal, setRejectModal] = useState<{ open: boolean; id: number | null }>({ open: false, id: null });
@@ -43,8 +48,15 @@ const Dashboard = () => {
   }, []);
 
   useEffect(() => {
-    if (userById?.id && tab !== "reviews") {
+    if (userById?.id && tab !== "reviews" && tab !== "records") {
       getDoctorAppointments(userById.id, tab);
+    }
+    if (userById?.id && tab === "records") {
+      setLoadingRecords(true);
+      fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/medical-records?doctorId=${userById.id}`)
+        .then(res => res.json())
+        .then(data => setMedicalRecords(data))
+        .finally(() => setLoadingRecords(false));
     }
   }, [userById, tab]);
 
@@ -92,6 +104,11 @@ const Dashboard = () => {
       key: "reviews",
       label: "Мои отзывы",
       icon: <MessageSquare className="w-4 h-4" />,
+    },
+    {
+      key: "records",
+      label: "Медкарты",
+      icon: <Activity className="w-4 h-4" />,
     },
   ];
 
@@ -333,8 +350,60 @@ const Dashboard = () => {
           </div>
         )}
 
+        {/* ── MEDICAL CARDS TAB ── */}
+        {tab === "records" && (
+          <div className="animate-fade-in-scale">
+            <h3 className="font-headline text-2xl font-bold text-md-on-surface mb-8 flex items-center gap-3">
+              <Activity className="w-7 h-7 text-md-primary" />
+              Медицинские карты
+            </h3>
+            {loadingRecords ? (
+              <div className="flex flex-col items-center justify-center py-24 bg-white dark:bg-md-surface-container-lowest rounded-3xl border border-md-outline/10">
+                <Loader2 className="w-12 h-12 text-md-primary animate-spin mb-4" />
+                <p className="text-md-on-surface-variant font-medium">Загрузка данных...</p>
+              </div>
+            ) : medicalRecords.length === 0 ? (
+              <div className="text-center py-24 bg-white dark:bg-md-surface-container-lowest rounded-3xl border border-md-outline/10 border-dashed">
+                <ClipboardList className="w-12 h-12 text-md-outline mx-auto mb-4 opacity-20" />
+                <p className="text-md-on-surface-variant italic font-medium">У вас пока нет созданных медкарты</p>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {medicalRecords.map((record) => (
+                  <div key={record.id} className="bg-white dark:bg-md-surface-container-lowest border border-md-outline/10 rounded-3xl p-6 shadow-sm hover:shadow-md transition-all">
+                    <div className="flex justify-between items-start mb-6">
+                      <div>
+                        <p className="text-xs font-bold text-md-primary uppercase tracking-widest mb-1">
+                          {new Date(record.createdAt).toLocaleDateString("ru-RU", { day: 'numeric', month: 'long', year: 'numeric' })}
+                        </p>
+                        <h4 className="font-bold text-md-on-surface flex items-center gap-2">
+                          <User className="w-4 h-4 opacity-50" />
+                          Пациент ID: {record.clientId}
+                        </h4>
+                      </div>
+                      <div className="bg-emerald-100 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400 px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider">
+                        Медкарта
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-1 gap-4">
+                      <div className="p-4 bg-md-surface-container-low rounded-2xl border border-md-outline/5">
+                        <p className="text-[10px] font-bold text-md-on-surface-variant uppercase mb-1 tracking-widest">Диагноз</p>
+                        <p className="text-sm font-semibold text-md-on-surface leading-relaxed">{record.data.diagnosis || "—"}</p>
+                      </div>
+                      <div className="p-4 bg-md-surface-container-low rounded-2xl border border-md-outline/5">
+                        <p className="text-[10px] font-bold text-md-on-surface-variant uppercase mb-1 tracking-widest">Лечение</p>
+                        <p className="text-sm text-md-on-surface leading-relaxed">{record.data.treatment || "—"}</p>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+
         {/* ── APPOINTMENTS TABS ── */}
-        {tab !== "reviews" && (
+        {tab !== "reviews" && tab !== "records" && (
           <>
             {appointmentsLoading ? (
               <div className="flex justify-center py-24">

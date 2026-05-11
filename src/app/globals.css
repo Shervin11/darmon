@@ -9,6 +9,14 @@
   font-family: "Inter", sans-serif;
 }
 
+/* Вставь это в globals.css */
+input:focus, 
+input:focus-visible {
+    outline: none !important;
+    box-shadow: none !important;
+    border-color: transparent !important;
+}
+
 h1, h2, h3, h4, h5, h6 {
   font-family: "Plus Jakarta Sans", sans-serif;
 }
@@ -104,40 +112,40 @@ h1, h2, h3, h4, h5, h6 {
   --md-error-container: #4C0519;
   --md-on-error-container: #FFE4E6;
 
-  /* Surface — Premium deep dark */
-  --md-surface: #0B1120;
+  /* Surface — Premium deep dark based on #091220 */
+  --md-surface: #091220;
   --md-on-surface: #F1F5F9;
   --md-on-surface-variant: #94A3B8;
-  --md-surface-variant: #1E293B;
-  --md-surface-container-lowest: #030712;
-  --md-surface-container-low: #0F172A;
-  --md-surface-container: #111827;
-  --md-surface-container-high: #1E293B;
-  --md-surface-container-highest: #334155;
+  --md-surface-variant: #111e33;
+  --md-surface-container-lowest: #050b18;
+  --md-surface-container-low: #0e1829;
+  --md-surface-container: #121e33;
+  --md-surface-container-high: #1a2942;
+  --md-surface-container-highest: #26364f;
 
   /* Outline */
-  --md-outline: #475569;
-  --md-outline-variant: #1E293B;
+  --md-outline: #334155;
+  --md-outline-variant: #1e293b;
 
   /* Shadcn compat */
-  --background: oklch(0.145 0.03 260);
-  --foreground: oklch(0.96 0.005 240);
-  --card: oklch(0.16 0.03 260);
-  --card-foreground: oklch(0.96 0.005 240);
-  --popover: oklch(0.16 0.03 260);
-  --popover-foreground: oklch(0.96 0.005 240);
-  --primary: oklch(0.78 0.13 170);
-  --primary-foreground: oklch(0.16 0.03 260);
-  --secondary: oklch(0.35 0.04 260);
-  --secondary-foreground: oklch(0.96 0.005 240);
-  --muted: oklch(0.25 0.03 260);
-  --muted-foreground: oklch(0.65 0.02 240);
-  --accent: oklch(0.78 0.13 170);
-  --accent-foreground: oklch(0.16 0.03 260);
-  --destructive: oklch(0.6 0.2 15);
-  --border: oklch(0.25 0.03 260);
-  --input: oklch(0.25 0.03 260);
-  --ring: oklch(0.78 0.13 170);
+  --background: #091220;
+  --foreground: #F1F5F9;
+  --card: #0e1829;
+  --card-foreground: #F1F5F9;
+  --popover: #0e1829;
+  --popover-foreground: #F1F5F9;
+  --primary: #00A896;
+  --primary-foreground: #ffffff;
+  --secondary: #38BDF8;
+  --secondary-foreground: #091220;
+  --muted: #111e33;
+  --muted-foreground: #94A3B8;
+  --accent: #121e33;
+  --accent-foreground: #ffffff;
+  --destructive: #EF4444;
+  --border: #1e293b;
+  --input: #1e293b;
+  --ring: #00A896;
 }
 
 /* ── Tailwind v4 Theme Mapping ────────────────── */
@@ -528,4 +536,28 @@ input:focus, textarea:focus, select:focus {
 .dark .diploma-preview:hover {
   border-color: rgba(45, 212, 191, 0.4);
   background: rgba(45, 212, 191, 0.03);
+}
+
+/* ── Voice Recording ────────────────── */
+@keyframes voicePulseDot {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.5; transform: scale(0.8); }
+}
+
+.voice-pulse-dot {
+  animation: voicePulseDot 1s ease-in-out infinite;
+}
+
+@keyframes voiceRecordRing {
+  0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.5); }
+  70% { box-shadow: 0 0 0 14px rgba(239, 68, 68, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
+}
+
+.voice-record-btn--active {
+  animation: voiceRecordRing 1.5s ease-out infinite;
+}
+
+.protocol-modal {
+  animation: fadeInScale 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }

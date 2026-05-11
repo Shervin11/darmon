@@ -164,7 +164,7 @@ const Home = () => {
       </section>
 
       {/* ── TECHNOLOGY SECTION ── */}
-      <section className="bg-md-surface-container-lowest py-24">
+      <section className="py-24">
         <div className="max-w-7xl mx-auto px-6">
           <div className="text-center mb-16 space-y-4">
             <span className="text-md-secondary font-bold text-sm uppercase tracking-[0.2em] font-headline">{t("tech.badge")}</span>

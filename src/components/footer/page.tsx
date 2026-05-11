@@ -13,7 +13,7 @@ const Footer = () => {
         {/* Brand */}
         <div className="space-y-4">
           <div className="flex items-center gap-2">
-            <span className="text-2xl font-bold text-white mb-4 block">D A R M O N</span>
+            <span className="text-2xl font-extrabold text-white mb-4">DARMON</span>
           </div>
           <p className="text-white/80">
             {t("footer.desc")}

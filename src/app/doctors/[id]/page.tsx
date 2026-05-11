@@ -127,20 +127,32 @@ const DoctorById = ({ params }: { params: Promise<{ id: string }> }) => {
                     </div>
                   </div>
                   <div className="flex-1 space-y-6">
-                    <div>
-                      <h2 className="text-3xl font-headline font-bold text-md-on-surface mb-2">{doctorById.fullName}</h2>
-                      <p className="text-md-primary font-semibold tracking-wide flex items-center gap-2">
-                        <Stethoscope className="w-5 h-5" />
-                        {doctorById.specialty}
-                      </p>
-                      {/* Diploma Badge */}
-                      {doctorById.diplomaVerified && (
+                    <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
+                      <div>
+                        <h2 className="text-3xl font-headline font-bold text-md-on-surface mb-2">{doctorById.fullName}</h2>
+                        <p className="text-md-primary font-semibold tracking-wide flex items-center gap-2">
+                          <Stethoscope className="w-5 h-5" />
+                          {doctorById.specialty}
+                        </p>
+                        {/* Diploma Badge */}
+                        {doctorById.diplomaVerified && (
+                          <button
+                            onClick={() => setShowDiplomaModal(true)}
+                            className="verified-badge cursor-pointer hover:scale-105 transition-transform mt-2"
+                          >
+                            <ShieldCheck className="w-3.5 h-3.5" />
+                            {t("doctor.verifiedDiploma")}
+                          </button>
+                        )}
+                      </div>
+                      
+                      {userById?.role === "client" && (
                         <button
-                          onClick={() => setShowDiplomaModal(true)}
-                          className="verified-badge cursor-pointer hover:scale-105 transition-transform mt-1"
+                          onClick={() => router.push(`/chat?partnerId=${doctorById.id}`)}
+                          className="flex items-center justify-center gap-2 bg-md-primary/10 text-md-primary hover:bg-md-primary hover:text-white px-5 py-2.5 rounded-xl font-bold transition-all cursor-pointer border border-md-primary/20 hover:shadow-lg hover:shadow-md-primary/30 active:scale-95 shrink-0"
                         >
-                          <ShieldCheck className="w-3.5 h-3.5" />
-                          {t("doctor.verifiedDiploma")}
+                          <MessageCircle className="w-5 h-5" />
+                          {t("common.message") || "Написать"}
                         </button>
                       )}
                     </div>

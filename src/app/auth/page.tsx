@@ -13,53 +13,26 @@ import { useTranslation } from "@/lib/i18n";
 
 export default function Auth() {
   const [nameReg, setNameReg] = useState("");
-  const [passReg, setPassReg] = useState("");
   const [emailReg, setEmailReg] = useState("");
-  const [docReg, setDocReg] = useState(false);
-  const [specialtyReg, setSpecialtyReg] = useState("");
+  const [passReg, setPassReg] = useState("");
   const [loading, setLoading] = useState(false);
   const router = useRouter();
   const { t } = useTranslation();
 
-  const { registerUser, getSubcategories, subcategories } = useStore((state) => state);
-
-  useEffect(() => {
-    getSubcategories();
-  }, []);
+  const { registerUser } = useStore((state) => state);
 
   async function register(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
-    let user: object = {};
-    if (docReg) {
-      user = {
-        fullName: nameReg.trim(),
-        phone: "",
-        email: emailReg.trim().toLowerCase(),
-        city: "",
-        specialty: specialtyReg,
-        experience: 0,
-        recommendation: 0,
-        rating: 0,
-        price: { current: 0, old: null, currency: "сом." },
-        clinic: "",
-        image: "",
-        bio: "",
-        availableSlots: [],
-        comments: [],
-        password: passReg.trim(),
-        role: "doctor",
-      };
-    } else {
-      user = {
-        fullName: nameReg.trim(),
-        phone: "",
-        email: emailReg.trim().toLowerCase(),
-        city: "",
-        password: passReg.trim(),
-        role: "client",
-        image: "",
-      };
-    }
+    const user = {
+      fullName: nameReg.trim(),
+      phone: "",
+      email: emailReg.trim().toLowerCase(),
+      city: "Душанбе",
+      password: passReg.trim(),
+      role: "client",
+      image: "",
+    };
+
     if (!nameReg || !passReg || !emailReg) {
       toast.error(t("auth.error.fillData"));
       return;
@@ -78,16 +51,16 @@ export default function Auth() {
     setLoading(false);
 
     if (result.success) {
-      // Redirect based on role
-      if (docReg) {
-        router.push("/dashboard");
-      } else {
-        router.push("/doctors");
-      }
+      const redirectMap: Record<string, string> = {
+        admin: "/admin/panel",
+        clinic: "/clinic/dashboard",
+        doctor: "/dashboard",
+        client: "/doctors",
+      };
+      router.push(redirectMap[result.role || "client"] || "/doctors");
       setNameReg("");
       setPassReg("");
       setEmailReg("");
-      setSpecialtyReg("");
     }
   }
 
@@ -181,48 +154,6 @@ export default function Auth() {
                 className="w-full border border-md-outline-variant/30 text-md-on-surface px-4 py-3 rounded-xl focus:outline-none focus:ring-2 focus:ring-md-primary focus:border-transparent placeholder-md-outline transition-all bg-md-surface-container-low"
               />
             </div>
-
-            <div className="border border-md-outline-variant/30 rounded-xl p-4 bg-md-surface-container-low">
-              <p className="text-sm font-medium text-md-on-surface-variant mb-3">{t("auth.iAm")}</p>
-              <RadioGroup
-                value={docReg ? "doctor" : "patient"}
-                onValueChange={(value) => setDocReg(value === "doctor")}
-                className="flex gap-4"
-              >
-                <div className="flex items-center gap-2 cursor-pointer">
-                  <RadioGroupItem value="doctor" id="reg-doctor" />
-                  <Label htmlFor="reg-doctor" className="cursor-pointer flex items-center gap-1.5 text-md-on-surface-variant">
-                    <Stethoscope className="w-4 h-4 text-md-primary" />
-                    {t("auth.doctor")}
-                  </Label>
-                </div>
-                <div className="flex items-center gap-2 cursor-pointer">
-                  <RadioGroupItem value="patient" id="reg-patient" />
-                  <Label htmlFor="reg-patient" className="cursor-pointer flex items-center gap-1.5 text-md-on-surface-variant">
-                    <Heart className="w-4 h-4 text-md-primary" />
-                    {t("auth.patient")}
-                  </Label>
-                </div>
-              </RadioGroup>
-            </div>
-
-            {/* Doctor Specialty Select */}
-            {docReg && (
-              <div className="flex flex-col gap-1.5">
-                <label htmlFor="specialty-reg" className="text-sm font-medium text-md-on-surface-variant">{t("auth.specialty")}</label>
-                <select
-                  id="specialty-reg"
-                  value={specialtyReg}
-                  onChange={(e) => setSpecialtyReg(e.target.value)}
-                  className="w-full border border-md-outline-variant/30 text-md-on-surface px-4 py-3 rounded-xl focus:outline-none focus:ring-2 focus:ring-md-primary focus:border-transparent transition-all bg-md-surface-container-low appearance-none"
-                >
-                  <option value="">{t("auth.selectSpecialty")}</option>
-                  {subcategories.map((sub, idx) => (
-                    <option key={idx} value={sub}>{sub}</option>
-                  ))}
-                </select>
-              </div>
-            )}
 
             <button
               type="submit"

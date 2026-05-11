@@ -121,7 +121,7 @@ export interface StoreState {
   subcategories: string[];
 
   // Actions
-  registerUser: (newUser: User) => Promise<{ success: boolean; status?: number }>;
+  registerUser: (newUser: User) => Promise<{ success: boolean; role?: string; status?: number }>;
   loginUser: (user: Partial<User>) => Promise<{ success: boolean; role?: string; status?: number }>;
   loginMe: () => Promise<User | null>;
   getCategory: () => Promise<void>;
@@ -156,7 +156,7 @@ const PROFANITY_LIST = [
   "ебан", "хуев", "пиздат", "заебал", "отъебись", "ёбан", "хер", "херов",
   // Tajik profanity
   "кунӣ", "ҳаромзода", "ҳаромӣ", "фоҳиша", "лаънатӣ", "мурдор", "бадбахт",
-  "бешараф", "беномус", "бепадар", "бемадар", "гуҳ", "гоҳ", "харзода",
+  "бешараф", "беномус", "бепадар", "бемодар", "гуҳ", "гоҳ", "харзода",
   // English profanity
   "fuck", "shit", "bitch", "asshole", "bastard", "dick", "pussy", "damn",
   "crap", "cunt", "whore", "slut", "moron", "idiot", "stupid", "retard"
@@ -189,9 +189,10 @@ const useStore = create<StoreState>((set, get) => ({
     try {
       const { data } = await axios.post(API + "/register", newUser);
       localStorage.setItem("accessToken", data.token);
+      document.cookie = `accessToken=${data.token}; path=/; max-age=${7 * 24 * 3600}; SameSite=Lax`;
       window.dispatchEvent(new Event("storage"));
       toast.success("Хуш омадед!");
-      return { success: true };
+      return { success: true, role: data.user?.role || newUser.role };
     } catch (error: any) {
       console.error(error);
       const message = error?.response?.data?.message || "Хатогӣ ҳангоми бақайдгирӣ";
@@ -204,13 +205,14 @@ const useStore = create<StoreState>((set, get) => ({
     try {
       const { data } = await axios.post(API + "/auth", user);
       localStorage.setItem("accessToken", data.token);
+      document.cookie = `accessToken=${data.token}; path=/; max-age=${7 * 24 * 3600}; SameSite=Lax`;
       // Fetch user profile right after login to get role
       const meRes = await axios.get(API + "/auth_me", {
         headers: { Authorization: `Bearer ${data.token}` },
       });
       set({ userById: meRes.data });
       toast.success("Хуш омадед!");
-      return { success: true, role: meRes.data.role };
+      return { success: true, role: data.role || meRes.data.role };
     } catch (error: any) {
       console.error(error);
       return { success: false, status: error?.response?.status || 500 };
@@ -363,9 +365,28 @@ const useStore = create<StoreState>((set, get) => ({
       }
 
       const updatedComments = currentComments ? [...currentComments, newComment] : [newComment];
-      await axios.patch(API + "/users/" + doctorId, { comments: updatedComments }, {
+      
+      // Calculate new average rating & recommendation %
+      const totalRating = updatedComments.reduce((acc: number, c: Comment) => acc + c.rating, 0);
+      const newAverageRating = Number((totalRating / updatedComments.length).toFixed(1));
+      
+      const positiveReviews = updatedComments.filter((c: Comment) => c.rating >= 4).length;
+      const newRecommendation = Math.round((positiveReviews / updatedComments.length) * 100);
+
+      await axios.patch(API + "/users/" + doctorId, { 
+        comments: updatedComments,
+        rating: newAverageRating,
+        recommendation: newRecommendation
+      }, {
         headers: { Authorization: `Bearer ${localStorage.getItem("accessToken")}` },
       });
+
+      // Update local state if needed
+      const doctor = get().doctorById;
+      if (doctor && doctor.id === doctorId) {
+        set({ doctorById: { ...doctor, comments: updatedComments, rating: newAverageRating, recommendation: newRecommendation } });
+      }
+
       toast.success("Шарҳи шумо илова шуд!");
       return { success: true, updatedComments };
     } catch (error) {
@@ -380,7 +401,7 @@ const useStore = create<StoreState>((set, get) => ({
       const doctor = get().doctorById;
       if (!doctor || !doctor.comments) return { success: false };
 
-      const updatedComments = doctor.comments.map((c) =>
+      const updatedComments = doctor.comments.map((c: Comment) =>
         c.id === commentId
           ? {
             ...c,
@@ -391,11 +412,22 @@ const useStore = create<StoreState>((set, get) => ({
           : c
       );
 
-      await axios.patch(`${API}/users/${doctorId}`, { comments: updatedComments }, {
+      // Calculate new average rating & recommendation %
+      const totalRating = updatedComments.reduce((acc: number, c: Comment) => acc + c.rating, 0);
+      const newAverageRating = Number((totalRating / updatedComments.length).toFixed(1));
+
+      const positiveReviews = updatedComments.filter((c: Comment) => c.rating >= 4).length;
+      const newRecommendation = Math.round((positiveReviews / updatedComments.length) * 100);
+
+      await axios.patch(`${API}/users/${doctorId}`, { 
+        comments: updatedComments,
+        rating: newAverageRating,
+        recommendation: newRecommendation
+      }, {
         headers: { Authorization: `Bearer ${localStorage.getItem("accessToken")}` },
       });
 
-      set({ doctorById: { ...doctor, comments: updatedComments } });
+      set({ doctorById: { ...doctor, comments: updatedComments, rating: newAverageRating, recommendation: newRecommendation } });
       toast.success("Шарҳ иваз карда шуд!");
       return { success: true };
     } catch (error) {
@@ -410,13 +442,28 @@ const useStore = create<StoreState>((set, get) => ({
       const doctor = get().doctorById;
       if (!doctor || !doctor.comments) return { success: false };
 
-      const updatedComments = doctor.comments.filter((c) => c.id !== commentId);
+      const updatedComments = doctor.comments.filter((c: Comment) => c.id !== commentId);
 
-      await axios.patch(`${API}/users/${doctorId}`, { comments: updatedComments }, {
+      // Calculate new average rating & recommendation %
+      const totalRating = updatedComments.reduce((acc: number, c: Comment) => acc + c.rating, 0);
+      const newAverageRating = updatedComments.length > 0 
+        ? Number((totalRating / updatedComments.length).toFixed(1)) 
+        : 0;
+
+      const positiveReviews = updatedComments.filter((c: Comment) => c.rating >= 4).length;
+      const newRecommendation = updatedComments.length > 0
+        ? Math.round((positiveReviews / updatedComments.length) * 100)
+        : 0;
+
+      await axios.patch(`${API}/users/${doctorId}`, { 
+        comments: updatedComments,
+        rating: newAverageRating,
+        recommendation: newRecommendation
+      }, {
         headers: { Authorization: `Bearer ${localStorage.getItem("accessToken")}` },
       });
 
-      set({ doctorById: { ...doctor, comments: updatedComments } });
+      set({ doctorById: { ...doctor, comments: updatedComments, rating: newAverageRating, recommendation: newRecommendation } });
       toast.success("Шарҳ нест карда шуд");
       return { success: true };
     } catch (error) {
@@ -689,11 +736,12 @@ const useStore = create<StoreState>((set, get) => ({
       const formData = new FormData();
       formData.append("file", file);
 
+      // 1. Upload to server
       const { data } = await axios.post(API + "/uploads", formData, {
         headers: { "Content-Type": "multipart/form-data" },
       });
 
-      // Save diploma URL to doctor profile
+      // Save diploma URL to doctor profile temporarily
       await axios.patch(API + "/users/" + doctorId, {
         diploma: data.url,
         diplomaVerified: false,
@@ -705,62 +753,59 @@ const useStore = create<StoreState>((set, get) => ({
         userById: { ...state.userById, diploma: data.url, diplomaVerified: false },
       }));
 
-      toast.success("Диплом бор карда шуд! Тафтиш оғоз шуд...");
+      toast.success("Диплом бор карда шуд! Тафтиш бо зеҳни сунъӣ оғоз шуд...");
 
-      // Auto-start verification
-      setTimeout(() => {
-        get().verifyDiploma(doctorId);
-      }, 2000);
+      // 2. AI Verification
+      const verifyFormData = new FormData();
+      verifyFormData.append("image", file);
 
-      return { success: true };
-    } catch (error) {
-      console.error(error);
-      toast.error("Хатогӣ ҳангоми бор кардани диплом");
-      return { success: false };
-    }
-  },
+      const verifyRes = await fetch("/api/verify-diploma", {
+        method: "POST",
+        body: verifyFormData,
+      });
 
-  async verifyDiploma(doctorId) {
-    try {
-      const user = get().userById;
-      if (!user.diploma) {
-        toast.error("Аввал дипломро бор кунед");
-        return { success: false, verified: false };
+      const verifyData = await verifyRes.json();
+
+      if (!verifyRes.ok || verifyData.isValid === false) {
+        // Reset diploma if verification fails
+        await axios.patch(API + "/users/" + doctorId, {
+          diploma: "",
+          diplomaVerified: false,
+        }, {
+          headers: { Authorization: `Bearer ${localStorage.getItem("accessToken")}` },
+        });
+
+        set((state) => ({
+          userById: { ...state.userById, diploma: "", diplomaVerified: false },
+        }));
+
+        toast.error(verifyData.message || "Хатогӣ: Диплом тасдиқ нашуд.");
+        return { success: false };
       }
 
-      // Simulated AI verification:
-      // 1. Check that diploma is uploaded (non-empty URL)
-      // 2. Check that it's a valid image/PDF (base64 data or URL)
-      const diplomaUrl = user.diploma;
-      const isValidFormat = diplomaUrl.startsWith("data:image/") ||
-                           diplomaUrl.startsWith("data:application/pdf") ||
-                           diplomaUrl.startsWith("http");
-      const isLargeEnough = diplomaUrl.length > 1000; // Base64 should be substantial
-
-      const verified = isValidFormat && isLargeEnough;
-
+      // Verification success
       await axios.patch(API + "/users/" + doctorId, {
-        diplomaVerified: verified,
+        diplomaVerified: true,
       }, {
         headers: { Authorization: `Bearer ${localStorage.getItem("accessToken")}` },
       });
 
       set((state) => ({
-        userById: { ...state.userById, diplomaVerified: verified },
+        userById: { ...state.userById, diplomaVerified: true },
       }));
 
-      if (verified) {
-        toast.success("✅ Дипломи шумо тасдиқ шуд!");
-      } else {
-        toast.error("❌ Диплом тасдиқ нашуд. Лутфан аксро бо сифати беҳтар бор кунед.");
-      }
-
-      return { success: true, verified };
+      toast.success("✅ Дипломи шумо бомуваффақият тасдиқ шуд!");
+      return { success: true };
     } catch (error) {
       console.error(error);
-      toast.error("Хатогӣ ҳангоми тафтиши диплом");
-      return { success: false, verified: false };
+      toast.error("Хатогӣ ҳангоми бор кардан ё тафтиши диплом");
+      return { success: false };
     }
+  },
+
+  async verifyDiploma(doctorId) {
+    // Verification is now handled inside uploadDiploma
+    return { success: false, verified: false };
   },
 }));
 

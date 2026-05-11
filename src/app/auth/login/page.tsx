@@ -3,8 +3,6 @@
 import { useState } from "react";
 import React from "react";
 import Image from "next/image";
-import { Label } from "@/components/ui/label";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Stethoscope, Heart, Shield, LogIn } from "lucide-react";
 import useStore from "@/store/store";
 import { useRouter } from "next/navigation";
@@ -14,7 +12,6 @@ import { useTranslation } from "@/lib/i18n";
 export default function Login() {
   const [emailLogin, setEmailLogin] = useState("");
   const [passLogin, setPassLogin] = useState("");
-  const [docLog, setDocLog] = useState(false);
   const [loading, setLoading] = useState(false);
   const router = useRouter();
   const { t } = useTranslation();
@@ -41,7 +38,14 @@ export default function Login() {
     setLoading(false);
 
     if (result.success) {
-      router.push(result.role === "doctor" ? "/dashboard" : "/doctors");
+      // Role-based redirect
+      const redirectMap: Record<string, string> = {
+        admin: "/admin/panel",
+        clinic: "/clinic/dashboard",
+        doctor: "/dashboard",
+        client: "/doctors",
+      };
+      router.push(redirectMap[result.role || "client"] || "/doctors");
       setPassLogin("");
       setEmailLogin("");
     } else {
@@ -57,7 +61,7 @@ export default function Login() {
           <div className="w-9 h-9 rounded-lg bg-md-primary flex items-center justify-center">
             <Stethoscope className="w-5 h-5 text-white" />
           </div>
-          <span className="text-xl font-bold text-md-on-surface font-headline">D A R M O N</span>
+          <span className="text-xl font-bold text-md-on-surface font-headline">DARMON</span>
         </div>
 
         <div className="max-w-sm w-full">
@@ -89,30 +93,6 @@ export default function Login() {
                 placeholder="••••••••"
                 className="w-full border border-md-outline-variant/30 text-md-on-surface px-4 py-3 rounded-xl focus:outline-none focus:ring-2 focus:ring-md-primary focus:border-transparent placeholder-md-outline transition-all bg-md-surface-container-low"
               />
-            </div>
-
-            <div className="border border-md-outline-variant/30 rounded-xl p-4 bg-md-surface-container-low">
-              <p className="text-sm font-medium text-md-on-surface-variant mb-3">{t("auth.iAm")}</p>
-              <RadioGroup
-                value={docLog ? "doctor" : "patient"}
-                onValueChange={(value) => setDocLog(value === "doctor")}
-                className="flex gap-4"
-              >
-                <div className="flex items-center gap-2 cursor-pointer">
-                  <RadioGroupItem value="doctor" id="login-doctor" />
-                  <Label htmlFor="login-doctor" className="cursor-pointer flex items-center gap-1.5 text-md-on-surface-variant">
-                    <Stethoscope className="w-4 h-4 text-md-primary" />
-                    {t("auth.doctor")}
-                  </Label>
-                </div>
-                <div className="flex items-center gap-2 cursor-pointer">
-                  <RadioGroupItem value="patient" id="login-patient" />
-                  <Label htmlFor="login-patient" className="cursor-pointer flex items-center gap-1.5 text-md-on-surface-variant">
-                    <Heart className="w-4 h-4 text-md-primary" />
-                    {t("auth.patient")}
-                  </Label>
-                </div>
-              </RadioGroup>
             </div>
 
             <button

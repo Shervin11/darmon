@@ -30,7 +30,11 @@ import {
   ShieldCheck,
   AlertCircle,
   Loader2,
+  Mic,
+  Activity,
 } from "lucide-react";
+import axios from "axios";
+import Link from "next/link";
 import { DefaultPhoto } from "@/config/config";
 import { WorkingSchedule } from "@/store/store";
 import { useTranslation } from "@/lib/i18n";
@@ -57,6 +61,8 @@ const Profile = () => {
   const [priceCurrent, setPriceCurrent] = useState("");
   const [priceCurrency, setPriceCurrency] = useState("сом.");
   const [schedule, setSchedule] = useState<WorkingSchedule[]>([]);
+  const [medicalRecords, setMedicalRecords] = useState<any[]>([]);
+  const [loadingRecords, setLoadingRecords] = useState(false);
 
   const handleAddSchedule = () => {
     setSchedule([...schedule, { day: "Душанбе", startTime: "08:00", endTime: "17:00" }]);
@@ -80,6 +86,17 @@ const Profile = () => {
       setIsPhotoRemoved(false);
     }
   };
+
+  useEffect(() => {
+    if (userById?.id) {
+      setLoadingRecords(true);
+      const query = userById.role === "doctor" ? `doctorId=${userById.id}` : `clientId=${userById.id}`;
+      axios.get(`${process.env.NEXT_PUBLIC_BASE_URL}/medical-records?${query}`)
+        .then(({ data }) => setMedicalRecords(data))
+        .catch(console.error)
+        .finally(() => setLoadingRecords(false));
+    }
+  }, [userById]);
 
   const handleRemovePhoto = () => {
     setPreviewUrl(null);
@@ -398,6 +415,8 @@ const Profile = () => {
                       </label>
                     </div>
                   </div>
+
+
 
                   {/* Schedule */}
                   <div className="space-y-4 bg-md-primary/5 p-6 rounded-3xl border border-md-primary/10">
