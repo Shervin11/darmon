@@ -329,7 +329,7 @@ const DoctorById = ({ params }: { params: Promise<{ id: string }> }) => {
                     <label className="block text-xs font-bold text-md-on-surface-variant uppercase tracking-wider mb-2 ml-1">{t("doctor.selectTime")}</label>
                     <div className="space-y-2">
                       <Input type="time" value={bookingTime} onChange={(e) => setBookingTime(e.target.value)} className="rounded-xl h-12" />
-                      <p className="text-[10px] text-md-on-surface-variant/60">⏱️ Один сеанс длится 1 час</p>
+                      <p className="text-[10px] text-md-on-surface-variant/60">{t("doctor.sessionDuration")}</p>
                     </div>
                   </div>
                   <div>
@@ -355,7 +355,7 @@ const DoctorById = ({ params }: { params: Promise<{ id: string }> }) => {
                       const isAvailable = await checkSlotAvailability(doctorById.id!, bookingDate, bookingTime);
 
                       if (!isAvailable) {
-                        toast.error("Ин вақт аллақачон забронирован шудаест. Лутфан вақти дигарро интихоб кунед.");
+                        toast.error(t("doctor.timeBooked"));
                         setBooking(false);
                         return;
                       }

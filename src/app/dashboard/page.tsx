@@ -102,12 +102,12 @@ const Dashboard = () => {
     },
     {
       key: "reviews",
-      label: "Мои отзывы",
+      label: t("dashboard.reviews"),
       icon: <MessageSquare className="w-4 h-4" />,
     },
     {
       key: "records",
-      label: "Медкарты",
+      label: t("dashboard.records"),
       icon: <Activity className="w-4 h-4" />,
     },
   ];
@@ -151,17 +151,17 @@ const Dashboard = () => {
                 {
                   icon: <Users className="w-5 h-5" />,
                   val: doctorAppointments.filter((a: any) => a.status === "approved").length,
-                  label: "Принятых",
+                  label: t("dashboard.approvedCount"),
                 },
                 {
                   icon: <Star className="w-5 h-5" />,
                   val: avgRating,
-                  label: "Рейтинг",
+                  label: t("dashboard.rating"),
                 },
                 {
                   icon: <MessageSquare className="w-5 h-5" />,
                   val: comments.length,
-                  label: "Отзывов",
+                  label: t("dashboard.reviewsCount"),
                 },
               ].map((s, i) => (
                 <div
@@ -202,7 +202,7 @@ const Dashboard = () => {
         {tab === "reviews" && (
           <div className="animate-fade-in-scale">
             {comments.length === 0 ? (
-              <EmptyState icon={<MessageSquare />} text="У вас пока нет отзывов" />
+              <EmptyState icon={<MessageSquare />} text={t("dashboard.noReviews")} />
             ) : (
               <>
                 {/* Rating summary */}
@@ -215,7 +215,7 @@ const Dashboard = () => {
                       <div className="text-3xl font-headline font-black text-md-on-surface">
                         {avgRating}
                       </div>
-                      <div className="text-md-on-surface-variant text-sm">Средний рейтинг</div>
+                      <div className="text-md-on-surface-variant text-sm">{t("dashboard.avgRating")}</div>
                       <div className="flex gap-0.5 mt-1">
                         {[1, 2, 3, 4, 5].map((n) => (
                           <Star
@@ -236,7 +236,7 @@ const Dashboard = () => {
                       <div className="text-3xl font-headline font-black text-md-on-surface">
                         {comments.length}
                       </div>
-                      <div className="text-md-on-surface-variant text-sm">Всего отзывов</div>
+                      <div className="text-md-on-surface-variant text-sm">{t("dashboard.totalReviews")}</div>
                     </div>
                   </div>
 
@@ -248,7 +248,7 @@ const Dashboard = () => {
                       <div className="text-3xl font-headline font-black text-md-on-surface">
                         {rating5Count}
                       </div>
-                      <div className="text-md-on-surface-variant text-sm">Оценок «5 звёзд»</div>
+                      <div className="text-md-on-surface-variant text-sm">{t("dashboard.fiveStarCount")}</div>
                     </div>
                   </div>
                 </div>
@@ -257,7 +257,7 @@ const Dashboard = () => {
                 <div className="premium-card rounded-2xl p-6 mb-8">
                   <h3 className="font-headline font-bold text-md-on-surface mb-5 flex items-center gap-2">
                     <Activity className="w-5 h-5 text-md-primary" />
-                    Распределение оценок
+                    {t("dashboard.ratingDistribution")}
                   </h3>
                   <div className="space-y-3">
                     {[5, 4, 3, 2, 1].map((star) => {
@@ -310,7 +310,7 @@ const Dashboard = () => {
                         )}
                         <div className="flex-1 min-w-0">
                           <p className="font-semibold text-md-on-surface text-sm truncate">
-                            {c.user?.fullName || "Аноним"}
+                            {c.user?.fullName || t("dashboard.anonymous")}
                           </p>
                           <p className="text-xs text-md-on-surface-variant">{c.date}</p>
                         </div>
@@ -355,17 +355,17 @@ const Dashboard = () => {
           <div className="animate-fade-in-scale">
             <h3 className="font-headline text-2xl font-bold text-md-on-surface mb-8 flex items-center gap-3">
               <Activity className="w-7 h-7 text-md-primary" />
-              Медицинские карты
+              {t("dashboard.medicalCardsTitle")}
             </h3>
             {loadingRecords ? (
               <div className="flex flex-col items-center justify-center py-24 bg-white dark:bg-md-surface-container-lowest rounded-3xl border border-md-outline/10">
                 <Loader2 className="w-12 h-12 text-md-primary animate-spin mb-4" />
-                <p className="text-md-on-surface-variant font-medium">Загрузка данных...</p>
+                <p className="text-md-on-surface-variant font-medium">{t("dashboard.loadingData")}</p>
               </div>
             ) : medicalRecords.length === 0 ? (
               <div className="text-center py-24 bg-white dark:bg-md-surface-container-lowest rounded-3xl border border-md-outline/10 border-dashed">
                 <ClipboardList className="w-12 h-12 text-md-outline mx-auto mb-4 opacity-20" />
-                <p className="text-md-on-surface-variant italic font-medium">У вас пока нет созданных медкарты</p>
+                <p className="text-md-on-surface-variant italic font-medium">{t("dashboard.noRecords")}</p>
               </div>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -382,16 +382,16 @@ const Dashboard = () => {
                         </h4>
                       </div>
                       <div className="bg-emerald-100 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400 px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider">
-                        Медкарта
+                        {t("dashboard.recordBadge")}
                       </div>
                     </div>
                     <div className="grid grid-cols-1 gap-4">
                       <div className="p-4 bg-md-surface-container-low rounded-2xl border border-md-outline/5">
-                        <p className="text-[10px] font-bold text-md-on-surface-variant uppercase mb-1 tracking-widest">Диагноз</p>
+                        <p className="text-[10px] font-bold text-md-on-surface-variant uppercase mb-1 tracking-widest">{t("dashboard.diagnosisLabel")}</p>
                         <p className="text-sm font-semibold text-md-on-surface leading-relaxed">{record.data.diagnosis || "—"}</p>
                       </div>
                       <div className="p-4 bg-md-surface-container-low rounded-2xl border border-md-outline/5">
-                        <p className="text-[10px] font-bold text-md-on-surface-variant uppercase mb-1 tracking-widest">Лечение</p>
+                        <p className="text-[10px] font-bold text-md-on-surface-variant uppercase mb-1 tracking-widest">{t("dashboard.treatmentLabel")}</p>
                         <p className="text-sm text-md-on-surface leading-relaxed">{record.data.treatment || "—"}</p>
                       </div>
                     </div>
@@ -409,7 +409,7 @@ const Dashboard = () => {
               <div className="flex justify-center py-24">
                 <div className="flex flex-col items-center gap-4">
                   <div className="w-12 h-12 rounded-full border-2 border-md-primary/20 border-t-md-primary animate-spin" />
-                  <span className="text-sm text-md-on-surface-variant">Загрузка...</span>
+                  <span className="text-sm text-md-on-surface-variant">{t("dashboard.loading")}</span>
                 </div>
               </div>
             ) : doctorAppointments.length === 0 ? (
@@ -472,7 +472,7 @@ const Dashboard = () => {
                       {apt.status === "rejected" && apt.rejectReason && (
                         <div className="bg-md-error-container/30 rounded-xl p-3 border-l-2 border-md-error/50">
                           <p className="text-[10px] font-black text-md-error uppercase tracking-widest mb-1">
-                            Причина отказа
+                            {t("dashboard.rejectReasonLabel")}
                           </p>
                           <p className="text-sm text-md-on-surface">{apt.rejectReason}</p>
                         </div>
@@ -515,7 +515,7 @@ const Dashboard = () => {
               {t("dashboard.rejectReason")}
             </h3>
             <p className="text-sm text-md-on-surface-variant mb-5">
-              Объясните пациенту причину отказа
+              {t("dashboard.rejectExplanation")}
             </p>
             <textarea
               value={rejectReason}
