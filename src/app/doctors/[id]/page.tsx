@@ -132,7 +132,7 @@ const DoctorById = ({ params }: { params: Promise<{ id: string }> }) => {
                         <h2 className="text-3xl font-headline font-bold text-md-on-surface mb-2">{doctorById.fullName}</h2>
                         <p className="text-md-primary font-semibold tracking-wide flex items-center gap-2">
                           <Stethoscope className="w-5 h-5" />
-                          {doctorById.specialty}
+                          {doctorById.specialty ? t(doctorById.specialty) : ""}
                         </p>
                         {/* Diploma Badge */}
                         {doctorById.diplomaVerified && (

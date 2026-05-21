@@ -304,7 +304,7 @@ const Profile = () => {
                         >
                           <option value="">{t("profile.selectSpecialty")}</option>
                           {subcategories.map((sub, idx) => (
-                            <option key={idx} value={sub}>{sub}</option>
+                            <option key={idx} value={sub}>{t(sub)}</option>
                           ))}
                         </select>
                       </div>
@@ -331,13 +331,18 @@ const Profile = () => {
                       <div className="flex gap-2">
                         <div className="relative flex-1">
                           <Wallet className="absolute left-3 top-3 w-4 h-4 text-md-outline" />
-                          <Input value={priceCurrent} onChange={(e) => setPriceCurrent(e.target.value)} className="pl-10 h-11" />
+                          <Input value={priceCurrent} onChange={(e) => setPriceCurrent(e.target.value)} className="pl-10 h-11 disabled:opacity-60 disabled:cursor-not-allowed" disabled={userById?.role === "doctor"} />
                         </div>
-                        <select value={priceCurrency} onChange={(e) => setPriceCurrency(e.target.value)} className="w-24 h-11 bg-md-surface-container-low border border-md-outline-variant/30 rounded-lg text-sm text-md-on-surface">
+                        <select value={priceCurrency} onChange={(e) => setPriceCurrency(e.target.value)} className="w-24 h-11 bg-md-surface-container-low border border-md-outline-variant/30 rounded-lg text-sm text-md-on-surface disabled:opacity-60 disabled:cursor-not-allowed" disabled={userById?.role === "doctor"}>
                           <option value="сом.">сом.</option>
                           <option value="$">$</option>
                         </select>
                       </div>
+                      {userById?.role === "doctor" && (
+                        <p className="text-[11px] text-md-on-surface-variant italic">
+                          {t("profile.price")} — устанавливается клиникой / нархро клиника муайян мекунад
+                        </p>
+                      )}
                     </div>
                   </div>
 

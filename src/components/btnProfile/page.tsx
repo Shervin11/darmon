@@ -38,7 +38,7 @@ const BtnProfile = () => {
           </Link>
 
           {/* Favorites Icon — only for clients */}
-          {userById?.role !== "doctor" && (
+          {userById?.role === "client" && (
             <Link
               href="/wishlist"
               className="p-2.5 rounded-xl text-md-on-surface-variant hover:text-pink-500 hover:bg-pink-500/10 transition-all duration-200 cursor-pointer"

@@ -1,14 +1,16 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useMemo } from "react";
 import useStore from "@/store/store";
-import { Heart, ChevronRight, Search, ChevronDown, ChevronUp, MapPin, Activity } from "lucide-react";
+import { Heart, ChevronRight, Search, ChevronDown, ChevronUp, MapPin, Activity, ChevronLeft } from "lucide-react";
 import Link from "next/link";
 import FixedRating from "@/components/StarRating/page";
 import toast from "react-hot-toast";
 import { DefaultPhoto } from "@/config/config";
 import { Doctor, Category } from "@/store/store";
 import { useTranslation } from "@/lib/i18n";
+
+const ITEMS_PER_PAGE = 6;
 
 const Doctors = () => {
   const category: Category[] = useStore((state) => state.category);
@@ -20,11 +22,12 @@ const Doctors = () => {
   const [doc, setDoc] = useState("");
   const [city, setCity] = useState("all");
   const [filterData, setFilterData] = useState(doctor);
+  const [currentPage, setCurrentPage] = useState(1);
   const getCategory = useStore.getState().getCategory;
   const getDoctor = useStore.getState().getDoctor;
   const { t } = useTranslation();
 
-  const verifiedDoctors = React.useMemo(() => {
+  const verifiedDoctors = useMemo(() => {
     if (userById?.role === "doctor") return doctor;
     return doctor.filter(d => d.diplomaVerified === true);
   }, [doctor, userById?.role]);
@@ -41,10 +44,12 @@ const Doctors = () => {
       filtered = filtered.filter(e => e.city === city);
     }
     setFilterData(filtered);
+    setCurrentPage(1);
   }
 
   function searchDoctorByCategory(categoryName: string) {
     setFilterData(verifiedDoctors.filter((e) => e.specialty === categoryName));
+    setCurrentPage(1);
   }
 
   useEffect(() => {
@@ -59,11 +64,24 @@ const Doctors = () => {
 
   useEffect(() => {
     setFilterData(verifiedDoctors);
+    setCurrentPage(1);
   }, [verifiedDoctors]);
 
   const displayedCategories = showAllCategories
     ? category
     : category.slice(0, CATEGORY_LIMIT);
+
+  // Pagination
+  const totalPages = Math.ceil(filterData.length / ITEMS_PER_PAGE);
+  const paginatedDoctors = filterData.slice(
+    (currentPage - 1) * ITEMS_PER_PAGE,
+    currentPage * ITEMS_PER_PAGE
+  );
+
+  const goToPage = (page: number) => {
+    setCurrentPage(Math.max(1, Math.min(page, totalPages)));
+    window.scrollTo({ top: 300, behavior: "smooth" });
+  };
 
   return (
     <div className="pt-20">
@@ -126,27 +144,37 @@ const Doctors = () => {
       <section className="max-w-7xl mx-auto px-6 py-16 grid grid-cols-1 lg:grid-cols-12 gap-12">
         {/* Doctor List */}
         <div className="lg:col-span-8 space-y-6">
+          {/* Results count */}
+          {filterData.length > 0 && (
+            <div className="flex items-center justify-between text-sm text-md-on-surface-variant">
+              <span>{filterData.length} {t("nav.doctors").toLowerCase()}</span>
+              <span>{currentPage} / {totalPages}</span>
+            </div>
+          )}
+
           {isLoading ? (
             <div className="flex justify-center py-20">
               <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-md-primary"></div>
             </div>
-          ) : filterData.length > 0 ? (
-            filterData.map((e) => (
+          ) : paginatedDoctors.length > 0 ? (
+            paginatedDoctors.map((e) => (
               <div key={e.id} className="bg-md-surface-container-lowest p-6 rounded-[1.5rem] shadow-[0_12px_40px_rgba(0,78,159,0.06)] flex flex-col md:flex-row gap-6 hover:shadow-[0_20px_60px_rgba(0,78,159,0.1)] transition-shadow duration-300">
                 <div className="relative w-full md:w-32 h-32 flex-shrink-0">
                   <Link href={`/doctors/${e.id}`}>
                     <img className="w-full h-full object-cover rounded-xl" src={e.image || DefaultPhoto} alt={e.fullName} />
                   </Link>
-                  <button
-                    onClick={() => userById?.id ? toggleWishlist(userById.id, e) : toast.error(t("doctor.loginToBook"))}
-                    className="absolute top-2 right-2 bg-white/90 dark:bg-[#252540]/90 backdrop-blur-sm p-1.5 rounded-full shadow-sm hover:text-red-500 transition-colors cursor-pointer"
-                  >
-                    <Heart className={`w-4 h-4 ${wishlist?.favorites?.some(f => f.doctorId == e.id) ? "fill-red-500 text-red-500" : ""}`} />
-                  </button>
+                  {userById?.role === "client" && (
+                    <button
+                      onClick={() => userById?.id ? toggleWishlist(userById.id, e) : toast.error(t("doctor.loginToBook"))}
+                      className="absolute top-2 right-2 bg-white/90 dark:bg-[#252540]/90 backdrop-blur-sm p-1.5 rounded-full shadow-sm hover:text-red-500 transition-colors cursor-pointer"
+                    >
+                      <Heart className={`w-4 h-4 ${wishlist?.favorites?.some(f => f.doctorId == e.id) ? "fill-red-500 text-red-500" : ""}`} />
+                    </button>
+                  )}
                 </div>
                 <div className="flex-1 flex flex-col md:flex-row justify-between gap-6">
                   <div className="space-y-2">
-                    <span className="text-[10px] font-headline font-bold text-md-primary tracking-widest uppercase py-1 px-3 bg-md-primary/5 rounded-full">{e.specialty}</span>
+                    <span className="text-[10px] font-headline font-bold text-md-primary tracking-widest uppercase py-1 px-3 bg-md-primary/5 rounded-full">{e.specialty ? t(e.specialty) : ""}</span>
                     <Link href={`/doctors/${e.id}`} className="text-xl font-headline font-extrabold text-md-on-surface hover:text-md-primary cursor-pointer transition-colors block">{e.fullName}</Link>
                     <div className="flex items-center gap-2">
                       <FixedRating rating={e.rating || 0} />
@@ -169,6 +197,41 @@ const Doctors = () => {
           ) : (
             <div className="bg-md-surface-container-lowest rounded-2xl p-20 text-center border border-dashed border-md-outline-variant">
               <p className="text-md-on-surface-variant">{t("doctors.notFound")}</p>
+            </div>
+          )}
+
+          {/* Pagination */}
+          {totalPages > 1 && (
+            <div className="flex items-center justify-center gap-2 pt-8">
+              <button
+                onClick={() => goToPage(currentPage - 1)}
+                disabled={currentPage === 1}
+                className="w-10 h-10 rounded-xl flex items-center justify-center bg-md-surface-container-low hover:bg-md-primary/10 text-md-on-surface-variant disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer transition-all"
+              >
+                <ChevronLeft className="w-5 h-5" />
+              </button>
+              
+              {Array.from({ length: totalPages }, (_, i) => i + 1).map(page => (
+                <button
+                  key={page}
+                  onClick={() => goToPage(page)}
+                  className={`w-10 h-10 rounded-xl flex items-center justify-center font-bold text-sm cursor-pointer transition-all ${
+                    currentPage === page
+                      ? "bg-md-primary text-white shadow-md shadow-md-primary/20"
+                      : "bg-md-surface-container-low hover:bg-md-primary/10 text-md-on-surface-variant"
+                  }`}
+                >
+                  {page}
+                </button>
+              ))}
+              
+              <button
+                onClick={() => goToPage(currentPage + 1)}
+                disabled={currentPage === totalPages}
+                className="w-10 h-10 rounded-xl flex items-center justify-center bg-md-surface-container-low hover:bg-md-primary/10 text-md-on-surface-variant disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer transition-all"
+              >
+                <ChevronRight className="w-5 h-5" />
+              </button>
             </div>
           )}
         </div>
@@ -195,7 +258,7 @@ const Doctors = () => {
                           <Activity className="w-5 h-5" />
                         )}
                       </div>
-                      <span className="font-headline font-bold text-sm text-md-on-surface">{cat.name}</span>
+                      <span className="font-headline font-bold text-sm text-md-on-surface">{cat.name ? t(cat.name) : ""}</span>
                     </div>
                     <ChevronRight className={`w-5 h-5 text-md-outline group-hover:text-md-primary transition-transform ${selectedCategory?.id === cat.id ? "rotate-90" : ""}`} />
                   </div>
@@ -208,7 +271,7 @@ const Doctors = () => {
                           onClick={() => searchDoctorByCategory(sub)}
                           className="text-left text-xs py-2 px-3 rounded-lg hover:bg-md-primary/5 text-md-on-surface-variant hover:text-md-primary transition-colors cursor-pointer"
                         >
-                          {sub}
+                          {t(sub)}
                         </button>
                       ))}
                     </div>
