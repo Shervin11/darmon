@@ -1,13 +1,20 @@
 import { NextRequest, NextResponse } from "next/server";
+import { guardAi } from "@/lib/ai-guard";
 
 const DEFAULT_VOICE_ID = "nPczCjzI2devNBz1zQrb"; // Brian — professional male voice
 
 export async function POST(req: NextRequest) {
+  const denied = await guardAi(req, "speak", { limit: 40 });
+  if (denied) return denied;
+
   try {
     const { text, voice_id } = await req.json();
 
     if (!text || typeof text !== "string") {
       return NextResponse.json({ error: "No text provided" }, { status: 400 });
+    }
+    if (text.length > 2000) {
+      return NextResponse.json({ error: "Text is too long" }, { status: 400 });
     }
 
     const apiKey = process.env.ELEVENLABS_API_KEY;

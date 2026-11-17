@@ -2,13 +2,6 @@
 import useStore from "@/store/store";
 import React, { useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
@@ -30,17 +23,38 @@ import {
   ShieldCheck,
   AlertCircle,
   Loader2,
-  Mic,
-  Activity,
 } from "lucide-react";
-import axios from "axios";
-import Link from "next/link";
-import { DefaultPhoto } from "@/config/config";
-import { WorkingSchedule } from "@/store/store";
+import { WorkingSchedule, type TimeOff } from "@/store/store";
 import { useTranslation } from "@/lib/i18n";
+import TelegramConnect from "@/components/TelegramConnect/TelegramConnect";
+import { WEEKDAYS_MON_FIRST } from "@/lib/schedule";
+import { DefaultPhoto, ECG_WIDE, delay } from "@/lib/ui";
+
+const labelCls = "text-sm font-medium text-md-on-surface-variant";
+const inputCls = "pl-11 h-12 rounded-2xl bg-md-surface-container-low border-transparent focus:border-md-primary/50 focus:bg-md-surface-container-lowest";
+const selectCls =
+  "w-full pl-11 pr-4 h-12 bg-md-surface-container-low border border-transparent rounded-2xl text-md-on-surface outline-none transition focus:border-md-primary/50 focus:ring-2 ring-md-primary/20 disabled:opacity-60 disabled:cursor-not-allowed";
+
+/* Поле с иконкой слева */
+const Field = ({ icon, label, children }: { icon: React.ReactNode; label: string; children: React.ReactNode }) => (
+  <div className="space-y-2">
+    <Label className={labelCls}>{label}</Label>
+    <div className="relative">
+      <span className="absolute left-4 top-1/2 -translate-y-1/2 text-md-outline pointer-events-none [&>svg]:w-4 [&>svg]:h-4">{icon}</span>
+      {children}
+    </div>
+  </div>
+);
+
+const SectionTitle = ({ icon, children }: { icon: React.ReactNode; children: React.ReactNode }) => (
+  <div className="flex items-center gap-3 mb-8">
+    <span className="h-10 w-10 rounded-full bg-md-primary/10 text-md-primary flex items-center justify-center [&>svg]:w-5 [&>svg]:h-5">{icon}</span>
+    <h3 className="font-headline font-bold text-xl md:text-2xl tracking-tight text-md-on-surface">{children}</h3>
+  </div>
+);
 
 const Profile = () => {
-  const { loginMe, userById, edit, uploadImage, uploadDiploma, getSubcategories, subcategories } = useStore((state) => state);
+  const { userById, edit, uploadImage, uploadDiploma, getSubcategories, subcategories } = useStore((state) => state);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [city, setCity] = useState("");
   const [name, setName] = useState("");
@@ -61,8 +75,8 @@ const Profile = () => {
   const [priceCurrent, setPriceCurrent] = useState("");
   const [priceCurrency, setPriceCurrency] = useState("сом.");
   const [schedule, setSchedule] = useState<WorkingSchedule[]>([]);
-  const [medicalRecords, setMedicalRecords] = useState<any[]>([]);
-  const [loadingRecords, setLoadingRecords] = useState(false);
+  const [slotMinutes, setSlotMinutes] = useState(60);
+  const [timeOff, setTimeOff] = useState<TimeOff[]>([]);
 
   const handleAddSchedule = () => {
     setSchedule([...schedule, { day: "Душанбе", startTime: "08:00", endTime: "17:00" }]);
@@ -73,9 +87,7 @@ const Profile = () => {
   };
 
   const handleScheduleChange = (index: number, field: keyof WorkingSchedule, value: string) => {
-    const newSchedule = [...schedule];
-    newSchedule[index][field] = value;
-    setSchedule(newSchedule);
+    setSchedule(schedule.map((slot, i) => (i === index ? { ...slot, [field]: value } : slot)));
   };
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -87,17 +99,6 @@ const Profile = () => {
     }
   };
 
-  useEffect(() => {
-    if (userById?.id) {
-      setLoadingRecords(true);
-      const query = userById.role === "doctor" ? `doctorId=${userById.id}` : `clientId=${userById.id}`;
-      axios.get(`${process.env.NEXT_PUBLIC_BASE_URL}/medical-records?${query}`)
-        .then(({ data }) => setMedicalRecords(data))
-        .catch(console.error)
-        .finally(() => setLoadingRecords(false));
-    }
-  }, [userById]);
-
   const handleRemovePhoto = () => {
     setPreviewUrl(null);
     setIsPhotoRemoved(true);
@@ -107,10 +108,10 @@ const Profile = () => {
 
   const handleDiplomaUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
-    if (!file || !userById?.id) return;
+    if (!file) return;
 
     setDiplomaUploading(true);
-    await uploadDiploma(userById.id, file);
+    await uploadDiploma(file);
     setDiplomaUploading(false);
 
     if (diplomaInputRef.current) diplomaInputRef.current.value = "";
@@ -126,20 +127,22 @@ const Profile = () => {
       else return;
     }
 
+    // Price is set by the clinic, so the doctor does not send it
     const updatedUser = {
-      ...userById,
+      id: userById.id,
       fullName: name,
       email: email.toLowerCase(),
-      phone: phone,
-      city: city,
-      photo: finalPhoto,
+      phone,
+      city,
+      image: finalPhoto,
       ...(userById.role === "doctor" && {
         specialty,
         experience: Number(experience),
         clinic,
         bio,
-        price: { current: priceCurrent, old: userById.price?.old || "", currency: priceCurrency },
         workingSchedule: schedule,
+        slotMinutes,
+        timeOff: timeOff.filter((t) => t.from && t.to),
       }),
     };
 
@@ -163,318 +166,333 @@ const Profile = () => {
       setPriceCurrent(userById.price?.current || "");
       setPriceCurrency(userById.price?.currency || "сом.");
       setSchedule(userById.workingSchedule || []);
+      setSlotMinutes(userById.slotMinutes || 60);
+      setTimeOff(userById.timeOff || []);
     }
   }, [userById]);
 
   useEffect(() => {
-    loginMe();
     getSubcategories();
   }, []);
 
+  const isDoctor = userById.role === "doctor";
+
   return (
     <div className="bg-md-surface-container-low min-h-screen pb-20 pt-20">
-      {/* Hero Banner */}
-      <section className="max-w-7xl mx-auto px-6 mb-12 mt-4">
-        <div className="relative bg-gradient-to-br from-[#00A896] via-[#00BFA5] to-[#0D9488] rounded-2xl pt-16 pb-20 px-10 md:px-16 overflow-hidden flex flex-col items-center justify-center text-center animate-gradient-shift">
-          {/* Glow effects */}
-          <div className="absolute inset-0 opacity-20">
-            <div className="absolute -right-20 -top-20 w-96 h-96 bg-[#00C4B0] rounded-full blur-[120px]"></div>
-            <div className="absolute -left-20 -bottom-20 w-96 h-96 bg-[#007D70] rounded-full blur-[120px]"></div>
-          </div>
-          
-          <div className="relative z-10">
-            <p className="text-[#A7F3EB] text-xs uppercase tracking-[4px] font-bold mb-3 font-headline">{t("profile.badge")}</p>
-            <h1 className="text-4xl md:text-5xl font-extrabold text-white tracking-tight font-headline">{t("profile.title")}</h1>
+
+      {/* Hero */}
+      <section className="max-w-7xl mx-auto px-6 mb-10 mt-4">
+        <div className="relative overflow-hidden rounded-[2rem] bg-md-banner px-8 py-12 md:px-14 md:py-16">
+          <svg aria-hidden="true" viewBox="0 0 1200 120" preserveAspectRatio="none" className="absolute inset-x-0 bottom-4 h-24 w-full text-white/20">
+            <path d={ECG_WIDE} pathLength="1" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" vectorEffect="non-scaling-stroke" className="fx-draw" />
+          </svg>
+          <div className="relative space-y-4">
+            <p className="fx-rise inline-flex items-center gap-2 rounded-full bg-white/15 px-4 py-1.5 text-sm font-semibold text-white font-headline" style={delay("0.05s")}>
+              <span className="fx-beat h-2 w-2 rounded-full bg-white" />
+              {t("profile.badge")}
+            </p>
+            <h1 className="fx-rise text-white font-headline font-extrabold text-4xl md:text-6xl tracking-tight leading-[1.05]" style={delay("0.2s")}>
+              {t("profile.title")}
+            </h1>
           </div>
         </div>
       </section>
 
-      <div className="max-w-[1000px] mx-auto px-4">
-        <form onSubmit={editUser} className="space-y-6">
-          <Card className="border-none clinical-shadow overflow-hidden bg-md-surface-container-lowest rounded-2xl">
-            <CardHeader className="bg-md-surface-container-lowest border-b border-md-surface-variant/20 py-8">
-              <div className="flex flex-col md:flex-row items-center gap-8">
-                {/* Avatar */}
-                <div className="relative group">
-                  <div className="w-32 h-32 rounded-3xl overflow-hidden ring-4 ring-white dark:ring-[#1E293B] shadow-2xl transition-transform group-hover:scale-[1.02]">
-                    <img
-                      src={isPhotoRemoved ? DefaultPhoto : (previewUrl || userById.image || DefaultPhoto)}
-                      alt="avatar"
-                      className="w-full h-full object-cover"
-                    />
-                  </div>
-                  <label htmlFor="avatar-upload" className="absolute -bottom-2 -right-2 bg-md-primary hover:bg-md-primary-container text-white p-2 rounded-xl shadow-lg cursor-pointer transition-all active:scale-90">
-                    <Camera className="w-5 h-5" />
-                    <input id="avatar-upload" type="file" accept="image/*" className="hidden" onChange={handleFileChange} ref={fileInputRef} />
-                  </label>
-                </div>
-
-                <div className="text-center md:text-left space-y-2">
-                  <CardTitle className="text-2xl font-bold text-md-on-surface font-headline">{name || t("profile.user")}</CardTitle>
-                  <CardDescription className="flex items-center justify-center md:justify-start gap-2">
-                    <span className="bg-md-primary/10 text-md-primary px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider font-headline">
-                      {userById.role === "doctor" ? t("profile.doctorRole") : t("profile.patientRole")}
-                    </span>
-                    <span className="text-md-outline">•</span>
-                    <span className="text-md-on-surface-variant text-sm">{email}</span>
-                  </CardDescription>
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    onClick={handleRemovePhoto}
-                    className="text-md-error hover:text-md-error hover:bg-md-error-container h-8 px-2 text-xs cursor-pointer"
-                  >
-                    <Trash2 className="w-3.5 h-3.5 mr-1" /> {t("profile.removePhoto")}
-                  </Button>
-                </div>
+      <form onSubmit={editUser} className="max-w-7xl mx-auto px-6 grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+        {/* Left: identity card */}
+        <aside className="lg:col-span-4 lg:sticky lg:top-28">
+          <div className="bg-md-surface-container-lowest rounded-[2rem] clinical-shadow p-8 flex flex-col items-center text-center gap-6">
+            <div className="relative w-44">
+              <div className="aspect-[4/5] overflow-hidden rounded-t-[999px] rounded-b-[1.5rem] shadow-xl">
+                <img
+                  src={isPhotoRemoved ? DefaultPhoto : (previewUrl || userById.image || DefaultPhoto)}
+                  alt="avatar"
+                  className="w-full h-full object-cover"
+                />
               </div>
-            </CardHeader>
+              <label
+                htmlFor="avatar-upload"
+                className="absolute -bottom-2 -right-2 h-12 w-12 flex items-center justify-center bg-md-primary hover:bg-md-primary-container text-white rounded-full shadow-lg cursor-pointer transition-all active:scale-90 focus-within:outline focus-within:outline-2 focus-within:outline-offset-2 focus-within:outline-md-primary"
+              >
+                <Camera className="w-5 h-5" />
+                <span className="sr-only">{t("profile.title")}</span>
+                <input id="avatar-upload" type="file" accept="image/*" className="sr-only" onChange={handleFileChange} ref={fileInputRef} />
+              </label>
+            </div>
 
-            <CardContent className="p-8 space-y-10">
-              {/* General Info */}
-              <div className="space-y-6">
-                <div className="flex items-center gap-2 text-md-on-surface font-bold border-l-4 border-md-primary pl-4 font-headline">
-                  <User className="w-5 h-5 text-md-primary" />
-                  <h3>{t("profile.generalInfo")}</h3>
-                </div>
+            <div className="space-y-3">
+              <h2 className="text-2xl font-headline font-extrabold tracking-tight text-md-on-surface leading-tight">{name || t("profile.user")}</h2>
+              <span className="inline-block bg-md-primary/10 text-md-primary px-4 py-1.5 rounded-full text-sm font-semibold font-headline">
+                {isDoctor ? t("profile.doctorRole") : t("profile.patientRole")}
+              </span>
+              <p className="text-md-on-surface-variant text-sm break-all">{email}</p>
+            </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <Button
+              type="button"
+              variant="ghost"
+              onClick={handleRemovePhoto}
+              className="text-md-error hover:text-md-error hover:bg-md-error-container rounded-full h-10 px-5 text-sm cursor-pointer"
+            >
+              <Trash2 className="w-4 h-4 mr-2" /> {t("profile.removePhoto")}
+            </Button>
+          </div>
+        </aside>
+
+        {/* Right: sections */}
+        <div className="lg:col-span-8 space-y-6 min-w-0">
+          {/* General Info */}
+          <section className="bg-md-surface-container-lowest rounded-[2rem] clinical-shadow p-6 md:p-10">
+            <SectionTitle icon={<User />}>{t("profile.generalInfo")}</SectionTitle>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+              <Field icon={<User />} label={t("profile.fullName")}>
+                <Input value={name} onChange={(e) => setName(e.target.value)} className={inputCls} />
+              </Field>
+              <Field icon={<Phone />} label={t("profile.phone")}>
+                <Input value={phone} onChange={(e) => setPhone(e.target.value)} className={inputCls} />
+              </Field>
+              <Field icon={<Mail />} label={t("profile.email")}>
+                <Input type="email" value={email} onChange={(e) => setEmail(e.target.value)} className={inputCls} />
+              </Field>
+              <Field icon={<MapPin />} label={t("profile.city")}>
+                <select value={city} onChange={(e) => setCity(e.target.value)} className={selectCls}>
+                  <option value="">{t("profile.selectCity")}</option>
+                  <option value="Душанбе">Душанбе</option>
+                  <option value="Бохтар">Бохтар</option>
+                  <option value="Хуҷанд">Хуҷанд</option>
+                  <option value="Кӯлоб">Кӯлоб</option>
+                  <option value="Истаравшан">Истаравшан</option>
+                </select>
+              </Field>
+            </div>
+          </section>
+
+          <TelegramConnect />
+
+          {isDoctor && (
+            <>
+              {/* Professional Info */}
+              <section className="bg-md-surface-container-lowest rounded-[2rem] clinical-shadow p-6 md:p-10">
+                <SectionTitle icon={<Stethoscope />}>{t("profile.professionalInfo")}</SectionTitle>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                  <Field icon={<Briefcase />} label={t("profile.specialty")}>
+                    <select value={specialty} onChange={(e) => setSpecialty(e.target.value)} className={selectCls}>
+                      <option value="">{t("profile.selectSpecialty")}</option>
+                      {subcategories.map((sub, idx) => (
+                        <option key={idx} value={sub}>{t(sub)}</option>
+                      ))}
+                    </select>
+                  </Field>
+
+                  <Field icon={<Clock />} label={t("profile.experience")}>
+                    <Input type="number" value={experience} onChange={(e) => setExperience(e.target.value === "" ? "" : Number(e.target.value))} className={inputCls} />
+                  </Field>
+
+                  <Field icon={<Building2 />} label={t("profile.clinic")}>
+                    <Input value={clinic} onChange={(e) => setClinic(e.target.value)} className={inputCls} />
+                  </Field>
+
                   <div className="space-y-2">
-                    <Label className="text-xs font-bold text-md-on-surface-variant uppercase tracking-wider">{t("profile.fullName")}</Label>
-                    <div className="relative">
-                      <User className="absolute left-3 top-3 w-4 h-4 text-md-outline" />
-                      <Input value={name} onChange={(e) => setName(e.target.value)} className="pl-10 h-11 bg-md-surface-container-low border-md-outline-variant/30 focus:bg-white dark:focus:bg-[#1E293B]" />
-                    </div>
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label className="text-xs font-bold text-md-on-surface-variant uppercase tracking-wider">{t("profile.phone")}</Label>
-                    <div className="relative">
-                      <Phone className="absolute left-3 top-3 w-4 h-4 text-md-outline" />
-                      <Input value={phone} onChange={(e) => setPhone(e.target.value)} className="pl-10 h-11 bg-md-surface-container-low border-md-outline-variant/30 focus:bg-white dark:focus:bg-[#1E293B]" />
-                    </div>
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label className="text-xs font-bold text-md-on-surface-variant uppercase tracking-wider">{t("profile.email")}</Label>
-                    <div className="relative">
-                      <Mail className="absolute left-3 top-3 w-4 h-4 text-md-outline" />
-                      <Input type="email" value={email} onChange={(e) => setEmail(e.target.value)} className="pl-10 h-11 bg-md-surface-container-low border-md-outline-variant/30 focus:bg-white dark:focus:bg-[#1E293B]" />
-                    </div>
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label className="text-xs font-bold text-md-on-surface-variant uppercase tracking-wider">{t("profile.city")}</Label>
-                    <div className="relative">
-                      <MapPin className="absolute left-3 top-3 w-4 h-4 text-md-outline" />
-                      <select
-                        value={city}
-                        onChange={(e) => setCity(e.target.value)}
-                        className="w-full pl-10 h-11 bg-md-surface-container-low border border-md-outline-variant/30 rounded-lg text-sm appearance-none focus:outline-none focus:ring-2 ring-md-primary/20 text-md-on-surface"
-                      >
-                        <option value="all">{t("profile.selectCity")}</option>
-                        <option value="Душанбе">Душанбе</option>
-                        <option value="Бохтар">Бохтар</option>
-                        <option value="Хуҷанд">Хуҷанд</option>
-                        <option value="Кӯлоб">Кӯлоб</option>
-                        <option value="Истаравшан">Истаравшан</option>
+                    <Label className={labelCls}>{t("profile.price")}</Label>
+                    <div className="flex gap-2">
+                      <div className="relative flex-1">
+                        <span className="absolute left-4 top-1/2 -translate-y-1/2 text-md-outline pointer-events-none"><Wallet className="w-4 h-4" /></span>
+                        <Input value={priceCurrent} onChange={(e) => setPriceCurrent(e.target.value)} className={`${inputCls} disabled:opacity-60 disabled:cursor-not-allowed`} disabled={isDoctor} />
+                      </div>
+                      <select value={priceCurrency} onChange={(e) => setPriceCurrency(e.target.value)} className={`${selectCls} !w-24 !pl-4`} disabled={isDoctor}>
+                        <option value="сом.">сом.</option>
+                        <option value="$">$</option>
                       </select>
                     </div>
+                    <p className="text-xs text-md-on-surface-variant leading-relaxed">
+                      {t("profile.price")} — устанавливается клиникой / нархро клиника муайян мекунад
+                    </p>
                   </div>
                 </div>
-              </div>
 
-              {/* Doctor Info */}
-              {userById.role === "doctor" && (
-                <div className="space-y-8 pt-6 border-t border-md-surface-variant/20">
-                  <div className="flex items-center gap-2 text-md-on-surface font-bold border-l-4 border-md-secondary-container pl-4 font-headline">
-                    <Stethoscope className="w-5 h-5 text-md-secondary-container" />
-                    <h3>{t("profile.professionalInfo")}</h3>
+                <div className="space-y-2 mt-5">
+                  <Label className={labelCls}>{t("profile.aboutMe")}</Label>
+                  <textarea
+                    value={bio}
+                    onChange={(e) => setBio(e.target.value)}
+                    className="w-full rounded-2xl p-4 min-h-[140px] bg-md-surface-container-low border border-transparent text-md-on-surface outline-none transition focus:border-md-primary/50 focus:ring-2 ring-md-primary/20"
+                    placeholder={t("profile.aboutPlaceholder")}
+                  />
+                </div>
+              </section>
+
+              {/* Diploma */}
+              <section className="bg-md-surface-container-lowest rounded-[2rem] clinical-shadow p-6 md:p-10">
+                <div className="flex flex-wrap items-start justify-between gap-3 mb-8">
+                  <div className="flex items-center gap-3">
+                    <span className="h-10 w-10 rounded-full bg-md-primary/10 text-md-primary flex items-center justify-center">
+                      <GraduationCap className="w-5 h-5" />
+                    </span>
+                    <h3 className="font-headline font-bold text-xl md:text-2xl tracking-tight text-md-on-surface">{t("profile.diploma")}</h3>
                   </div>
-
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div className="space-y-2">
-                      <Label className="text-xs font-bold text-md-on-surface-variant uppercase tracking-wider">{t("profile.specialty")}</Label>
-                      <div className="relative">
-                        <Briefcase className="absolute left-3 top-3 w-4 h-4 text-md-outline" />
-                        <select
-                          value={specialty}
-                          onChange={(e) => setSpecialty(e.target.value)}
-                          className="w-full pl-10 h-11 bg-md-surface-container-low border border-md-outline-variant/30 rounded-lg text-sm appearance-none focus:outline-none focus:ring-2 ring-md-primary/20 text-md-on-surface"
-                        >
-                          <option value="">{t("profile.selectSpecialty")}</option>
-                          {subcategories.map((sub, idx) => (
-                            <option key={idx} value={sub}>{t(sub)}</option>
-                          ))}
-                        </select>
-                      </div>
-                    </div>
-
-                    <div className="space-y-2">
-                      <Label className="text-xs font-bold text-md-on-surface-variant uppercase tracking-wider">{t("profile.experience")}</Label>
-                      <div className="relative">
-                        <Clock className="absolute left-3 top-3 w-4 h-4 text-md-outline" />
-                        <Input type="number" value={experience} onChange={(e) => setExperience(e.target.value === "" ? "" : Number(e.target.value))} className="pl-10 h-11" />
-                      </div>
-                    </div>
-
-                    <div className="space-y-2">
-                      <Label className="text-xs font-bold text-md-on-surface-variant uppercase tracking-wider">{t("profile.clinic")}</Label>
-                      <div className="relative">
-                        <Building2 className="absolute left-3 top-3 w-4 h-4 text-md-outline" />
-                        <Input value={clinic} onChange={(e) => setClinic(e.target.value)} className="pl-10 h-11" />
-                      </div>
-                    </div>
-
-                    <div className="space-y-2">
-                      <Label className="text-xs font-bold text-md-on-surface-variant uppercase tracking-wider">{t("profile.price")}</Label>
-                      <div className="flex gap-2">
-                        <div className="relative flex-1">
-                          <Wallet className="absolute left-3 top-3 w-4 h-4 text-md-outline" />
-                          <Input value={priceCurrent} onChange={(e) => setPriceCurrent(e.target.value)} className="pl-10 h-11 disabled:opacity-60 disabled:cursor-not-allowed" disabled={userById?.role === "doctor"} />
-                        </div>
-                        <select value={priceCurrency} onChange={(e) => setPriceCurrency(e.target.value)} className="w-24 h-11 bg-md-surface-container-low border border-md-outline-variant/30 rounded-lg text-sm text-md-on-surface disabled:opacity-60 disabled:cursor-not-allowed" disabled={userById?.role === "doctor"}>
-                          <option value="сом.">сом.</option>
-                          <option value="$">$</option>
-                        </select>
-                      </div>
-                      {userById?.role === "doctor" && (
-                        <p className="text-[11px] text-md-on-surface-variant italic">
-                          {t("profile.price")} — устанавливается клиникой / нархро клиника муайян мекунад
-                        </p>
+                  {userById.diploma && (
+                    <span
+                      className={`inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-sm font-semibold ${
+                        userById.diplomaVerified
+                          ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300"
+                          : "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-300"
+                      }`}
+                    >
+                      {userById.diplomaVerified ? (
+                        <><ShieldCheck className="w-4 h-4" /> {t("profile.diplomaVerified")}</>
+                      ) : (
+                        <><AlertCircle className="w-4 h-4" /> {t("profile.diplomaNotVerified")}</>
                       )}
+                    </span>
+                  )}
+                </div>
+
+                <div className="rounded-[1.5rem] border-2 border-dashed border-md-outline-variant/50 bg-md-surface-container-low/50 p-6 flex flex-col items-center gap-5 text-center">
+                  {userById.diploma ? (
+                    <img src={userById.diploma} alt="Diploma" className="max-h-52 rounded-2xl object-contain shadow-md" />
+                  ) : (
+                    <div className="w-16 h-16 rounded-full bg-md-primary/10 text-md-primary flex items-center justify-center">
+                      <Upload className="w-7 h-7" />
                     </div>
-                  </div>
+                  )}
+                  <p className="text-sm text-md-on-surface-variant max-w-sm leading-relaxed">{t("profile.diplomaHint")}</p>
 
-                  <div className="space-y-2">
-                    <Label className="text-xs font-bold text-md-on-surface-variant uppercase tracking-wider">{t("profile.aboutMe")}</Label>
-                    <textarea
-                      value={bio}
-                      onChange={(e) => setBio(e.target.value)}
-                      className="w-full border border-md-outline-variant/30 rounded-xl p-4 min-h-[120px] focus:ring-2 ring-md-primary/20 outline-none transition-all bg-md-surface-container-low text-md-on-surface"
-                      placeholder={t("profile.aboutPlaceholder")}
-                    />
-                  </div>
-
-                  {/* ── Diploma Section ── */}
-                  <div className="space-y-4 bg-gradient-to-br from-md-primary/5 to-transparent p-6 rounded-2xl border border-md-primary/10">
-                    <div className="flex items-center justify-between">
-                      <h4 className="font-bold text-md-on-surface flex items-center gap-2 font-headline">
-                        <GraduationCap className="w-5 h-5 text-md-primary" /> {t("profile.diploma")}
-                      </h4>
-                      {/* Verification Status */}
-                      {userById.diploma && (
-                        <span className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold ${
-                          userById.diplomaVerified
-                            ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400"
-                            : "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400"
-                        }`}>
-                          {userById.diplomaVerified ? (
-                            <><ShieldCheck className="w-3.5 h-3.5" /> {t("profile.diplomaVerified")}</>
-                          ) : (
-                            <><AlertCircle className="w-3.5 h-3.5" /> {t("profile.diplomaNotVerified")}</>
-                          )}
-                        </span>
-                      )}
-                    </div>
-
-                    {/* Diploma Preview */}
-                    {userById.diploma ? (
-                      <div className="diploma-preview flex flex-col items-center gap-4">
-                        <img
-                          src={userById.diploma}
-                          alt="Diploma"
-                          className="max-h-48 rounded-xl object-contain shadow-md"
-                        />
-                        <p className="text-xs text-md-on-surface-variant">{t("profile.diplomaHint")}</p>
-                      </div>
+                  <label
+                    className={`inline-flex items-center gap-2 px-7 py-3 rounded-full font-bold text-sm transition-all focus-within:outline focus-within:outline-2 focus-within:outline-offset-2 focus-within:outline-md-primary ${
+                      diplomaUploading
+                        ? "bg-md-outline/20 text-md-outline cursor-wait"
+                        : "bg-md-primary text-white shadow-md shadow-md-primary/25 hover:shadow-lg active:scale-95 cursor-pointer"
+                    }`}
+                  >
+                    {diplomaUploading ? (
+                      <><Loader2 className="w-4 h-4 animate-spin" /> {t("profile.diplomaPending")}</>
                     ) : (
-                      <div className="diploma-preview flex flex-col items-center gap-3 py-8">
-                        <div className="w-16 h-16 rounded-2xl bg-md-primary/10 flex items-center justify-center">
-                          <Upload className="w-8 h-8 text-md-primary/60" />
-                        </div>
-                        <p className="text-sm text-md-on-surface-variant text-center">{t("profile.diplomaHint")}</p>
-                      </div>
+                      <><Upload className="w-4 h-4" /> {t("profile.uploadDiploma")}</>
                     )}
+                    <input
+                      type="file"
+                      accept="image/png,image/jpeg,image/webp"
+                      className="sr-only"
+                      onChange={handleDiplomaUpload}
+                      disabled={diplomaUploading}
+                      ref={diplomaInputRef}
+                    />
+                  </label>
+                </div>
+              </section>
 
-                    {/* Upload Button */}
-                    <div className="flex justify-center">
-                      <label className={`inline-flex items-center gap-2 px-6 py-3 rounded-xl font-bold text-sm cursor-pointer transition-all ${
-                        diplomaUploading
-                          ? "bg-md-outline/20 text-md-outline cursor-wait"
-                          : "bg-md-primary/10 text-md-primary hover:bg-md-primary/20 active:scale-95"
-                      }`}>
-                        {diplomaUploading ? (
-                          <><Loader2 className="w-4 h-4 animate-spin" /> {t("profile.diplomaPending")}</>
-                        ) : (
-                          <><Upload className="w-4 h-4" /> {t("profile.uploadDiploma")}</>
-                        )}
-                        <input
-                          type="file"
-                          accept="image/*,.pdf"
-                          className="hidden"
-                          onChange={handleDiplomaUpload}
-                          disabled={diplomaUploading}
-                          ref={diplomaInputRef}
-                        />
-                      </label>
-                    </div>
+              {/* Schedule */}
+              <section className="bg-md-surface-container-lowest rounded-[2rem] clinical-shadow p-6 md:p-10">
+                <div className="flex flex-wrap items-center justify-between gap-3 mb-8">
+                  <div className="flex items-center gap-3">
+                    <span className="h-10 w-10 rounded-full bg-md-primary/10 text-md-primary flex items-center justify-center">
+                      <Clock className="w-5 h-5" />
+                    </span>
+                    <h3 className="font-headline font-bold text-xl md:text-2xl tracking-tight text-md-on-surface">{t("profile.schedule")}</h3>
                   </div>
+                  <Button
+                    type="button"
+                    onClick={handleAddSchedule}
+                    className="bg-md-primary/10 text-md-primary hover:bg-md-primary hover:text-white rounded-full h-11 px-5 cursor-pointer transition-colors"
+                  >
+                    <Plus className="w-4 h-4 mr-1.5" /> {t("profile.addSchedule")}
+                  </Button>
+                </div>
 
-
-
-                  {/* Schedule */}
-                  <div className="space-y-4 bg-md-primary/5 p-6 rounded-3xl border border-md-primary/10">
-                    <div className="flex items-center justify-between">
-                      <h4 className="font-bold text-md-primary flex items-center gap-2 font-headline">
-                        <Clock className="w-4 h-4" /> {t("profile.schedule")}
-                      </h4>
-                      <Button type="button" size="sm" onClick={handleAddSchedule} className="bg-white dark:bg-[#1E293B] text-md-primary border border-md-primary/20 hover:bg-md-primary/10 shadow-sm cursor-pointer">
-                        <Plus className="w-4 h-4 mr-1" /> {t("profile.addSchedule")}
+                <div className="space-y-3">
+                  {schedule.map((slot, index) => (
+                    <div key={index} className="flex flex-col sm:flex-row sm:items-center gap-3 bg-md-surface-container-low p-2 pl-4 rounded-[1.5rem] sm:rounded-full">
+                      <select
+                        value={slot.day}
+                        onChange={(e) => handleScheduleChange(index, "day", e.target.value)}
+                        aria-label={t("profile.schedule")}
+                        className="sm:w-1/3 h-10 bg-transparent font-semibold text-md-on-surface outline-none cursor-pointer"
+                      >
+                        {WEEKDAYS_MON_FIRST.map((d) => (
+                          <option key={d} value={d}>{t(`day.${d}`)}</option>
+                        ))}
+                      </select>
+                      <div className="flex items-center gap-2 flex-1 bg-md-surface-container-lowest px-4 py-1 rounded-full">
+                        <Input type="time" value={slot.startTime} onChange={(e) => handleScheduleChange(index, "startTime", e.target.value)} className="border-none bg-transparent h-9 p-0 focus-visible:ring-0" />
+                        <ChevronRight className="w-4 h-4 text-md-outline shrink-0" />
+                        <Input type="time" value={slot.endTime} onChange={(e) => handleScheduleChange(index, "endTime", e.target.value)} className="border-none bg-transparent h-9 p-0 focus-visible:ring-0" />
+                      </div>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        onClick={() => handleRemoveSchedule(index)}
+                        aria-label="Удалить"
+                        className="text-md-error/70 hover:text-md-error hover:bg-md-error-container/40 rounded-full h-10 w-10 p-0 self-end sm:self-auto cursor-pointer"
+                      >
+                        <Trash2 className="w-4 h-4" />
                       </Button>
                     </div>
+                  ))}
+                </div>
 
-                    <div className="space-y-3">
-                      {schedule.map((slot, index) => (
-                        <div key={index} className="flex flex-col sm:flex-row items-center gap-4 bg-white dark:bg-[#0F172A] p-3 rounded-2xl shadow-sm group">
-                          <Input
-                            value={slot.day}
-                            onChange={(e) => handleScheduleChange(index, "day", e.target.value)}
-                            className="sm:w-1/3 border-none bg-transparent font-semibold focus:ring-0"
-                          />
-                          <div className="flex items-center gap-2 flex-1 bg-md-surface-container-low px-3 py-1 rounded-xl">
-                            <Input type="time" value={slot.startTime} onChange={(e) => handleScheduleChange(index, "startTime", e.target.value)} className="border-none bg-transparent h-8 p-0" />
-                            <ChevronRight className="w-4 h-4 text-md-outline" />
-                            <Input type="time" value={slot.endTime} onChange={(e) => handleScheduleChange(index, "endTime", e.target.value)} className="border-none bg-transparent h-8 p-0" />
-                          </div>
+                <div className="mt-8 grid gap-6 md:grid-cols-[14rem_1fr]">
+                  <label className="space-y-2">
+                    <span className="block text-sm font-medium text-md-on-surface-variant">{t("schedule.slotLength")}</span>
+                    <select
+                      value={slotMinutes}
+                      onChange={(e) => setSlotMinutes(Number(e.target.value))}
+                      className="w-full h-11 rounded-full bg-md-surface-container-low px-4 font-semibold text-md-on-surface outline-none cursor-pointer"
+                    >
+                      {[15, 20, 30, 40, 45, 60, 90].map((m) => (
+                        <option key={m} value={m}>{m} {t("schedule.minutes")}</option>
+                      ))}
+                    </select>
+                  </label>
+
+                  <div className="space-y-3">
+                    <div className="flex flex-wrap items-center justify-between gap-2">
+                      <span className="text-sm font-medium text-md-on-surface-variant">{t("schedule.timeOff")}</span>
+                      <button
+                        type="button"
+                        onClick={() => setTimeOff([...timeOff, { from: "", to: "", reason: "" }])}
+                        className="inline-flex items-center gap-1.5 text-sm font-semibold text-md-primary hover:underline cursor-pointer"
+                      >
+                        <Plus className="w-4 h-4" /> {t("schedule.addTimeOff")}
+                      </button>
+                    </div>
+                    {timeOff.length === 0 && <p className="text-sm text-md-on-surface-variant">{t("schedule.noTimeOff")}</p>}
+                    {timeOff.map((off, index) => {
+                      const update = (patch: Partial<TimeOff>) => setTimeOff(timeOff.map((o, i) => (i === index ? { ...o, ...patch } : o)));
+                      return (
+                        <div key={index} className="flex flex-col sm:flex-row sm:items-center gap-2 bg-md-surface-container-low p-2 pl-4 rounded-[1.5rem] sm:rounded-full">
+                          <Input type="date" aria-label={t("report.from")} value={off.from} onChange={(e) => update({ from: e.target.value })} className="border-none bg-transparent h-9 sm:w-40 focus-visible:ring-0" />
+                          <ChevronRight className="hidden sm:block w-4 h-4 text-md-outline shrink-0" />
+                          <Input type="date" aria-label={t("report.to")} value={off.to} min={off.from} onChange={(e) => update({ to: e.target.value })} className="border-none bg-transparent h-9 sm:w-40 focus-visible:ring-0" />
+                          <Input placeholder={t("schedule.reason")} value={off.reason || ""} onChange={(e) => update({ reason: e.target.value })} className="border-none bg-md-surface-container-lowest rounded-full h-9 flex-1 focus-visible:ring-0" />
                           <Button
                             type="button"
                             variant="ghost"
-                            onClick={() => handleRemoveSchedule(index)}
-                            className="text-md-error hover:text-md-error opacity-0 group-hover:opacity-100 transition-all cursor-pointer"
+                            onClick={() => setTimeOff(timeOff.filter((_, i) => i !== index))}
+                            aria-label={t("doctor.delete")}
+                            className="text-md-error/70 hover:text-md-error hover:bg-md-error-container/40 rounded-full h-10 w-10 p-0 self-end sm:self-auto cursor-pointer"
                           >
                             <Trash2 className="w-4 h-4" />
                           </Button>
                         </div>
-                      ))}
-                    </div>
+                      );
+                    })}
                   </div>
                 </div>
-              )}
+              </section>
+            </>
+          )}
 
-              {/* Save Button */}
-              <div className="flex justify-end pt-6">
-                <Button
-                  type="submit"
-                  className="bg-gradient-to-r from-md-primary to-md-primary-container hover:from-md-primary-container hover:to-md-primary text-white px-12 h-12 rounded-xl font-bold uppercase tracking-widest shadow-lg transition-all active:scale-95 cursor-pointer font-headline"
-                >
-                  {t("profile.save")}
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-        </form>
-      </div>
+          {/* Save */}
+          <div className="flex justify-end pt-2">
+            <Button
+              type="submit"
+              className="bg-md-primary hover:bg-md-primary/90 text-white px-14 h-14 rounded-full text-base font-bold shadow-lg shadow-md-primary/25 hover:shadow-xl transition-all active:scale-95 cursor-pointer font-headline"
+            >
+              {t("profile.save")}
+            </Button>
+          </div>
+        </div>
+      </form>
     </div>
   );
 };

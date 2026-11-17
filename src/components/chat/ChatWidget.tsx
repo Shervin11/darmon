@@ -1,10 +1,8 @@
 "use client";
 import React, { useState, useEffect, useRef, useCallback } from "react";
-import axios from "axios";
+import { api } from "@/lib/api";
 import { Send, User, Mic, Trash2, Edit3, Smile, X, Check, Play, Pause } from "lucide-react";
 import { useTranslation } from "@/lib/i18n";
-
-const API = process.env.NEXT_PUBLIC_BASE_URL;
 
 interface Message {
   id: number;
@@ -50,7 +48,7 @@ const ChatWidget: React.FC<ChatWidgetProps> = ({ currentUserId, partnerId, partn
 
   const fetchMessages = async () => {
     try {
-      const { data } = await axios.get(`${API}/messages?userId1=${currentUserId}&userId2=${partnerId}`);
+      const { data } = await api.get("/messages", { params: { partnerId } });
       setMessages(data);
     } catch (e) { console.error(e); }
   };
@@ -70,7 +68,7 @@ const ChatWidget: React.FC<ChatWidgetProps> = ({ currentUserId, partnerId, partn
     }
     const hasUnread = messages.some(m => m.senderId === partnerId && m.receiverId === currentUserId && !m.isRead);
     if (hasUnread) {
-      axios.post(`${API}/messages/mark-read`, { userId: currentUserId, partnerId }).catch(console.error);
+      api.post("/messages/mark-read", { partnerId }).catch(console.error);
     }
   }, [messages]);
 
@@ -89,14 +87,10 @@ const ChatWidget: React.FC<ChatWidgetProps> = ({ currentUserId, partnerId, partn
     setSending(true);
     try {
       if (editingId) {
-        await axios.patch(`${API}/messages/${editingId}`, { text: text.trim() });
+        await api.patch(`/messages/${editingId}`, { text: text.trim() });
         setEditingId(null);
       } else {
-        await axios.post(`${API}/messages`, {
-          senderId: currentUserId,
-          receiverId: partnerId,
-          text: text.trim(),
-        });
+        await api.post("/messages", { receiverId: partnerId, text: text.trim() });
       }
       setText("");
       setShowEmoji(false);
@@ -108,7 +102,7 @@ const ChatWidget: React.FC<ChatWidgetProps> = ({ currentUserId, partnerId, partn
   const handleDelete = async (id: number) => {
     if (!confirm(t("chat.confirmDelete"))) return;
     try {
-      await axios.delete(`${API}/messages/${id}`);
+      await api.delete(`/messages/${id}`);
       await fetchMessages();
     } catch (e) { console.error(e); }
   };
@@ -153,8 +147,7 @@ const ChatWidget: React.FC<ChatWidgetProps> = ({ currentUserId, partnerId, partn
         reader.onloadend = async () => {
           const base64 = reader.result as string;
           try {
-            await axios.post(`${API}/messages`, {
-              senderId: currentUserId,
+            await api.post("/messages", {
               receiverId: partnerId,
               text: `🎤 ${t("chat.voiceMessage")}`,
               audioUrl: base64,
@@ -225,10 +218,10 @@ const ChatWidget: React.FC<ChatWidgetProps> = ({ currentUserId, partnerId, partn
   const formatTime = (ts: string) => new Date(ts).toLocaleTimeString("ru", { hour: "2-digit", minute: "2-digit" });
   const formatDuration = (s: number) => `${Math.floor(s / 60)}:${(s % 60).toString().padStart(2, "0")}`;
 
-    const handleClear = async () => {
+  const handleClear = async () => {
     if (!confirm(t("chat.clearHistory") + "?")) return;
     try {
-      await axios.delete(`${API}/messages/clear?userId1=${currentUserId}&userId2=${partnerId}`);
+      await api.delete("/messages", { params: { partnerId } });
       await fetchMessages();
     } catch (e) { console.error(e); }
   };

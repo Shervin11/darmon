@@ -3,8 +3,13 @@ import "./globals.css";
 import LayoutContent from "@/components/LayoutContent/LayoutContent";
 
 export const metadata: Metadata = {
-  title: "DARMON — Платформаи тиббии онлайн",
+  title: { default: "DARMON — Платформаи тиббии онлайн", template: "%s — DARMON" },
   description: "Ҷустуҷӯ ва қайд ба қабули духтурони касбӣ дар Тоҷикистон",
+  openGraph: {
+    siteName: "DARMON",
+    type: "website",
+    locale: "tg_TJ",
+  },
 };
 
 export default function RootLayout({

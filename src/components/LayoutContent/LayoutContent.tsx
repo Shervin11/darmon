@@ -8,14 +8,23 @@ import { Toaster } from "react-hot-toast";
 import AuthGuard from "@/components/auth/page";
 import AiChat from "@/components/AiChat/AiChat";
 import { useThemeStore } from "@/lib/theme";
-import { useLanguageStore } from "@/lib/i18n";
+import { useLanguageStore, langNames, type Lang } from "@/lib/i18n";
 
 export default function LayoutContent({ children }: { children: React.ReactNode }) {
     const pathname = usePathname();
     const theme = useThemeStore((s) => s.theme);
     const lang = useLanguageStore((s) => s.lang);
 
-    const hideLayout = pathname === "/auth/login" || pathname === "/auth";
+    // Restore saved preferences on the client
+    useEffect(() => {
+        const savedTheme = localStorage.getItem("darmon_theme");
+        const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
+        useThemeStore.setState({ theme: savedTheme === "dark" || (!savedTheme && prefersDark) ? "dark" : "light" });
+        const savedLang = localStorage.getItem("darmon_lang");
+        if (savedLang && savedLang in langNames) useLanguageStore.setState({ lang: savedLang as Lang });
+    }, []);
+
+    const hideLayout = pathname === "/auth" || pathname.startsWith("/auth/");
 
     // Apply theme class on mount and on change
     useEffect(() => {
@@ -38,11 +47,16 @@ export default function LayoutContent({ children }: { children: React.ReactNode 
 
     return (
         <>
-            <Header />
+            {/* Site chrome is left out of printouts (e.g. the medical card) */}
+            <div className="print:hidden">
+                <Header />
+            </div>
             <AuthGuard>{children}</AuthGuard>
             <Toaster position="top-center" reverseOrder={false} />
-            <Footer />
-            <AiChat />
+            <div className="print:hidden">
+                <Footer />
+                <AiChat />
+            </div>
         </>
     );
 }

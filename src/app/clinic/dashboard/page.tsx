@@ -1,50 +1,88 @@
 "use client";
 import React, { useEffect, useState } from "react";
 import useStore from "@/store/store";
-import axios from "axios";
-import { Stethoscope, Plus, Users, X, Mail, Lock, Phone, UserPlus, Building2, Award, Edit3, Trash2, Wallet, Check } from "lucide-react";
+import { api, apiError } from "@/lib/api";
+import { Stethoscope, Plus, X, Mail, Lock, Phone, UserPlus, Building2, Edit3, Wallet, Check, BadgeCheck, Clock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import toast from "react-hot-toast";
 import { useTranslation } from "@/lib/i18n";
+import { ECG_WIDE, delay } from "@/lib/ui";
+import ReportPanel from "@/components/clinic/ReportPanel";
+import StaffPanel from "@/components/clinic/StaffPanel";
 
-const API = process.env.NEXT_PUBLIC_BASE_URL;
+const SLOT_OPTIONS = [15, 20, 30, 40, 45, 60, 90];
+
+const emptyForm = {
+  fullName: "",
+  email: "",
+  password: "",
+  phone: "",
+  specialty: "",
+  bio: "",
+  priceCurrent: "",
+  priceCurrency: "см",
+  slotMinutes: "60",
+};
+
+/* Число плавно набирается, когда приходят данные */
+const CountUp = ({ value }: { value: number }) => {
+  const [shown, setShown] = useState(0);
+
+  useEffect(() => {
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      setShown(value);
+      return;
+    }
+    let raf = 0;
+    const start = performance.now();
+    const tick = (now: number) => {
+      const p = Math.min((now - start) / 900, 1);
+      setShown(Math.round(value * (1 - Math.pow(1 - p, 3))));
+      if (p < 1) raf = requestAnimationFrame(tick);
+    };
+    raf = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(raf);
+  }, [value]);
+
+  return <>{shown}</>;
+};
+
+const labelCls = "text-sm font-medium text-md-on-surface-variant flex items-center gap-1.5";
+const fieldCls =
+  "w-full border border-md-outline-variant/30 text-md-on-surface px-4 rounded-xl bg-md-surface-container-lowest h-11 outline-none transition focus:border-md-primary/50 focus:ring-2 ring-md-primary/20";
 
 const ClinicDashboard = () => {
-  const { loginMe, userById, getSubcategories, subcategories } = useStore((s) => s);
+  const { userById, getSubcategories, subcategories } = useStore((s) => s);
   const [doctors, setDoctors] = useState<any[]>([]);
   const [showForm, setShowForm] = useState(false);
   const [loading, setLoading] = useState(false);
   const [editingDoctor, setEditingDoctor] = useState<any | null>(null);
   const { t } = useTranslation();
 
-  const [form, setForm] = useState({
-    fullName: "",
-    email: "",
-    password: "",
-    phone: "",
-    specialty: "",
-    bio: "",
-    priceCurrent: "",
-    priceCurrency: "см",
-  });
+  const [form, setForm] = useState(emptyForm);
 
   useEffect(() => {
-    loginMe();
     getSubcategories();
   }, []);
 
   useEffect(() => {
     if (userById?.id) fetchDoctors();
-  }, [userById]);
+  }, [userById?.id]);
 
   const fetchDoctors = async () => {
     try {
-      const { data } = await axios.get(API + "/clinic/doctors?clinicId=" + userById?.id);
+      const { data } = await api.get("/clinic/doctors");
       setDoctors(data);
     } catch (e) {
       console.error(e);
     }
+  };
+
+  const closeForm = () => {
+    setShowForm(false);
+    setEditingDoctor(null);
+    setForm(emptyForm);
   };
 
   const handleCreate = async (e: React.FormEvent) => {
@@ -55,42 +93,29 @@ const ClinicDashboard = () => {
     }
     setLoading(true);
 
+    const { priceCurrent, priceCurrency, slotMinutes, ...fields } = form;
     const payload = {
-      ...form,
+      ...fields,
+      slotMinutes: Number(slotMinutes),
       price: {
-        current: Number(form.priceCurrent) || 0,
+        current: Number(priceCurrent) || 0,
         old: null,
-        currency: form.priceCurrency,
+        currency: priceCurrency,
       },
     };
 
     try {
       if (editingDoctor) {
-        await axios.patch(`${API}/users/${editingDoctor.id}`, payload, {
-          headers: { Authorization: `Bearer ${localStorage.getItem("accessToken")}` },
-        });
+        await api.patch(`/users/${editingDoctor.id}`, payload);
         toast.success(t("profile.editSuccess") || "Маълумот иваз шуд!");
       } else {
-        await axios.post(API + "/clinic/create-doctor", payload, {
-          headers: { Authorization: `Bearer ${localStorage.getItem("accessToken")}` },
-        });
+        await api.post("/clinic/create-doctor", payload);
         toast.success(t("auth.success.welcome") || "Духтур илова шуд!");
       }
-      setShowForm(false);
-      setEditingDoctor(null);
-      setForm({
-        fullName: "",
-        email: "",
-        password: "",
-        phone: "",
-        specialty: "",
-        bio: "",
-        priceCurrent: "",
-        priceCurrency: "см",
-      });
+      closeForm();
       fetchDoctors();
-    } catch (err: any) {
-      toast.error(err?.response?.data?.message || t("common.error"));
+    } catch (err) {
+      toast.error(apiError(err, t("common.error")));
     } finally {
       setLoading(false);
     }
@@ -107,38 +132,43 @@ const ClinicDashboard = () => {
       bio: doctor.bio || "",
       priceCurrent: doctor.price?.current?.toString() || "",
       priceCurrency: doctor.price?.currency || "см",
+      slotMinutes: String(doctor.slotMinutes || 60),
     });
     setShowForm(true);
     window.scrollTo({ top: 300, behavior: "smooth" });
   };
 
   return (
-    <div className="pt-20 pb-16 min-h-screen">
+    <div className="pt-20 pb-20 min-h-screen">
+
       {/* Hero */}
-      <section className="max-w-7xl mx-auto px-6 mb-10 mt-4">
-        <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-teal-600 to-emerald-600 text-white p-8 md:p-12">
-          <div className="absolute inset-0 opacity-20">
-            <div className="absolute -right-20 -top-20 w-96 h-96 bg-white rounded-full blur-[120px]"></div>
-          </div>
-          <div className="relative z-10 flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
-            <div className="space-y-3">
-              <div className="flex items-center gap-3">
-                <span className="bg-white/15 backdrop-blur-md p-2.5 rounded-xl border border-white/20">
-                  <Building2 className="w-5 h-5" />
-                </span>
-                <span className="text-emerald-200 font-semibold tracking-widest text-xs uppercase">{t("clinic.title")}</span>
-              </div>
-              <h1 className="font-headline font-black text-3xl md:text-4xl">
+      <section className="max-w-7xl mx-auto px-6 mt-4 mb-10">
+        <div className="relative overflow-hidden rounded-[2rem] bg-md-primary text-white px-8 py-12 md:px-14 md:py-16">
+          <svg aria-hidden="true" viewBox="0 0 1200 120" preserveAspectRatio="none" className="absolute inset-x-0 bottom-6 h-28 w-full text-white/25">
+            <path d={ECG_WIDE} pathLength="1" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" vectorEffect="non-scaling-stroke" className="fx-draw" />
+          </svg>
+
+          <div className="relative flex flex-col md:flex-row md:items-end justify-between gap-10">
+            <div className="space-y-4 max-w-2xl">
+              <p className="fx-rise inline-flex items-center gap-2 rounded-full bg-white/15 px-4 py-1.5 text-sm font-semibold" style={delay("0.05s")}>
+                <Building2 className="w-4 h-4" />
+                {t("clinic.title")}
+              </p>
+              <h1 className="fx-rise font-headline font-black tracking-tight leading-[1.05] text-4xl md:text-6xl" style={delay("0.2s")}>
                 {(userById as any)?.clinicName || userById?.fullName}
               </h1>
-              <p className="text-emerald-200/80 max-w-lg">
+              <p className="fx-rise text-white/85 text-lg leading-relaxed" style={delay("0.4s")}>
                 {t("hero.desc")}
               </p>
             </div>
-            <div className="flex gap-4">
-              <div className="bg-white/10 backdrop-blur-md border border-white/20 rounded-xl px-5 py-3 text-center">
-                <div className="font-headline font-black text-2xl">{doctors.length}</div>
-                <div className="text-emerald-200 text-xs">{t("nav.doctors")}</div>
+
+            <div className="fx-rise shrink-0 flex items-center gap-4" style={delay("0.6s")}>
+              <span className="fx-beat h-3 w-3 rounded-full bg-white" />
+              <div>
+                <div className="font-headline font-black text-6xl leading-none tabular-nums">
+                  <CountUp value={doctors.length} />
+                </div>
+                <div className="mt-1 text-white/85">{t("nav.doctors")}</div>
               </div>
             </div>
           </div>
@@ -147,64 +177,51 @@ const ClinicDashboard = () => {
 
       {/* Doctors */}
       <section className="max-w-7xl mx-auto px-6">
-        <div className="flex items-center justify-between mb-6">
-          <h2 className="font-headline font-bold text-xl text-md-on-surface flex items-center gap-2">
-            <Stethoscope className="w-5 h-5 text-md-primary" /> {t("clinic.doctors")}
+        <div className="flex flex-wrap items-center justify-between gap-4 mb-8">
+          <h2 className="font-headline font-bold text-3xl md:text-4xl tracking-tight text-md-on-surface">
+            {t("clinic.doctors")}
           </h2>
           <Button
             onClick={() => {
               setShowForm(!showForm);
               if (editingDoctor) {
                 setEditingDoctor(null);
-                setForm({
-                  fullName: "",
-                  email: "",
-                  password: "",
-                  phone: "",
-                  specialty: "",
-                  bio: "",
-                  priceCurrent: "",
-                  priceCurrency: "см",
-                });
+                setForm(emptyForm);
               }
             }}
-            className="bg-md-primary hover:bg-md-primary/90 text-white rounded-xl gap-2 cursor-pointer"
+            aria-expanded={showForm}
+            className="bg-md-primary hover:bg-md-primary/90 text-white rounded-full h-12 px-6 gap-2 cursor-pointer shadow-lg shadow-md-primary/25"
           >
-            <Plus className="w-4 h-4" /> {t("clinic.addDoctor")}
+            <Plus className={`w-4 h-4 transition-transform duration-300 ${showForm ? "rotate-45" : ""}`} />
+            {t("clinic.addDoctor")}
           </Button>
         </div>
 
         {/* Create/Edit form */}
         {showForm && (
-          <form onSubmit={handleCreate} className="premium-card rounded-2xl p-6 mb-6 space-y-4 animate-fade-in-scale border-2 border-md-primary/20">
+          <form
+            onSubmit={handleCreate}
+            className={`fx-open rounded-[2rem] bg-md-surface-container-low p-6 md:p-10 mb-10 space-y-6 border-2 ${
+              editingDoctor ? "border-md-primary/40" : "border-transparent"
+            }`}
+          >
             <div className="flex items-center justify-between">
-              <h3 className="font-headline font-bold text-md-on-surface">
+              <h3 className="font-headline font-bold text-xl text-md-on-surface">
                 {editingDoctor ? t("clinic.editDoctor") : t("clinic.addDoctor")}
               </h3>
               <button
                 type="button"
-                onClick={() => {
-                  setShowForm(false);
-                  setEditingDoctor(null);
-                  setForm({
-                    fullName: "",
-                    email: "",
-                    password: "",
-                    phone: "",
-                    specialty: "",
-                    bio: "",
-                    priceCurrent: "",
-                    priceCurrency: "см",
-                  });
-                }}
-                className="text-md-on-surface-variant hover:text-md-on-surface cursor-pointer"
+                onClick={closeForm}
+                aria-label="Закрыть"
+                className="h-10 w-10 rounded-full flex items-center justify-center text-md-on-surface-variant hover:bg-md-surface-container hover:text-md-on-surface transition-colors cursor-pointer"
               >
                 <X className="w-5 h-5" />
               </button>
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div className="space-y-1.5">
-                <label className="text-xs font-bold text-md-on-surface-variant uppercase tracking-wider">{t("auth.fullName")} *</label>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+              <div className="space-y-2">
+                <label className={labelCls}>{t("auth.fullName")} *</label>
                 <Input
                   value={form.fullName}
                   onChange={(e) => setForm({ ...form, fullName: e.target.value })}
@@ -213,12 +230,12 @@ const ClinicDashboard = () => {
                   required
                 />
               </div>
-              <div className="space-y-1.5">
-                <label className="text-xs font-bold text-md-on-surface-variant uppercase tracking-wider">{t("auth.specialty")} *</label>
+              <div className="space-y-2">
+                <label className={labelCls}>{t("auth.specialty")} *</label>
                 <select
                   value={form.specialty}
                   onChange={(e) => setForm({ ...form, specialty: e.target.value })}
-                  className="w-full border border-md-outline-variant/30 text-md-on-surface px-4 py-2.5 rounded-xl bg-md-surface-container-low appearance-none h-11"
+                  className={fieldCls}
                   required
                 >
                   <option value="">{t("auth.selectSpecialty")}</option>
@@ -227,10 +244,8 @@ const ClinicDashboard = () => {
                   ))}
                 </select>
               </div>
-              <div className="space-y-1.5">
-                <label className="text-xs font-bold text-md-on-surface-variant uppercase tracking-wider flex items-center gap-1">
-                  <Mail className="w-3.5 h-3.5" /> {t("auth.email")} *
-                </label>
+              <div className="space-y-2">
+                <label className={labelCls}><Mail className="w-3.5 h-3.5" /> {t("auth.email")} *</label>
                 <Input
                   type="email"
                   value={form.email}
@@ -241,10 +256,8 @@ const ClinicDashboard = () => {
                 />
               </div>
               {!editingDoctor && (
-                <div className="space-y-1.5">
-                  <label className="text-xs font-bold text-md-on-surface-variant uppercase tracking-wider flex items-center gap-1">
-                    <Lock className="w-3.5 h-3.5" /> {t("auth.password")} *
-                  </label>
+                <div className="space-y-2">
+                  <label className={labelCls}><Lock className="w-3.5 h-3.5" /> {t("auth.password")} *</label>
                   <Input
                     type="password"
                     value={form.password}
@@ -255,10 +268,8 @@ const ClinicDashboard = () => {
                   />
                 </div>
               )}
-              <div className="space-y-1.5">
-                <label className="text-xs font-bold text-md-on-surface-variant uppercase tracking-wider flex items-center gap-1">
-                  <Phone className="w-3.5 h-3.5" /> {t("profile.phone")}
-                </label>
+              <div className="space-y-2">
+                <label className={labelCls}><Phone className="w-3.5 h-3.5" /> {t("profile.phone")}</label>
                 <Input
                   value={form.phone}
                   onChange={(e) => setForm({ ...form, phone: e.target.value })}
@@ -266,10 +277,8 @@ const ClinicDashboard = () => {
                   className="rounded-xl h-11"
                 />
               </div>
-              <div className="space-y-1.5">
-                <label className="text-xs font-bold text-md-on-surface-variant uppercase tracking-wider flex items-center gap-1">
-                  <Wallet className="w-3.5 h-3.5" /> {t("clinic.price")}
-                </label>
+              <div className="space-y-2">
+                <label className={labelCls}><Wallet className="w-3.5 h-3.5" /> {t("clinic.price")}</label>
                 <div className="flex gap-2">
                   <Input
                     type="number"
@@ -281,27 +290,40 @@ const ClinicDashboard = () => {
                   <select
                     value={form.priceCurrency}
                     onChange={(e) => setForm({ ...form, priceCurrency: e.target.value })}
-                    className="w-24 border border-md-outline-variant/30 text-md-on-surface px-4 py-2.5 rounded-xl bg-md-surface-container-low h-11"
+                    className={`${fieldCls} w-24`}
                   >
                     <option value="см">см</option>
                     <option value="$">$</option>
                   </select>
                 </div>
               </div>
+              <div className="space-y-2">
+                <label htmlFor="slot-minutes" className={labelCls}><Clock className="w-3.5 h-3.5" /> {t("schedule.slotLength")}</label>
+                <select
+                  id="slot-minutes"
+                  value={form.slotMinutes}
+                  onChange={(e) => setForm({ ...form, slotMinutes: e.target.value })}
+                  className={fieldCls}
+                >
+                  {SLOT_OPTIONS.map((m) => <option key={m} value={m}>{m} {t("schedule.minutes")}</option>)}
+                </select>
+              </div>
             </div>
-            <div className="space-y-1.5 pt-2">
-              <label className="text-xs font-bold text-md-on-surface-variant uppercase tracking-wider">{t("profile.aboutMe")}</label>
+
+            <div className="space-y-2">
+              <label className={labelCls}>{t("profile.aboutMe")}</label>
               <textarea
                 value={form.bio}
                 onChange={(e) => setForm({ ...form, bio: e.target.value })}
                 placeholder={t("profile.aboutPlaceholder")}
-                className="w-full border border-md-outline-variant/30 text-md-on-surface px-4 py-3 rounded-xl bg-md-surface-container-low min-h-[100px] outline-none focus:ring-2 ring-md-primary/20"
+                className="w-full border border-md-outline-variant/30 text-md-on-surface px-4 py-3 rounded-xl bg-md-surface-container-lowest min-h-[110px] outline-none transition focus:border-md-primary/50 focus:ring-2 ring-md-primary/20"
               />
             </div>
+
             <Button
               type="submit"
               disabled={loading}
-              className="bg-md-primary hover:bg-md-primary/90 text-white rounded-xl gap-2 cursor-pointer h-12 w-full md:w-auto px-10"
+              className="bg-md-primary hover:bg-md-primary/90 text-white rounded-full gap-2 cursor-pointer h-12 w-full md:w-auto px-10"
             >
               {loading ? (
                 <div className="animate-spin rounded-full h-4 w-4 border-t-2 border-white" />
@@ -317,63 +339,78 @@ const ClinicDashboard = () => {
 
         {/* Doctor cards */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-          {doctors.map((d: any) => (
-            <div key={d.id} className="premium-card rounded-2xl overflow-hidden group hover:shadow-xl transition-all duration-300 border border-md-outline/5">
-              <div className="h-1.5 w-full bg-gradient-to-r from-teal-500 to-emerald-500" />
-              <div className="p-5 space-y-4">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    {d.image ? (
-                      <img src={d.image} alt={d.fullName} className="w-12 h-12 rounded-xl object-cover ring-2 ring-md-primary/10" />
-                    ) : (
-                      <div className="w-12 h-12 rounded-xl bg-md-primary/10 flex items-center justify-center">
-                        <Stethoscope className="w-6 h-6 text-md-primary" />
-                      </div>
-                    )}
-                    <div>
-                      <h3 className="font-headline font-bold text-md-on-surface leading-tight">{d.fullName}</h3>
-                      <p className="text-[11px] font-bold text-md-primary uppercase tracking-wider">{d.specialty}</p>
+          {doctors.map((d: any, i: number) => (
+            <article
+              key={d.id}
+              className="fx-rise group rounded-[2rem] bg-md-surface-container-lowest clinical-shadow p-6 flex flex-col gap-6 transition-transform duration-500 hover:-translate-y-1"
+              style={delay(`${Math.min(i, 8) * 0.07}s`)}
+            >
+              <div className="flex items-start justify-between gap-3">
+                <div className="flex items-center gap-4 min-w-0">
+                  {d.image ? (
+                    <img src={d.image} alt={d.fullName} className="w-14 h-14 shrink-0 rounded-full object-cover ring-4 ring-md-primary/10" />
+                  ) : (
+                    <div className="w-14 h-14 shrink-0 rounded-full bg-md-primary/10 text-md-primary flex items-center justify-center transition-colors duration-300 group-hover:bg-md-primary group-hover:text-white">
+                      <Stethoscope className="w-6 h-6" />
                     </div>
-                  </div>
-                  <button
-                    onClick={() => handleEdit(d)}
-                    className="p-2 rounded-lg bg-md-surface-container-high text-md-on-surface-variant hover:bg-md-primary hover:text-white transition-all cursor-pointer"
-                    title={t("doctor.edit")}
-                  >
-                    <Edit3 className="w-4 h-4" />
-                  </button>
-                </div>
-
-                <div className="grid grid-cols-2 gap-3 py-1">
-                  <div className="bg-md-surface-container-low rounded-xl p-2.5 text-center">
-                    <p className="text-[9px] font-bold text-md-on-surface-variant uppercase mb-0.5">{t("clinic.experience")}</p>
-                    <p className="text-sm font-bold text-md-on-surface">{d.experience || 0} {t("doctor.years")}</p>
-                  </div>
-                  <div className="bg-md-surface-container-low rounded-xl p-2.5 text-center">
-                    <p className="text-[9px] font-bold text-md-on-surface-variant uppercase mb-0.5">{t("clinic.price")}</p>
-                    <p className="text-sm font-bold text-md-primary">{d.price?.current || 0} {d.price?.currency || "см"}</p>
+                  )}
+                  <div className="min-w-0">
+                    <h3 className="font-headline font-bold text-lg text-md-on-surface leading-tight truncate">{d.fullName}</h3>
+                    <p className="text-sm font-medium text-md-primary truncate">{d.specialty}</p>
                   </div>
                 </div>
+                <button
+                  onClick={() => handleEdit(d)}
+                  aria-label={t("doctor.edit")}
+                  title={t("doctor.edit")}
+                  className="h-10 w-10 shrink-0 rounded-full bg-md-surface-container text-md-on-surface-variant flex items-center justify-center hover:bg-md-primary hover:text-white transition-colors cursor-pointer focus-visible:outline focus-visible:outline-2 focus-visible:outline-md-primary"
+                >
+                  <Edit3 className="w-4 h-4" />
+                </button>
+              </div>
 
-                <div className="flex items-center justify-between pt-1">
-                  <span className={`px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest ${d.diplomaVerified ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/20" : "bg-amber-100 text-amber-700 dark:bg-amber-900/20"}`}>
-                    {d.diplomaVerified ? "✓ " + t("doctor.verifiedDiploma") : "⏳ " + t("profile.diplomaPending")}
-                  </span>
-                  <p className="text-[10px] text-md-on-surface-variant font-medium">{d.email}</p>
+              <div className="grid grid-cols-2 gap-3">
+                <div className="rounded-2xl bg-md-surface-container-low px-4 py-3">
+                  <p className="text-xs text-md-on-surface-variant mb-0.5">{t("clinic.experience")}</p>
+                  <p className="font-bold text-md-on-surface">{d.experience || 0} {t("doctor.years")}</p>
+                </div>
+                <div className="rounded-2xl bg-md-surface-container-low px-4 py-3">
+                  <p className="text-xs text-md-on-surface-variant mb-0.5">{t("clinic.price")}</p>
+                  <p className="font-bold text-md-primary">{d.price?.current || 0} {d.price?.currency || "см"}</p>
                 </div>
               </div>
-            </div>
+
+              <div className="flex flex-wrap items-center justify-between gap-2 mt-auto">
+                <span
+                  className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold ${
+                    d.diplomaVerified
+                      ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300"
+                      : "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-300"
+                  }`}
+                >
+                  {d.diplomaVerified ? <BadgeCheck className="w-3.5 h-3.5" /> : <Clock className="w-3.5 h-3.5" />}
+                  {d.diplomaVerified ? t("doctor.verifiedDiploma") : t("profile.diplomaPending")}
+                </span>
+                <p className="text-xs text-md-on-surface-variant truncate max-w-full">{d.email}</p>
+              </div>
+            </article>
           ))}
+
           {doctors.length === 0 && (
-            <div className="col-span-full flex flex-col items-center py-20 bg-md-surface-container-lowest rounded-3xl border-2 border-dashed border-md-outline/10">
-              <div className="w-20 h-20 rounded-3xl bg-md-surface-container flex items-center justify-center mb-4">
-                <Stethoscope className="w-10 h-10 text-md-on-surface-variant opacity-20" />
-              </div>
-              <p className="text-md-on-surface-variant font-medium">{t("doctors.notFound")}</p>
+            <div className="col-span-full rounded-[2rem] border-2 border-dashed border-md-surface-variant/40 px-8 py-16 text-center">
+              <svg aria-hidden="true" viewBox="0 0 120 40" className="mx-auto mb-5 h-10 w-28 text-md-primary/40">
+                <path d="M0 20 H44 L52 20 L58 6 L67 34 L74 20 H120" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
+              <p className="text-md-on-surface-variant text-lg">{t("doctors.notFound")}</p>
             </div>
           )}
         </div>
       </section>
+
+      <div className="max-w-7xl mx-auto px-6 mt-12 space-y-8">
+        <ReportPanel />
+        <StaffPanel />
+      </div>
     </div>
   );
 };

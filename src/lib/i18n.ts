@@ -1,6 +1,7 @@
 "use client";
 
 import { create } from "zustand";
+import { clinicTranslations } from "./i18n-clinic";
 
 export type Lang = "tj" | "ru" | "en";
 
@@ -10,7 +11,8 @@ interface LangState {
 }
 
 export const useLanguageStore = create<LangState>((set) => ({
-  lang: (typeof window !== "undefined" ? (localStorage.getItem("darmon_lang") as Lang) : null) || "tj",
+  // Saved language is applied after mount (LayoutContent) so server and client render the same HTML
+  lang: "tj",
   setLang: (lang: Lang) => {
     if (typeof window !== "undefined") localStorage.setItem("darmon_lang", lang);
     set({ lang });
@@ -28,6 +30,9 @@ const translations: Record<Lang, Record<string, string>> = {
     "nav.menu": "МЕНЮ",
     "nav.login": "Воридшавӣ",
     "nav.ai": "ИИ Ёрдамчӣ",
+    "nav.chat": "Чат",
+    "nav.assistant": "AI-ёвар",
+    "nav.medicalCard": "Корти тиббӣ",
 
     // Profile menu
     "profile.cabinet": "Ҳуҷраи шахсӣ",
@@ -36,8 +41,12 @@ const translations: Record<Lang, Record<string, string>> = {
 
     // Hero
     "hero.badge": "Дармони шумо дар дасти мо",
-    "hero.title1": "Духтури шумо,",
-    "hero.title2": "муолиҷаи шумо",
+    "hero.title1": "Духтури шумо",
+    "hero.title2": "Муолиҷаи шумо",
+    'hero.title3': "Дар як платформа",
+    'hero.f1Desc': "Пайдо кардани мутахассис бо чанд клик",
+    'hero.f2Desc': "Рейтинг дар асоси таҷрибаи воқеӣ",
+    'hero.f3Desc': "Фармоиши осон ва бехатар",
     "hero.desc": "Мо технологияҳои навтаринро бо касбияти баланд муттаҳид кардем, то ба саломатии шумо ғамхории комил зоҳир намоем.",
     "hero.more": "Бештар фаҳмед",
     "hero.services": "Хизматрасонӣ",
@@ -136,6 +145,15 @@ const translations: Record<Lang, Record<string, string>> = {
     "profile.schedule": "Реҷаи корӣ",
     "profile.addSchedule": "Илова",
     "profile.save": "Маҳфуз доштан",
+    "telegram.title": "Огоҳиҳо дар Telegram",
+    "telegram.hint": "Хабар дар бораи тасдиқ ё рад шудани навбат ва ёдрас 24 соат ва 1 соат пеш аз қабул.",
+    "telegram.connect": "Пайваст кардани Telegram",
+    "telegram.waiting": "Дар Telegram «Start»-ро пахш кунед...",
+    "telegram.connected": "Telegram пайваст шуд!",
+    "telegram.connectedBadge": "Пайваст аст",
+    "telegram.disconnect": "Ҷудо кардан",
+    "telegram.disconnected": "Telegram ҷудо карда шуд",
+    "telegram.unavailable": "Огоҳиҳои Telegram ҳоло дастрас нестанд",
     "profile.editSuccess": "Маълумот бомуваффақият иваз шуд!",
     "profile.editError": "Хатогӣ ҳангоми ивазкунӣ",
 
@@ -192,6 +210,16 @@ const translations: Record<Lang, Record<string, string>> = {
     "doctor.star2": "2 ситора — Бад",
     "doctor.star1": "1 ситора — Хеле бад",
     "doctor.sessionDuration": "⏱️ Як қабул 1 соат давом мекунад",
+    "doctor.workDays": "Рӯзҳои қабул",
+    "doctor.noSlots": "Дар ин рӯз духтур қабул намекунад ё ҳамаи вақтҳо банданд. Рӯзи дигарро интихоб кунед.",
+    "doctor.slotBusy": "Банд",
+    "day.Душанбе": "Душанбе",
+    "day.Сешанбе": "Сешанбе",
+    "day.Чоршанбе": "Чоршанбе",
+    "day.Панҷшанбе": "Панҷшанбе",
+    "day.Ҷумъа": "Ҷумъа",
+    "day.Шанбе": "Шанбе",
+    "day.Якшанбе": "Якшанбе",
     "doctor.timeBooked": "Ин вақт аллақачон банд аст. Лутфан вақти дигарро интихоб кунед.",
 
     // Dashboard
@@ -295,6 +323,7 @@ const translations: Record<Lang, Record<string, string>> = {
     "ai.placeholder": "Саволатонро нависед...",
     "ai.thinking": "Фикр мекунам...",
     "ai.error": "Хатогӣ рӯй дод. Лутфан дубора кӯшиш кунед.",
+    "ai.limit": "Шумо аз ҳадди саволҳо гузаштед. Лутфан баъдтар кӯшиш кунед ё ворид шавед.",
     "ai.greeting": "Салом! Ман ёрдамчии тиббии DARMON ҳастам. Чӣ тавр ба шумо кӯмак карда метавонам?",
 
     // Theme
@@ -475,6 +504,9 @@ const translations: Record<Lang, Record<string, string>> = {
     "nav.menu": "МЕНЮ",
     "nav.login": "Войти",
     "nav.ai": "ИИ Помощник",
+    "nav.chat": "Чат",
+    "nav.assistant": "AI-помощник",
+    "nav.medicalCard": "Медкарта",
 
     // Profile menu
     "profile.cabinet": "Личный кабинет",
@@ -484,7 +516,11 @@ const translations: Record<Lang, Record<string, string>> = {
     // Hero
     "hero.badge": "Ваше здоровье в наших руках",
     "hero.title1": "Ваш врач,",
-    "hero.title2": "ваше лечение",
+    "hero.title2": "Ваше лечение",
+    'hero.title3': "На одной платформе",
+    'hero.f1Desc': "Найдите специалиста в несколько кликов",
+    'hero.f2Desc': "Рейтинг на основе реального опыта",
+    'hero.f3Desc': "Простая и безопасная запись",
     "hero.desc": "Мы объединили новейшие технологии с высоким профессионализмом, чтобы обеспечить полную заботу о вашем здоровье.",
     "hero.more": "Узнать больше",
     "hero.services": "Услуги",
@@ -581,6 +617,15 @@ const translations: Record<Lang, Record<string, string>> = {
     "profile.schedule": "Расписание работы",
     "profile.addSchedule": "Добавить",
     "profile.save": "Сохранить",
+    "telegram.title": "Уведомления в Telegram",
+    "telegram.hint": "Сообщим о подтверждении или отказе и напомним о приёме за 24 часа и за 1 час.",
+    "telegram.connect": "Подключить Telegram",
+    "telegram.waiting": "Нажмите «Start» в Telegram...",
+    "telegram.connected": "Telegram подключён!",
+    "telegram.connectedBadge": "Подключено",
+    "telegram.disconnect": "Отключить",
+    "telegram.disconnected": "Telegram отключён",
+    "telegram.unavailable": "Уведомления в Telegram сейчас недоступны",
     "profile.editSuccess": "Данные успешно обновлены!",
     "profile.editError": "Ошибка при обновлении",
 
@@ -637,6 +682,16 @@ const translations: Record<Lang, Record<string, string>> = {
     "doctor.star2": "2 звезды — Плохо",
     "doctor.star1": "1 звезда — Ужасно",
     "doctor.sessionDuration": "⏱️ Один сеанс длится 1 час",
+    "doctor.workDays": "Дни приёма",
+    "doctor.noSlots": "В этот день врач не принимает или всё время занято. Выберите другой день.",
+    "doctor.slotBusy": "Занято",
+    "day.Душанбе": "Понедельник",
+    "day.Сешанбе": "Вторник",
+    "day.Чоршанбе": "Среда",
+    "day.Панҷшанбе": "Четверг",
+    "day.Ҷумъа": "Пятница",
+    "day.Шанбе": "Суббота",
+    "day.Якшанбе": "Воскресенье",
     "doctor.timeBooked": "Это время уже забронировано. Пожалуйста, выберите другое время.",
 
     // Dashboard
@@ -740,6 +795,7 @@ const translations: Record<Lang, Record<string, string>> = {
     "ai.placeholder": "Напишите свой вопрос...",
     "ai.thinking": "Думаю...",
     "ai.error": "Произошла ошибка. Попробуйте снова.",
+    "ai.limit": "Лимит вопросов исчерпан. Попробуйте позже или войдите в аккаунт.",
     "ai.greeting": "Здравствуйте! Я медицинский помощник DARMON. Чем могу вам помочь?",
 
     // Theme
@@ -920,6 +976,9 @@ const translations: Record<Lang, Record<string, string>> = {
     "nav.menu": "MENU",
     "nav.login": "Sign in",
     "nav.ai": "AI Assistant",
+    "nav.chat": "Chat",
+    "nav.assistant": "AI assistant",
+    "nav.medicalCard": "Medical records",
 
     // Profile menu
     "profile.cabinet": "My Account",
@@ -930,6 +989,10 @@ const translations: Record<Lang, Record<string, string>> = {
     "hero.badge": "Your health is in our hands",
     "hero.title1": "Your doctor,",
     "hero.title2": "your treatment",
+    'hero.title3': "On one platform",
+    'hero.f1Desc': "Find a specialist in a few clicks",
+    'hero.f2Desc': "Ratings based on real experience",
+    'hero.f3Desc': "Simple and secure booking",
     "hero.desc": "We combined the latest technologies with high professionalism to provide complete care for your health.",
     "hero.more": "Learn more",
     "hero.services": "Services",
@@ -1026,6 +1089,15 @@ const translations: Record<Lang, Record<string, string>> = {
     "profile.schedule": "Work schedule",
     "profile.addSchedule": "Add",
     "profile.save": "Save",
+    "telegram.title": "Telegram notifications",
+    "telegram.hint": "Get notified when a booking is confirmed or declined, plus reminders 24 hours and 1 hour before the visit.",
+    "telegram.connect": "Connect Telegram",
+    "telegram.waiting": "Press “Start” in Telegram...",
+    "telegram.connected": "Telegram connected!",
+    "telegram.connectedBadge": "Connected",
+    "telegram.disconnect": "Disconnect",
+    "telegram.disconnected": "Telegram disconnected",
+    "telegram.unavailable": "Telegram notifications are unavailable right now",
     "profile.editSuccess": "Data successfully updated!",
     "profile.editError": "Error during update",
 
@@ -1082,6 +1154,16 @@ const translations: Record<Lang, Record<string, string>> = {
     "doctor.star2": "2 stars — Poor",
     "doctor.star1": "1 star — Terrible",
     "doctor.sessionDuration": "⏱️ One session lasts 1 hour",
+    "doctor.workDays": "Working days",
+    "doctor.noSlots": "The doctor does not see patients on this day or all times are taken. Please choose another day.",
+    "doctor.slotBusy": "Taken",
+    "day.Душанбе": "Monday",
+    "day.Сешанбе": "Tuesday",
+    "day.Чоршанбе": "Wednesday",
+    "day.Панҷшанбе": "Thursday",
+    "day.Ҷумъа": "Friday",
+    "day.Шанбе": "Saturday",
+    "day.Якшанбе": "Sunday",
     "doctor.timeBooked": "This time is already booked. Please choose another time.",
 
     // Dashboard
@@ -1185,6 +1267,7 @@ const translations: Record<Lang, Record<string, string>> = {
     "ai.placeholder": "Type your question...",
     "ai.thinking": "Thinking...",
     "ai.error": "An error occurred. Please try again.",
+    "ai.limit": "You have reached the question limit. Please try again later or sign in.",
     "ai.greeting": "Hello! I'm the DARMON medical assistant. How can I help you?",
 
     // Theme
@@ -1359,7 +1442,13 @@ const translations: Record<Lang, Record<string, string>> = {
 export function useTranslation() {
   const lang = useLanguageStore((s) => s.lang);
   const t = (key: string): string => {
-    return translations[lang]?.[key] || translations["tj"]?.[key] || key;
+    return (
+      translations[lang]?.[key] ||
+      clinicTranslations[lang]?.[key] ||
+      translations["tj"]?.[key] ||
+      clinicTranslations["tj"]?.[key] ||
+      key
+    );
   };
   return { t, lang };
 }

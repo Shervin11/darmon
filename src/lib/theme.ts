@@ -11,15 +11,10 @@ interface ThemeState {
 }
 
 export const useThemeStore = create<ThemeState>((set, get) => ({
-  theme: (typeof window !== "undefined"
-    ? (localStorage.getItem("darmon_theme") as Theme) ||
-      (window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light")
-    : "light"),
+  // Saved/system theme is applied after mount (LayoutContent) so server and client render the same HTML
+  theme: "light",
   setTheme: (theme: Theme) => {
-    if (typeof window !== "undefined") {
-      localStorage.setItem("darmon_theme", theme);
-      document.documentElement.classList.toggle("dark", theme === "dark");
-    }
+    localStorage.setItem("darmon_theme", theme);
     set({ theme });
   },
   toggleTheme: () => {

@@ -1,22 +1,19 @@
-import axios from "axios";
 import toast from "react-hot-toast";
 import { create } from "zustand";
-
-const API = process.env.NEXT_PUBLIC_BASE_URL;
+import { api, apiError, clearSession, getToken, saveSession } from "@/lib/api";
 
 // --- Interfaces ---
 
 export interface Category {
   id: number;
-  title?: string;
   name?: string;
   image?: string;
-  img?: string;
   subcategories?: string[];
 }
 
 export interface Comment {
   id: number;
+  userId?: number;
   user: {
     fullName: string;
     image: string;
@@ -24,6 +21,7 @@ export interface Comment {
   rating: number;
   comment: string;
   date: string;
+  edited?: boolean;
 }
 
 export interface WorkingSchedule {
@@ -41,44 +39,56 @@ export interface Price {
 export interface Doctor {
   id: number;
   fullName: string;
-  name?: string;
   role: string;
   specialty?: string;
   experience?: number;
   rating?: number;
   recommendation?: number;
   phone?: string;
-  patients?: number;
   price?: Price;
   city?: string;
   clinic?: string;
   image?: string;
-  photo?: string;
   bio?: string;
   workingSchedule?: WorkingSchedule[];
+  slotMinutes?: number;
+  timeOff?: TimeOff[];
   comments?: Comment[];
   diploma?: string;
   diplomaVerified?: boolean;
+  clinicId?: number | null;
+  clinicName?: string | null;
+}
+
+export interface TimeOff {
+  from: string;
+  to: string;
+  reason?: string;
 }
 
 export interface User {
-  id?: number | string;
+  id?: number;
   fullName?: string;
   email?: string;
   phone?: string;
   role?: string;
   city?: string;
   image?: string;
-  photo?: string;
-  password?: string;
   specialty?: string;
   experience?: number;
   clinic?: string;
   bio?: string;
   price?: Price;
   workingSchedule?: WorkingSchedule[];
+  slotMinutes?: number;
+  timeOff?: TimeOff[];
+  comments?: Comment[];
   diploma?: string;
   diplomaVerified?: boolean;
+  telegramLinked?: boolean;
+  clinicId?: number | null;
+  clinicName?: string | null;
+  lang?: string;
 }
 
 export interface FavoriteDoctor {
@@ -89,24 +99,31 @@ export interface FavoriteDoctor {
 }
 
 export interface WishlistData {
-  id?: number;
-  userId?: number | string;
   favorites: FavoriteDoctor[];
 }
+
+export type AppointmentStatus = "pending" | "approved" | "rejected" | "cancelled" | "completed" | "no_show";
 
 export interface Appointment {
   id?: number;
   doctorId: number | string;
-  clientId: number | string;
+  clientId: number | string | null;
   doctorName?: string;
   clientName?: string;
+  clientPhone?: string;
   specialty?: string;
   date: string;
   time: string;
+  durationMinutes?: number;
   symptoms?: string;
-  status: "pending" | "approved" | "rejected";
+  status: AppointmentStatus;
   rejectReason?: string;
+  source?: "online" | "phone" | "walkin";
+  price?: number;
+  paid?: boolean;
 }
+
+type Result = { success: boolean };
 
 export interface StoreState {
   category: Category[];
@@ -120,693 +137,286 @@ export interface StoreState {
   appointmentsLoading: boolean;
   subcategories: string[];
 
-  // Actions
-  registerUser: (newUser: User) => Promise<{ success: boolean; role?: string; status?: number }>;
-  loginUser: (user: Partial<User>) => Promise<{ success: boolean; role?: string; status?: number }>;
+  registerUser: (newUser: {
+    fullName: string;
+    email?: string;
+    phone?: string;
+    password: string;
+    consent: boolean;
+    lang?: string;
+  }) => Promise<{ success: boolean; role?: string }>;
+  loginUser: (user: { login: string; password: string }) => Promise<{ success: boolean; role?: string }>;
   loginMe: () => Promise<User | null>;
+  logout: () => void;
   getCategory: () => Promise<void>;
   getDoctor: () => Promise<void>;
   getDoctorById: (id: string | number) => Promise<void>;
-  edit: (user: User) => Promise<{ success: boolean }>;
-  addComment: (doctorId: string | number, newComment: Comment, currentComments?: Comment[]) => Promise<{ success: boolean; updatedComments?: Comment[] }>;
-  wishlistUser: (id: string | number) => Promise<void>;
-  toggleWishlist: (userId: string | number, doctor: any) => Promise<void>;
-  deleteWishlist: (userId: string | number, doctorId: string | number) => Promise<void>;
-  getAppointments: (clientId: string | number) => Promise<void>;
-  getDoctorAppointments: (doctorId: string | number, status?: string) => Promise<void>;
-  checkSlotAvailability: (doctorId: string | number, date: string, time: string) => Promise<boolean>;
-  createAppointment: (appointmentData: Partial<Appointment>) => Promise<{ success: boolean }>;
-  approveAppointment: (id: string | number) => Promise<{ success: boolean }>;
-  rejectAppointment: (id: string | number, rejectReason: string) => Promise<{ success: boolean }>;
-  updateComment: (doctorId: string | number, commentId: number, updatedText: string, updatedRating: number) => Promise<{ success: boolean }>;
-  deleteComment: (doctorId: string | number, commentId: number) => Promise<{ success: boolean }>;
+  edit: (user: User) => Promise<Result>;
   uploadImage: (file: File) => Promise<string | null>;
+  addComment: (doctorId: number, rating: number, comment: string) => Promise<Result>;
+  updateComment: (doctorId: number, commentId: number, comment: string, rating: number) => Promise<Result>;
+  deleteComment: (doctorId: number, commentId: number) => Promise<Result>;
+  wishlistUser: () => Promise<void>;
+  toggleWishlist: (doctorId: number | string) => Promise<void>;
+  deleteWishlist: (doctorId: number | string) => Promise<void>;
+  getAppointments: () => Promise<void>;
+  getDoctorAppointments: (status?: string) => Promise<void>;
+  createAppointment: (data: { doctorId: number; date: string; time: string; symptoms?: string }) => Promise<Result>;
+  approveAppointment: (id: number) => Promise<Result>;
+  rejectAppointment: (id: number, rejectReason: string) => Promise<Result>;
+  /** Status change, reschedule ({date, time}) or payment mark ({paid}). */
+  updateAppointment: (id: number, body: Partial<Appointment> & { reason?: string }, successMsg: string) => Promise<Result>;
   getSubcategories: () => Promise<void>;
-  uploadDiploma: (doctorId: string | number, file: File) => Promise<{ success: boolean }>;
-  verifyDiploma: (doctorId: string | number) => Promise<{ success: boolean; verified: boolean }>;
-  moderateComment: (text: string) => { isClean: boolean; reason?: string };
+  uploadDiploma: (file: File) => Promise<Result>;
 }
 
-// ── Profanity Filter (RU/TJ/EN) ──────────────────
-const PROFANITY_LIST = [
-  // Russian profanity
-  "блять", "бля", "блядь", "сука", "хуй", "пизда", "ебать", "ёб", "нахуй", "пиздец",
-  "мудак", "дебил", "идиот", "урод", "тварь", "гандон", "залупа", "шлюха",
-  "ублюдок", "пидор", "пидар", "даун", "дерьмо", "говно", "жопа", "срать",
-  "ебан", "хуев", "пиздат", "заебал", "отъебись", "ёбан", "хер", "херов",
-  // Tajik profanity
-  "кунӣ", "ҳаромзода", "ҳаромӣ", "фоҳиша", "лаънатӣ", "мурдор", "бадбахт",
-  "бешараф", "беномус", "бепадар", "бемодар", "гуҳ", "гоҳ", "харзода",
-  // English profanity
-  "fuck", "shit", "bitch", "asshole", "bastard", "dick", "pussy", "damn",
-  "crap", "cunt", "whore", "slut", "moron", "idiot", "stupid", "retard"
-];
-
-function containsProfanity(text: string): { isClean: boolean; reason?: string } {
-  const lowerText = text.toLowerCase().replace(/[\s.,!?;:*_\-—]+/g, " ");
-  for (const word of PROFANITY_LIST) {
-    if (lowerText.includes(word.toLowerCase())) {
-      return { isClean: false, reason: word };
-    }
-  }
-  return { isClean: true };
-}
-
-const useStore = create<StoreState>((set, get) => ({
-  category: [],
-  doctor: [],
-  doctorById: {},
-  userById: {},
-  wishlist: { favorites: [] },
-  isLoading: true,
-  appointments: [],
-  doctorAppointments: [],
-  appointmentsLoading: false,
-  subcategories: [],
-
-  // ── Auth ──────────────────────────────────────────
-  async registerUser(newUser) {
+const useStore = create<StoreState>((set, get) => {
+  /** Reviews endpoints return the updated doctor (with recalculated rating). */
+  const reviewRequest = async (request: Promise<{ data: Doctor }>, successMsg: string, errorMsg: string) => {
     try {
-      const { data } = await axios.post(API + "/register", newUser);
-      localStorage.setItem("accessToken", data.token);
-      document.cookie = `accessToken=${data.token}; path=/; max-age=${7 * 24 * 3600}; SameSite=Lax`;
-      window.dispatchEvent(new Event("storage"));
-      toast.success("Хуш омадед!");
-      return { success: true, role: data.user?.role || newUser.role };
-    } catch (error: any) {
-      console.error(error);
-      const message = error?.response?.data?.message || "Хатогӣ ҳангоми бақайдгирӣ";
-      toast.error(typeof message === "string" ? message : "Хатогӣ");
-      return { success: false, status: error?.response?.status || 500 };
-    }
-  },
-
-  async loginUser(user) {
-    try {
-      const { data } = await axios.post(API + "/auth", user);
-      localStorage.setItem("accessToken", data.token);
-      document.cookie = `accessToken=${data.token}; path=/; max-age=${7 * 24 * 3600}; SameSite=Lax`;
-      // Fetch user profile right after login to get role
-      const meRes = await axios.get(API + "/auth_me", {
-        headers: { Authorization: `Bearer ${data.token}` },
-      });
-      set({ userById: meRes.data });
-      toast.success("Хуш омадед!");
-      return { success: true, role: data.role || meRes.data.role };
-    } catch (error: any) {
-      console.error(error);
-      return { success: false, status: error?.response?.status || 500 };
-    }
-  },
-
-  async loginMe() {
-    try {
-      const { data } = await axios.get(API + "/auth_me", {
-        headers: { Authorization: `Bearer ${localStorage.getItem("accessToken")}` },
-      });
-      set({ userById: data });
-      return data;
-    } catch (error) {
-      console.error(error);
-      return null;
-    }
-  },
-
-  // ── Categories & Doctors ──────────────────────────
-  async getCategory() {
-    try {
-      set({ isLoading: true });
-      const { data } = await axios.get(API + "/category");
-      set({ category: data, isLoading: false });
-    } catch (error) {
-      console.error(error);
-      set({ isLoading: false });
-    }
-  },
-
-  async getDoctor() {
-    try {
-      set({ isLoading: true });
-      const { data } = await axios.get(API + "/users");
-      const filterData = data.filter((e: any) => e.role == "doctor");
-      set({ doctor: filterData, isLoading: false });
-    } catch (error) {
-      console.error(error);
-      set({ isLoading: false });
-    }
-  },
-
-  async getDoctorById(id) {
-    try {
-      const { data } = await axios.get(API + "/users/" + id);
+      const { data } = await request;
       set({ doctorById: data });
-    } catch (error) {
-      console.error(error);
-    }
-  },
-
-  // ── Profile Edit ──────────────────────────────────
-  async edit(user: User) {
-    try {
-      const oldUser = get().userById;
-
-      // 1. НОРМАЛИЗАЦИЯ ДАННЫХ
-      const dataToUpdate: any = { ...user };
-
-      // ИСПОЛЬЗУЕМ 'in', чтобы проверить наличие поля, даже если оно равно "" (пустая строка)
-      if ('photo' in dataToUpdate) {
-        dataToUpdate.image = dataToUpdate.photo; // Теперь если photo "", то и image станет ""
-        delete dataToUpdate.photo;
-      }
-
-      // Отправляем правильный объект в БД
-      await axios.patch(API + "/users/" + user.id, dataToUpdate, {
-        headers: { Authorization: `Bearer ${localStorage.getItem("accessToken")}` },
-      });
-
-      // 2. CASCADE UPDATE (Обновление фото/имени в комментариях)
-      // Сравниваем старое и новое (используем "" как запасной вариант для сравнения)
-      const isNameChanged = oldUser.fullName !== dataToUpdate.fullName;
-      const isImageChanged = (oldUser.image || "") !== (dataToUpdate.image || "");
-
-      if (isNameChanged || isImageChanged) {
-        const { data: allUsers } = await axios.get(API + "/users");
-
-        for (const doc of allUsers) {
-          if (doc.role === "doctor" && doc.comments && doc.comments.length > 0) {
-            let hasChanges = false;
-            const updatedComments = doc.comments.map((c: Comment) => {
-              if (c.user.fullName === oldUser.fullName) {
-                hasChanges = true;
-                return {
-                  ...c,
-                  user: {
-                    ...c.user,
-                    fullName: dataToUpdate.fullName || c.user.fullName,
-                    // Если image в dataToUpdate существует (даже ""), берем его, иначе старое
-                    image: 'image' in dataToUpdate ? dataToUpdate.image : c.user.image,
-                  },
-                };
-              }
-              return c;
-            });
-
-            if (hasChanges) {
-              await axios.patch(API + "/users/" + doc.id, { comments: updatedComments });
-            }
-          }
-        }
-      }
-
-      // 3. ОБНОВЛЕНИЕ ЛОКАЛЬНОГО СТЕЙТА
-      // Объединяем старые данные с новыми, чтобы UI обновился мгновенно
-      set({ userById: { ...oldUser, ...dataToUpdate } });
-
-      toast.success("Маълумот бомуваффақият иваз шуд!");
+      toast.success(successMsg);
       return { success: true };
     } catch (error) {
-      console.error(error);
-      toast.error("Хатогӣ ҳангоми ивазкунӣ");
+      toast.error(apiError(error, errorMsg));
       return { success: false };
     }
-  },
-  // Внутри useStore (create<StoreState>):
+  };
 
-  async uploadImage(file: File) {
+  const setAppointmentStatus = async (id: number, body: object, successMsg: string) => {
     try {
-      const formData = new FormData();
-      formData.append("file", file);
-
-      const { data } = await axios.post(API + "/uploads", formData, {
-        headers: { "Content-Type": "multipart/form-data" },
-      });
-
-      return data.url;
+      await api.patch(`/appointments/${id}`, body);
+      toast.success(successMsg);
+      return { success: true };
     } catch (error) {
-      console.error("Ошибка загрузки файла:", error);
-      toast.error("Хатогӣ ҳангоми боргузории акс");
-      return null;
+      toast.error(apiError(error, "Хатогӣ"));
+      return { success: false };
     }
-  },
+  };
 
-  // ── AI Comment Moderation ──────────────────────────
-  moderateComment(text: string) {
-    return containsProfanity(text);
-  },
+  return {
+    category: [],
+    doctor: [],
+    doctorById: {},
+    userById: {},
+    wishlist: { favorites: [] },
+    isLoading: true,
+    appointments: [],
+    doctorAppointments: [],
+    appointmentsLoading: false,
+    subcategories: [],
 
-  // ── Comments ──────────────────────────────────────
-  async addComment(doctorId, newComment, currentComments) {
-    try {
-      // AI moderation: check for profanity
-      const moderation = containsProfanity(newComment.comment);
-      if (!moderation.isClean) {
-        toast.error("⚠️ Шарҳи шумо иборатҳои номақбул дорад ва блок карда шуд.");
+    // ── Auth ──────────────────────────────────────────
+    async registerUser(newUser) {
+      try {
+        const { data } = await api.post("/register", newUser);
+        saveSession(data.token);
+        set({ userById: data.user });
+        toast.success("Хуш омадед!");
+        return { success: true, role: data.user.role };
+      } catch (error) {
+        toast.error(apiError(error, "Хатогӣ ҳангоми бақайдгирӣ"));
         return { success: false };
       }
+    },
 
-      const updatedComments = currentComments ? [...currentComments, newComment] : [newComment];
-      
-      // Calculate new average rating & recommendation %
-      const totalRating = updatedComments.reduce((acc: number, c: Comment) => acc + c.rating, 0);
-      const newAverageRating = Number((totalRating / updatedComments.length).toFixed(1));
-      
-      const positiveReviews = updatedComments.filter((c: Comment) => c.rating >= 4).length;
-      const newRecommendation = Math.round((positiveReviews / updatedComments.length) * 100);
-
-      await axios.patch(API + "/users/" + doctorId, { 
-        comments: updatedComments,
-        rating: newAverageRating,
-        recommendation: newRecommendation
-      }, {
-        headers: { Authorization: `Bearer ${localStorage.getItem("accessToken")}` },
-      });
-
-      // Update local state if needed
-      const doctor = get().doctorById;
-      if (doctor && doctor.id === doctorId) {
-        set({ doctorById: { ...doctor, comments: updatedComments, rating: newAverageRating, recommendation: newRecommendation } });
-      }
-
-      toast.success("Шарҳи шумо илова шуд!");
-      return { success: true, updatedComments };
-    } catch (error) {
-      console.error(error);
-      toast.error("Хатогӣ ҳангоми иловаи шарҳ");
-      return { success: false };
-    }
-  },
-
-  async updateComment(doctorId, commentId, updatedText, updatedRating) {
-    try {
-      const doctor = get().doctorById;
-      if (!doctor || !doctor.comments) return { success: false };
-
-      const updatedComments = doctor.comments.map((c: Comment) =>
-        c.id === commentId
-          ? {
-            ...c,
-            comment: updatedText,
-            rating: updatedRating,
-            date: new Date().toLocaleDateString("ru-RU") + " (тағйир ёфт)"
-          }
-          : c
-      );
-
-      // Calculate new average rating & recommendation %
-      const totalRating = updatedComments.reduce((acc: number, c: Comment) => acc + c.rating, 0);
-      const newAverageRating = Number((totalRating / updatedComments.length).toFixed(1));
-
-      const positiveReviews = updatedComments.filter((c: Comment) => c.rating >= 4).length;
-      const newRecommendation = Math.round((positiveReviews / updatedComments.length) * 100);
-
-      await axios.patch(`${API}/users/${doctorId}`, { 
-        comments: updatedComments,
-        rating: newAverageRating,
-        recommendation: newRecommendation
-      }, {
-        headers: { Authorization: `Bearer ${localStorage.getItem("accessToken")}` },
-      });
-
-      set({ doctorById: { ...doctor, comments: updatedComments, rating: newAverageRating, recommendation: newRecommendation } });
-      toast.success("Шарҳ иваз карда шуд!");
-      return { success: true };
-    } catch (error) {
-      console.error(error);
-      toast.error("Хатогӣ ҳангоми ивази шарҳ");
-      return { success: false };
-    }
-  },
-
-  async deleteComment(doctorId, commentId) {
-    try {
-      const doctor = get().doctorById;
-      if (!doctor || !doctor.comments) return { success: false };
-
-      const updatedComments = doctor.comments.filter((c: Comment) => c.id !== commentId);
-
-      // Calculate new average rating & recommendation %
-      const totalRating = updatedComments.reduce((acc: number, c: Comment) => acc + c.rating, 0);
-      const newAverageRating = updatedComments.length > 0 
-        ? Number((totalRating / updatedComments.length).toFixed(1)) 
-        : 0;
-
-      const positiveReviews = updatedComments.filter((c: Comment) => c.rating >= 4).length;
-      const newRecommendation = updatedComments.length > 0
-        ? Math.round((positiveReviews / updatedComments.length) * 100)
-        : 0;
-
-      await axios.patch(`${API}/users/${doctorId}`, { 
-        comments: updatedComments,
-        rating: newAverageRating,
-        recommendation: newRecommendation
-      }, {
-        headers: { Authorization: `Bearer ${localStorage.getItem("accessToken")}` },
-      });
-
-      set({ doctorById: { ...doctor, comments: updatedComments, rating: newAverageRating, recommendation: newRecommendation } });
-      toast.success("Шарҳ нест карда шуд");
-      return { success: true };
-    } catch (error) {
-      console.error(error);
-      toast.error("Хатогӣ ҳангоми нест кардан");
-      return { success: false };
-    }
-  },
-
-  // ── Wishlist (ОПТИМИЗИРОВАНО) ──────────────────────
-  async wishlistUser(id) {
-    try {
-      // Запрашиваем только список нужного юзера!
-      const { data } = await axios.get(`${API}/wishlist?userId=${id}`);
-      set({ wishlist: data[0] || { favorites: [] } });
-    } catch (error) {
-      console.error(error);
-    }
-  },
-
-  async toggleWishlist(userId, doctor) {
-    try {
-      // Запрашиваем только список нужного юзера!
-      const { data: wishlists } = await axios.get(`${API}/wishlist?userId=${userId}`);
-      const userList = wishlists[0];
-
-      const newDoctor: FavoriteDoctor = {
-        doctorId: doctor.id || doctor.doctorId,
-        name: doctor.fullName || doctor.name || "",
-        specialty: doctor.specialty,
-        photo: doctor.image || doctor.photo,
-      };
-
-      if (!userList) {
-        const { data: created } = await axios.post(`${API}/wishlist`, {
-          userId,
-          favorites: [newDoctor],
-        });
-        set({ wishlist: created });
-        toast.success("Ба интихобшудаҳо илова шуд!");
-        return;
-      }
-
-      const isInFavorites = userList.favorites.some((fav: FavoriteDoctor) => fav.doctorId == newDoctor.doctorId);
-      const updatedFavorites = isInFavorites
-        ? userList.favorites.filter((fav: FavoriteDoctor) => fav.doctorId != newDoctor.doctorId)
-        : [...userList.favorites, newDoctor];
-
-      await axios.patch(`${API}/wishlist/${userList.id}`, { favorites: updatedFavorites });
-      set((state) => ({
-        wishlist: { ...state.wishlist, favorites: updatedFavorites },
-      }));
-      toast.success(isInFavorites ? "Аз интихобшудаҳо гирифта шуд!" : "Ба интихобшудаҳо илова шуд!");
-    } catch (error) {
-      console.error(error);
-    }
-  },
-
-  async deleteWishlist(userId, doctorId) {
-    try {
-      // Запрашиваем только список нужного юзера!
-      const { data: wishlists } = await axios.get(`${API}/wishlist?userId=${userId}`);
-      const userList = wishlists[0];
-
-      if (!userList) { toast.error("Интихобшудаҳо ёфт нашуд!"); return; }
-
-      const updatedFavorites = userList.favorites.filter((fav: FavoriteDoctor) => fav.doctorId != doctorId);
-      await axios.patch(`${API}/wishlist/${userList.id}`, { favorites: updatedFavorites });
-      set((state) => ({
-        wishlist: { ...state.wishlist, favorites: updatedFavorites },
-      }));
-      toast.success("Аз интихобшудаҳо гирифта шуд!");
-    } catch (error) {
-      console.error(error);
-    }
-  },
-
-  // ── Appointments ──────────────────────────────────
-  async getAppointments(clientId) {
-    try {
-      set({ appointmentsLoading: true });
-      const { data } = await axios.get(`${API}/appointments?clientId=${clientId}`);
-      set({ appointments: data, appointmentsLoading: false });
-    } catch (error) {
-      console.error(error);
-      set({ appointmentsLoading: false });
-    }
-  },
-
-  async getDoctorAppointments(doctorId, status) {
-    try {
-      set({ appointmentsLoading: true });
-      let url = `${API}/appointments?doctorId=${doctorId}`;
-      if (status) url += `&status=${status}`;
-      const { data } = await axios.get(url);
-      set({ doctorAppointments: data, appointmentsLoading: false });
-    } catch (error) {
-      console.error(error);
-      set({ appointmentsLoading: false });
-    }
-  },
-
-  async checkSlotAvailability(doctorId, date, time) {
-    try {
-      const { data } = await axios.get(`${API}/appointments?doctorId=${doctorId}&date=${date}`);
-      
-      // Извлекаем час из времени (HH:MM -> HH)
-      const requestedHour = parseInt(time.split(':')[0]);
-      
-      // Проверяем как approved так и pending назначения
-      // Один сеанс занимает 1 час, поэтому если занято 10:00, то весь час 10:00-10:59 занят
-      const conflictingAppointments = data.filter((apt: Appointment) => {
-        if (apt.date !== date) return false;
-        
-        // Проверяем оба статуса: approved И pending (чтобы предотвратить двойную запись)
-        if (!['approved', 'pending'].includes(apt.status)) return false;
-        
-        const aptHour = parseInt(apt.time.split(':')[0]);
-        
-        // Конфликт если часы совпадают
-        return aptHour === requestedHour;
-      });
-      
-      return conflictingAppointments.length === 0; // true если слот свободен
-    } catch (error) {
-      console.error(error);
-      return true;
-    }
-  },
-
-  async createAppointment(appointmentData) {
-    try {
-      if (!appointmentData.doctorId || !appointmentData.date || !appointmentData.time || !appointmentData.clientId) {
-        toast.error("Маълумоти нопурра!");
+    async loginUser(credentials) {
+      try {
+        const { data } = await api.post("/auth", credentials);
+        saveSession(data.token);
+        set({ userById: data.user });
+        toast.success("Хуш омадед!");
+        return { success: true, role: data.user.role };
+      } catch {
         return { success: false };
       }
-      
-      const isAvailable = await get().checkSlotAvailability(
-        appointmentData.doctorId,
-        appointmentData.date,
-        appointmentData.time
-      );
-      
-      if (!isAvailable) {
-        toast.error("Ин вақт аллақачон забронирован шудаест. Лутфан саҳифаро нав кунед ва вақти дигарро интихоб кунед.");
+    },
+
+    async loginMe() {
+      if (!getToken()) return null;
+      try {
+        const { data } = await api.get("/auth_me");
+        set({ userById: data });
+        return data;
+      } catch {
+        return null;
+      }
+    },
+
+    logout() {
+      clearSession();
+      set({ userById: {}, wishlist: { favorites: [] } });
+    },
+
+    // ── Categories & Doctors ──────────────────────────
+    async getCategory() {
+      try {
+        const { data } = await api.get("/category");
+        set({ category: data });
+      } catch (error) {
+        console.error(error);
+      }
+    },
+
+    async getDoctor() {
+      try {
+        set({ isLoading: true });
+        const { data } = await api.get("/users", { params: { role: "doctor" } });
+        set({ doctor: data });
+      } catch (error) {
+        console.error(error);
+      } finally {
+        set({ isLoading: false });
+      }
+    },
+
+    async getDoctorById(id) {
+      try {
+        const { data } = await api.get(`/users/${id}`);
+        set({ doctorById: data });
+      } catch (error) {
+        console.error(error);
+      }
+    },
+
+    async getSubcategories() {
+      try {
+        const { data } = await api.get<Category[]>("/category");
+        set({ subcategories: [...new Set(data.flatMap((c) => c.subcategories || []))] });
+      } catch (error) {
+        console.error(error);
+      }
+    },
+
+    // ── Profile ───────────────────────────────────────
+    async edit(user) {
+      try {
+        const { data } = await api.patch(`/users/${user.id}`, user);
+        set({ userById: data });
+        toast.success("Маълумот бомуваффақият иваз шуд!");
+        return { success: true };
+      } catch (error) {
+        toast.error(apiError(error, "Хатогӣ ҳангоми ивазкунӣ"));
         return { success: false };
       }
+    },
 
-      const response = await axios.post(`${API}/appointments`, {
-        ...appointmentData,
-        status: "pending",
-      });
-
-      // Обновляем локальный список appointments
-      const newAppointment: Appointment = {
-        ...(appointmentData as Appointment),
-        id: response.data.id,
-        status: "pending",
-      };
-      
-      set((state) => ({
-        appointments: [...state.appointments, newAppointment],
-      }));
-
-      toast.success("Дархости шумо бомуваффақият ирсол шуд!");
-      return { success: true };
-    } catch (error: any) {
-      console.error(error);
-      
-      // Проверяем, если это ошибка конфликта времени
-      if (error?.response?.status === 409 || error?.response?.data?.message?.includes("time")) {
-        toast.error("Ин вақт аллақачон забронирован шудаест. Лутфан вақти дигарро интихоб кунед.");
-      } else {
-        toast.error("Хатогӣ ҳангоми ирсоли дархост");
+    async uploadImage(file) {
+      try {
+        const formData = new FormData();
+        formData.append("file", file);
+        const { data } = await api.post("/uploads", formData);
+        // Store the relative path; the API turns it into a full URL in responses
+        return data.path ?? data.url;
+      } catch (error) {
+        toast.error(apiError(error, "Хатогӣ ҳангоми боргузории акс"));
+        return null;
       }
-      return { success: false };
-    }
-  },
+    },
 
-  async approveAppointment(id) {
-    try {
-      const { data: appointmentToApprove } = await axios.get(`${API}/appointments/${id}`);
-      
-      // Перед одобрением, проверяем что нет других approved на это время
-      const { data: allAppointments } = await axios.get(`${API}/appointments?doctorId=${appointmentToApprove.doctorId}&date=${appointmentToApprove.date}`);
-      
-      const appointmentHour = parseInt(appointmentToApprove.time.split(':')[0]);
-      const conflictingApproved = allAppointments.filter((apt: Appointment) => 
-        apt.status === "approved" && 
-        apt.id !== id &&
-        parseInt(apt.time.split(':')[0]) === appointmentHour
-      );
-      
-      if (conflictingApproved.length > 0) {
-        toast.error("Вақти интихобшуда аллақачон забронирован шудаест!");
+    // The backend verifies the diploma with AI and only then marks it as verified
+    async uploadDiploma(file) {
+      const toastId = toast.loading("Диплом бо зеҳни сунъӣ тафтиш мешавад...");
+      try {
+        const formData = new FormData();
+        formData.append("file", file);
+        const { data } = await api.post("/users/me/diploma", formData);
+        set({ userById: data });
+        toast.success("✅ Дипломи шумо бомуваффақият тасдиқ шуд!", { id: toastId });
+        return { success: true };
+      } catch (error) {
+        toast.error(apiError(error, "Хатогӣ: Диплом тасдиқ нашуд."), { id: toastId });
         return { success: false };
       }
+    },
 
-      // Одобряем текущее назначение
-      await axios.patch(`${API}/appointments/${id}`, { status: "approved" });
+    // ── Reviews ───────────────────────────────────────
+    addComment: (doctorId, rating, comment) =>
+      reviewRequest(api.post(`/doctors/${doctorId}/comments`, { rating, comment }), "Шарҳи шумо илова шуд!", "Хатогӣ ҳангоми иловаи шарҳ"),
 
-      // Автоматически отклоняем все остальные pending запросы на то же время
-      const conflictingPending = allAppointments.filter((apt: Appointment) => 
-        apt.status === "pending" && 
-        apt.id !== id &&
-        parseInt(apt.time.split(':')[0]) === appointmentHour
-      );
-      
-      for (const conflictingApt of conflictingPending) {
-        await axios.patch(`${API}/appointments/${conflictingApt.id}`, { 
-          status: "rejected",
-          rejectReason: "Ин вақт аллақачон забронирован шудаест."
-        });
+    updateComment: (doctorId, commentId, comment, rating) =>
+      reviewRequest(api.patch(`/doctors/${doctorId}/comments/${commentId}`, { rating, comment }), "Шарҳ иваз карда шуд!", "Хатогӣ ҳангоми ивази шарҳ"),
+
+    deleteComment: (doctorId, commentId) =>
+      reviewRequest(api.delete(`/doctors/${doctorId}/comments/${commentId}`), "Шарҳ нест карда шуд", "Хатогӣ ҳангоми нест кардан"),
+
+    // ── Wishlist ──────────────────────────────────────
+    async wishlistUser() {
+      try {
+        const { data } = await api.get("/wishlist");
+        set({ wishlist: data });
+      } catch (error) {
+        console.error(error);
       }
+    },
 
-      // Обновляем локальное состояние
-      const state = get();
-      const updatedAppointments = state.doctorAppointments.map((apt: Appointment) => {
-        if (apt.id === id) return { ...apt, status: "approved" as const };
-        if (conflictingPending.some((p: Appointment) => p.id === apt.id)) {
-          return { ...apt, status: "rejected" as const, rejectReason: "Ин вақт аллақачон забронирован шудаест." };
-        }
-        return apt;
-      });
-      
-      set({ doctorAppointments: updatedAppointments });
+    async toggleWishlist(doctorId) {
+      const isFavorite = get().wishlist.favorites.some((f) => f.doctorId == doctorId);
+      try {
+        const { data } = isFavorite ? await api.delete(`/wishlist/${doctorId}`) : await api.post("/wishlist", { doctorId });
+        set({ wishlist: data });
+        toast.success(isFavorite ? "Аз интихобшудаҳо гирифта шуд!" : "Ба интихобшудаҳо илова шуд!");
+      } catch (error) {
+        console.error(error);
+      }
+    },
 
-      toast.success("Навбат тасдиқ шуд!");
-      return { success: true };
-    } catch (error: any) {
-      console.error(error);
-      toast.error(error?.response?.data?.message || "Хатогӣ");
-      return { success: false };
-    }
-  },
+    async deleteWishlist(doctorId) {
+      try {
+        const { data } = await api.delete(`/wishlist/${doctorId}`);
+        set({ wishlist: data });
+        toast.success("Аз интихобшудаҳо гирифта шуд!");
+      } catch (error) {
+        console.error(error);
+      }
+    },
 
-  async rejectAppointment(id, rejectReason) {
-    try {
-      await axios.patch(`${API}/appointments/${id}`, { status: "rejected", rejectReason });
-      toast.success("Навбат рад шуд");
-      return { success: true };
-    } catch (error) {
-      console.error(error);
-      toast.error("Хатогӣ");
-      return { success: false };
-    }
-  },
+    // ── Appointments ──────────────────────────────────
+    async getAppointments() {
+      try {
+        set({ appointmentsLoading: true });
+        const { data } = await api.get("/appointments");
+        set({ appointments: data });
+      } catch (error) {
+        console.error(error);
+      } finally {
+        set({ appointmentsLoading: false });
+      }
+    },
 
-  // ── Subcategories ──────────────────────────────────
-  async getSubcategories() {
-    try {
-      const { data } = await axios.get(API + "/category");
-      const allSubs: string[] = [];
-      data.forEach((cat: Category) => {
-        if (cat.subcategories) {
-          cat.subcategories.forEach((sub) => {
-            if (!allSubs.includes(sub)) allSubs.push(sub);
-          });
-        }
-      });
-      set({ subcategories: allSubs });
-    } catch (error) {
-      console.error(error);
-    }
-  },
+    async getDoctorAppointments(status) {
+      try {
+        set({ appointmentsLoading: true });
+        const { data } = await api.get("/appointments", { params: { status } });
+        set({ doctorAppointments: data });
+      } catch (error) {
+        console.error(error);
+      } finally {
+        set({ appointmentsLoading: false });
+      }
+    },
 
-  // ── Diploma Upload & Verification ─────────────────
-  async uploadDiploma(doctorId, file) {
-    try {
-      const formData = new FormData();
-      formData.append("file", file);
-
-      // 1. Upload to server
-      const { data } = await axios.post(API + "/uploads", formData, {
-        headers: { "Content-Type": "multipart/form-data" },
-      });
-
-      // Save diploma URL to doctor profile temporarily
-      await axios.patch(API + "/users/" + doctorId, {
-        diploma: data.url,
-        diplomaVerified: false,
-      }, {
-        headers: { Authorization: `Bearer ${localStorage.getItem("accessToken")}` },
-      });
-
-      set((state) => ({
-        userById: { ...state.userById, diploma: data.url, diplomaVerified: false },
-      }));
-
-      toast.success("Диплом бор карда шуд! Тафтиш бо зеҳни сунъӣ оғоз шуд...");
-
-      // 2. AI Verification
-      const verifyFormData = new FormData();
-      verifyFormData.append("image", file);
-
-      const verifyRes = await fetch("/api/verify-diploma", {
-        method: "POST",
-        body: verifyFormData,
-      });
-
-      const verifyData = await verifyRes.json();
-
-      if (!verifyRes.ok || verifyData.isValid === false) {
-        // Reset diploma if verification fails
-        await axios.patch(API + "/users/" + doctorId, {
-          diploma: "",
-          diplomaVerified: false,
-        }, {
-          headers: { Authorization: `Bearer ${localStorage.getItem("accessToken")}` },
-        });
-
-        set((state) => ({
-          userById: { ...state.userById, diploma: "", diplomaVerified: false },
-        }));
-
-        toast.error(verifyData.message || "Хатогӣ: Диплом тасдиқ нашуд.");
+    // Slot conflicts are checked by the backend (409)
+    async createAppointment(appointment) {
+      try {
+        const { data } = await api.post("/appointments", appointment);
+        set((state) => ({ appointments: [...state.appointments, data] }));
+        toast.success("Дархости шумо бомуваффақият ирсол шуд!");
+        return { success: true };
+      } catch (error) {
+        toast.error(apiError(error, "Хатогӣ ҳангоми ирсоли дархост"));
         return { success: false };
       }
+    },
 
-      // Verification success
-      await axios.patch(API + "/users/" + doctorId, {
-        diplomaVerified: true,
-      }, {
-        headers: { Authorization: `Bearer ${localStorage.getItem("accessToken")}` },
-      });
+    // Approving also auto-rejects other pending requests that overlap it (backend)
+    approveAppointment: (id) => setAppointmentStatus(id, { status: "approved" }, "Навбат тасдиқ шуд!"),
 
-      set((state) => ({
-        userById: { ...state.userById, diplomaVerified: true },
-      }));
+    rejectAppointment: (id, rejectReason) => setAppointmentStatus(id, { status: "rejected", rejectReason }, "Навбат рад шуд"),
 
-      toast.success("✅ Дипломи шумо бомуваффақият тасдиқ шуд!");
-      return { success: true };
-    } catch (error) {
-      console.error(error);
-      toast.error("Хатогӣ ҳангоми бор кардан ё тафтиши диплом");
-      return { success: false };
-    }
-  },
-
-  async verifyDiploma(doctorId) {
-    // Verification is now handled inside uploadDiploma
-    return { success: false, verified: false };
-  },
-}));
+    updateAppointment: (id, body, successMsg) => setAppointmentStatus(id, body, successMsg),
+  };
+});
 
 export default useStore;
