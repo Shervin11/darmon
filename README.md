@@ -2,6 +2,8 @@
 
 Веб-платформа для поиска врачей и клиник Таджикистана и онлайн-записи на приём. Фронтенд на Next.js; API — отдельный репозиторий [backend-darmon](https://github.com/Shervin11/backend-darmon) (NestJS + PostgreSQL).
 
+**Демо:** https://darmon-amber.vercel.app · API: https://darmon-api.onrender.com (бесплатный Render засыпает: первый запрос может идти ~50 с)
+
 ## Возможности
 
 - **Роли:** пациент, врач, клиника, администратор. Защита страниц через middleware.
